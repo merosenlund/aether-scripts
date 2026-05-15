@@ -16,6 +16,12 @@ The project is a curated, digital-first actual play fiction platform designed fo
 - [x] Core assistive tools (character sheets, standard tables).
 - [x] State management for active game sessions.
 
+## Phase 2.5: UI Overhaul & Premium Aesthetics
+- [x] Global application shell with glassmorphism sidebar.
+- [x] Premium typography (Outfit & Lora) and rich dark mode palette.
+- [x] Interactive placeholder dashboards for Authors and Readers.
+- [x] Refined editor UI with smooth transitions and micro-animations.
+
 ## Phase 3: Serial Novel Editor & Wiki Builder
 - [ ] Scene organization interface (grouping Scenes into Arcs).
 - [ ] Progressive Revelation Wiki implementation:

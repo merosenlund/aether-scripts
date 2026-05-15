@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import '../app.css';
   import favicon from '$lib/assets/favicon.svg';
+  import Sidebar from '$lib/components/layout/Sidebar.svelte';
 
   let { data, children } = $props();
   let { supabase, session } = $derived(data);
@@ -20,4 +21,15 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-{@render children()}
+<div class="flex h-screen w-full bg-stone-950 overflow-hidden font-sans">
+  <Sidebar />
+  <main class="flex-1 overflow-y-auto relative">
+    <!-- Ambient Background Glows -->
+    <div class="absolute top-0 right-0 -z-10 w-96 h-96 bg-primary/10 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
+    <div class="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-indigo-500/5 blur-[120px] rounded-full -translate-x-1/2 translate-y-1/2"></div>
+    
+    <div class="min-h-full">
+      {@render children()}
+    </div>
+  </main>
+</div>
