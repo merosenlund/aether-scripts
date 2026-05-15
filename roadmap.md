@@ -10,11 +10,11 @@ The project is a curated, digital-first actual play fiction platform designed fo
 - [x] Basic authentication (Email/Google OAuth) and protected routing setup.
 
 ## Phase 2: Solo TTRPG Journaling & Tiptap Editor
-- [ ] Initialize Tiptap rich text editor.
-- [ ] Build custom Tiptap blocks for TTRPG mechanics (dice rollers, stat blocks, GM notes).
-- [ ] Gameplay journaling interface (writing scenes progressively).
-- [ ] Core assistive tools (character sheets, standard tables).
-- [ ] State management for active game sessions.
+- [x] Initialize Tiptap rich text editor.
+- [x] Build custom Tiptap blocks for TTRPG mechanics (dice rollers, stat blocks, GM notes).
+- [x] Gameplay journaling interface (writing scenes progressively).
+- [x] Core assistive tools (character sheets, standard tables).
+- [x] State management for active game sessions.
 
 ## Phase 3: Serial Novel Editor & Wiki Builder
 - [ ] Scene organization interface (grouping Scenes into Arcs).
