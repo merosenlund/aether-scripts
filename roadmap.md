@@ -36,3 +36,9 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Reader Reactions**: Inline sentiment emoji reactions for readers.
 - [ ] **Wiki Deep-Links**: One-click navigation from reader prose to wiki lore.
 - [ ] **Author Notes**: Exclusive commentary layers for premium readers.
+
+## Phase 6: PWA & Live Notifications
+- [ ] **PWA Transformation**: Manifest and Service Worker setup for "Install to Home Screen" support.
+- [ ] **Push Notifications**: Browser-level push alerts for new scene releases and live-writing events.
+- [ ] **Offline Reading**: Cached scene content for reading your library without a connection.
+- [ ] **Kindle-Sync Logic**: Finalize cross-device scroll and block-level progress synchronization.

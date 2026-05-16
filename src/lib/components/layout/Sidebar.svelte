@@ -16,7 +16,7 @@
 
   let navItems = $derived([
     { name: 'Home', icon: LayoutDashboard, href: '/' },
-    ...(page.data.userRole === 'author' ? [{ name: 'Writing', icon: PenTool, href: '/dashboard' }] : []),
+    ...(page.data.userRole === 'author' ? [{ name: 'Writing', icon: PenTool, href: '/write' }] : []),
     { name: 'Library', icon: Library, href: '/library' },
     { name: 'Reading Lists', icon: BookOpen, href: '/lists' },
   ]);

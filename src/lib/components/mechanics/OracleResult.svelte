@@ -8,15 +8,17 @@
   }>();
 
   // Color mapping based on result (Mythic style)
-  const isExceptional = result.toLowerCase().includes('exceptional');
-  const isYes = result.toLowerCase().includes('yes');
-  const isNo = result.toLowerCase().includes('no');
+  const isExceptional = $derived(result.toLowerCase().includes('exceptional'));
+  const isYes = $derived(result.toLowerCase().includes('yes'));
+  const isNo = $derived(result.toLowerCase().includes('no'));
 
-  let resultColor = 'text-stone-300';
-  if (isExceptional && isYes) resultColor = 'text-emerald-400 font-bold';
-  else if (isExceptional && isNo) resultColor = 'text-rose-500 font-bold';
-  else if (isYes) resultColor = 'text-emerald-300';
-  else if (isNo) resultColor = 'text-rose-400';
+  const resultColor = $derived.by(() => {
+    if (isExceptional && isYes) return 'text-emerald-400 font-bold';
+    if (isExceptional && isNo) return 'text-rose-500 font-bold';
+    if (isYes) return 'text-emerald-300';
+    if (isNo) return 'text-rose-400';
+    return 'text-stone-300';
+  });
 </script>
 
 <div class="flex items-start gap-4 p-4 rounded-2xl border border-primary/20 bg-primary/5 shadow-inner my-4 group">

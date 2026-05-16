@@ -2,7 +2,7 @@
   import { Plus, Book, Users, Star, Clock } from '@lucide/svelte';
   import type { PageData } from './$types';
 
-  export let data: PageData;
+  let { data } = $props();
 
   function timeAgo(date: string | Date) {
     const now = new Date();
