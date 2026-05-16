@@ -9,12 +9,12 @@ The project is a curated, digital-first actual play fiction platform designed fo
 - [x] Define core data models (Scenes, Arcs, Serial-Scoped Wikis, Inline Comments).
 - [x] Basic authentication (Email/Google OAuth) and protected routing setup.
 
-## Phase 2: Solo TTRPG Journaling & Tiptap Editor
+## Phase 2: Narrative Engine & Tiptap Editor
 - [x] Initialize Tiptap rich text editor.
-- [x] Build custom Tiptap blocks for TTRPG mechanics (dice rollers, stat blocks, GM notes).
-- [x] Gameplay journaling interface (writing scenes progressively).
-- [x] Core assistive tools (character sheets, standard tables).
-- [x] State management for active game sessions.
+- [ ] Build Slash Command Engine (`/roll`, `/odds`, `/gm`, `/setup`).
+- [ ] Implement block-level visibility tags (Prose, Mechanics, Director's Cut).
+- [ ] Implement Dual-Layer Versioning (Yjs CRDT for granular history + Explicit Snapshot Versions).
+- [ ] Dynamic UI Modes (Journaling vs Editing toggle) operating on immutable snapshots.
 
 ## Phase 2.5: UI Overhaul & Premium Aesthetics
 - [x] Global application shell with glassmorphism sidebar.
@@ -22,13 +22,13 @@ The project is a curated, digital-first actual play fiction platform designed fo
 - [x] Interactive placeholder dashboards for Authors and Readers.
 - [x] Refined editor UI with smooth transitions and micro-animations.
 
-## Phase 3: Serial Novel Editor & Wiki Builder
+## Phase 3: Serial Novel Editor & Flexible Wiki
 - [ ] Scene organization interface (grouping Scenes into Arcs).
-- [ ] Progressive Revelation Wiki implementation:
-  - Create Serial-scoped entities.
-  - Implement facts with `valid_from_scene_id` and `valid_until_scene_id` tracking.
-- [ ] "Director's Cut" editing: Structuring scenes with separate prose, description, and summary blocks.
-- [ ] Drafting states and publishing workflows (hiding author titles to prevent spoilers).
+- [ ] Flexible Wiki implementation:
+  - Create generic Wiki Entities with custom properties/components (Characters, Clocks, Threads).
+  - Implement smart `wiki_anchors` tied to specific Tiptap `block_id`s.
+  - Anchor shift-forward logic when blocks are deleted during edit mode.
+- [ ] "Director's Cut" editing workflows and reader visibility filtering.
 
 ## Phase 4: Digital-First Reading Ecosystem
 - [ ] Infinite scroll reader interface (responsive, accessible, seamless scene transitions).

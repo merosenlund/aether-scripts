@@ -66,36 +66,6 @@
     </div>
     
     <div class="flex-1 p-6 space-y-12">
-      <!-- Quick Roll -->
-      <div class="space-y-4">
-        <h3 class="text-[10px] font-bold text-stone-500 uppercase tracking-[0.2em] flex items-center">
-          Roll Fate
-          <div class="ml-2 h-px flex-1 bg-white/5"></div>
-        </h3>
-        <div class="grid grid-cols-2 gap-3">
-          <button 
-            class="relative overflow-hidden px-4 py-4 bg-stone-900/50 border border-white/5 rounded-2xl text-xs hover:border-primary/50 hover:bg-primary/5 transition-all group font-bold text-left shadow-sm" 
-            onclick={() => gameSession.addRoll('1d20', Math.floor(Math.random() * 20) + 1)}
-          >
-            <span class="block text-stone-500 group-hover:text-primary transition-colors mb-1">D20</span>
-            Check Action
-            <div class="absolute top-0 right-0 p-1 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Dices class="w-8 h-8" />
-            </div>
-          </button>
-          <button 
-            class="relative overflow-hidden px-4 py-4 bg-stone-900/50 border border-white/5 rounded-2xl text-xs hover:border-primary/50 hover:bg-primary/5 transition-all group font-bold text-left shadow-sm" 
-            onclick={() => gameSession.addRoll('1d6', Math.floor(Math.random() * 6) + 1)}
-          >
-            <span class="block text-stone-500 group-hover:text-primary transition-colors mb-1">D6</span>
-            Roll Damage
-            <div class="absolute top-0 right-0 p-1 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Dices class="w-8 h-8" />
-            </div>
-          </button>
-        </div>
-      </div>
-
       <!-- Roll History -->
       <div class="space-y-4">
         <div class="flex justify-between items-center">

@@ -7,6 +7,9 @@
   import { GMNote } from './extensions/GMNote';
   import { DiceRoller } from './extensions/DiceRoller';
   import { StatBlock } from './extensions/StatBlock';
+  import { OddsCheck } from './extensions/OddsCheck';
+  import { Commands } from './extensions/Commands';
+  import suggestion from './extensions/suggestion.svelte.ts';
 
   let { 
     content = '', 
@@ -30,6 +33,10 @@
         GMNote,
         DiceRoller,
         StatBlock,
+        OddsCheck,
+        Commands.configure({
+          suggestion,
+        }),
       ],
       content,
       onUpdate: ({ editor: e }) => {
@@ -92,7 +99,17 @@
     </div>
   {/if}
   
-  <div class="p-8 min-h-[500px] prose prose-stone dark:prose-invert max-w-none focus:outline-none tiptap-container text-lg leading-relaxed text-stone-300" bind:this={element}></div>
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div 
+    class="p-8 min-h-[500px] prose prose-stone dark:prose-invert max-w-none focus:outline-none tiptap-container text-lg leading-relaxed text-stone-300 cursor-text" 
+    bind:this={element}
+    onclick={(e) => {
+      if (e.target === element) {
+        editor?.commands.focus('end');
+      }
+    }}
+  ></div>
 </div>
 
 <style>
