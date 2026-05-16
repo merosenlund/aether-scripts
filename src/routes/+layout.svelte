@@ -4,6 +4,7 @@
   import '../app.css';
   import favicon from '$lib/assets/favicon.svg';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
+  import Toaster from '$lib/components/Toaster.svelte';
 
   let { data, children } = $props();
   let { supabase, session } = $derived(data);
@@ -32,4 +33,5 @@
       {@render children()}
     </div>
   </main>
+  <Toaster />
 </div>

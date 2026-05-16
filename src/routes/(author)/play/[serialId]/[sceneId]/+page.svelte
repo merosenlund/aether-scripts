@@ -44,6 +44,7 @@
       <div class="relative group">
         <Tiptap 
           bind:content 
+          sceneId={data.scene.id}
           onUpdate={(html) => content = html}
         />
       </div>

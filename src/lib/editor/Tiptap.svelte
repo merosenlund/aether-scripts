@@ -10,26 +10,51 @@
   import { OddsCheck } from './extensions/OddsCheck';
   import { Commands } from './extensions/Commands';
   import suggestion from './extensions/suggestion.svelte.ts';
+  
+  import Collaboration from '@tiptap/extension-collaboration';
+  import * as Y from 'yjs';
+  import { SupabaseYjsProvider } from './yjs';
+  import { createSnapshot, type SceneStage } from '../api/versions';
+  import { notifications } from '$lib/stores/notifications';
+  import { Sparkles } from '@lucide/svelte';
 
   let { 
     content = '', 
+    sceneId = '',
+    stage = 'Draft' as SceneStage,
     onUpdate = (html: string) => {},
     placeholder = 'Write your story...' 
   } = $props<{
     content?: string;
+    sceneId?: string;
+    stage?: SceneStage;
     onUpdate?: (html: string) => void;
     placeholder?: string;
   }>();
 
   let element: HTMLElement;
   let editor = $state<Editor | undefined>(undefined);
+  let ydoc: Y.Doc;
+  let provider: SupabaseYjsProvider;
+  let isSaving = $state(false);
 
   onMount(() => {
+    ydoc = new Y.Doc();
+    if (sceneId) {
+      provider = new SupabaseYjsProvider(ydoc, sceneId);
+    }
+
     editor = new Editor({
       element,
       extensions: [
-        StarterKit,
+        StarterKit.configure({
+          // History is handled by Collaboration
+          history: false,
+        }),
         Placeholder.configure({ placeholder }),
+        Collaboration.configure({
+          document: ydoc,
+        }),
         GMNote,
         DiceRoller,
         StatBlock,
@@ -38,16 +63,31 @@
           suggestion,
         }),
       ],
-      content,
+      // When using collaboration, content is loaded from the Y.Doc
+      // but we can provide initial content if needed
+      content: content || undefined,
       onUpdate: ({ editor: e }) => {
         onUpdate(e.getHTML());
       },
       onTransaction: () => {
-        // Force state update so Svelte reacts to editor state changes (like isActive)
         editor = editor;
       }
     });
   });
+
+  async function handleSnapshot() {
+    if (!editor || !sceneId) return;
+    isSaving = true;
+    try {
+      await createSnapshot(sceneId, 'Edit', editor.getJSON());
+      notifications.success('Snapshot created! You are now in Editing mode.');
+    } catch (e) {
+      console.error(e);
+      notifications.error('Failed to create snapshot.');
+    } finally {
+      isSaving = false;
+    }
+  }
 
   onDestroy(() => {
     if (editor) {
@@ -95,6 +135,17 @@
         onclick={() => editor?.chain().focus().insertContent({ type: 'diceRoller', attrs: { formula: '1d20', result: Math.floor(Math.random() * 20) + 1 } }).run()}
       >
         Insert Roll
+      </button>
+
+      <div class="flex-1"></div>
+
+      <button 
+        class="px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 {isSaving ? 'bg-stone-800 text-stone-500' : 'bg-primary text-white hover:bg-primary/80 shadow-lg shadow-primary/20'}"
+        disabled={isSaving}
+        onclick={handleSnapshot}
+      >
+        <Sparkles size={14} class={isSaving ? 'animate-pulse' : ''} />
+        {isSaving ? 'Saving...' : 'Create Snapshot'}
       </button>
     </div>
   {/if}

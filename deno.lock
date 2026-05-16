@@ -11,7 +11,23 @@
     "npm:@sveltejs/vite-plugin-svelte@7": "7.1.2_svelte@5.55.5_vite@8.0.11__@types+node@24.12.3_@types+node@24.12.3",
     "npm:@tailwindcss/vite@^4.2.2": "4.2.4_vite@8.0.11__@types+node@24.12.3_@types+node@24.12.3",
     "npm:@tiptap/core@^3.23.4": "3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-blockquote@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-bold@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-bullet-list@^3.23.4": "3.23.4_@tiptap+extension-list@3.23.4__@tiptap+core@3.23.4___@tiptap+pm@3.23.4__@tiptap+pm@3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-code-block@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-code@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-collaboration@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4_@tiptap+y-tiptap@3.0.3__prosemirror-model@1.25.6__prosemirror-state@1.4.4__prosemirror-view@1.41.8__y-protocols@1.0.7___yjs@13.6.30__yjs@13.6.30_yjs@13.6.30_prosemirror-model@1.25.6_prosemirror-state@1.4.4_prosemirror-view@1.41.8_y-protocols@1.0.7__yjs@13.6.30",
+    "npm:@tiptap/extension-document@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-hard-break@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-heading@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-horizontal-rule@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-italic@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-list-item@^3.23.4": "3.23.4_@tiptap+extension-list@3.23.4__@tiptap+core@3.23.4___@tiptap+pm@3.23.4__@tiptap+pm@3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-ordered-list@^3.23.4": "3.23.4_@tiptap+extension-list@3.23.4__@tiptap+core@3.23.4___@tiptap+pm@3.23.4__@tiptap+pm@3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-paragraph@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
     "npm:@tiptap/extension-placeholder@^3.23.4": "3.23.4_@tiptap+extensions@3.23.4__@tiptap+core@3.23.4___@tiptap+pm@3.23.4__@tiptap+pm@3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-strike@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-text@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
     "npm:@tiptap/pm@^3.23.4": "3.23.4",
     "npm:@tiptap/starter-kit@^3.23.4": "3.23.4",
     "npm:@tiptap/suggestion@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
@@ -34,7 +50,9 @@
     "npm:tippy.js@^6.3.7": "6.3.7",
     "npm:typescript-eslint@^8.58.1": "8.59.2_eslint@10.3.0_typescript@6.0.3",
     "npm:typescript@^6.0.2": "6.0.3",
-    "npm:vite@^8.0.7": "8.0.11_@types+node@24.12.3"
+    "npm:vite@^8.0.7": "8.0.11_@types+node@24.12.3",
+    "npm:y-prosemirror@^1.3.7": "1.3.7_prosemirror-model@1.25.6_prosemirror-state@1.4.4_prosemirror-view@1.41.8_y-protocols@1.0.7__yjs@13.6.30_yjs@13.6.30",
+    "npm:yjs@^13.6.30": "13.6.30"
   },
   "npm": {
     "@emnapi/core@1.10.0": {
@@ -564,6 +582,15 @@
         "@tiptap/core"
       ]
     },
+    "@tiptap/extension-collaboration@3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4_@tiptap+y-tiptap@3.0.3__prosemirror-model@1.25.6__prosemirror-state@1.4.4__prosemirror-view@1.41.8__y-protocols@1.0.7___yjs@13.6.30__yjs@13.6.30_yjs@13.6.30_prosemirror-model@1.25.6_prosemirror-state@1.4.4_prosemirror-view@1.41.8_y-protocols@1.0.7__yjs@13.6.30": {
+      "integrity": "sha512-28TJFayxCk7J9TmHBG4+8lVAz6YgyjN0RqzZueVeimWxSEgnTDGlkfHx6Ho5tOuyLwDa6SMBhN/6Q0iUMdnwMQ==",
+      "dependencies": [
+        "@tiptap/core",
+        "@tiptap/pm",
+        "@tiptap/y-tiptap",
+        "yjs"
+      ]
+    },
     "@tiptap/extension-document@3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4": {
       "integrity": "sha512-YC4G6VkxT629rlqUTwD6XvOpxjvghn7fxrK4RbyKVJY2C6E1vgmX0won1Ast6v+qTE6iONOMS6f6VyPxSGjg4w==",
       "dependencies": [
@@ -728,6 +755,17 @@
       "dependencies": [
         "@tiptap/core",
         "@tiptap/pm"
+      ]
+    },
+    "@tiptap/y-tiptap@3.0.3_prosemirror-model@1.25.6_prosemirror-state@1.4.4_prosemirror-view@1.41.8_y-protocols@1.0.7__yjs@13.6.30_yjs@13.6.30": {
+      "integrity": "sha512-8UvuV4lTisCE9cMTc/X8kRyTn9edUO7Kball0I6wb17VwZSjNDfh/YKtP4O5vcPawEzFHQIvZGq/k1h37kAf0w==",
+      "dependencies": [
+        "lib0",
+        "prosemirror-model",
+        "prosemirror-state",
+        "prosemirror-view",
+        "y-protocols",
+        "yjs"
       ]
     },
     "@tybys/wasm-util@0.10.2": {
@@ -1278,6 +1316,9 @@
     "isexe@2.0.0": {
       "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw=="
     },
+    "isomorphic.js@0.2.5": {
+      "integrity": "sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw=="
+    },
     "jiti@2.7.0": {
       "integrity": "sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==",
       "bin": true
@@ -1309,6 +1350,13 @@
         "prelude-ls",
         "type-check"
       ]
+    },
+    "lib0@0.2.117": {
+      "integrity": "sha512-DeXj9X5xDCjgKLU/7RR+/HQEVzuuEUiwldwOGsHK/sfAfELGWEyTcf0x+uOvCvK3O2zPmZePXWL85vtia6GyZw==",
+      "dependencies": [
+        "isomorphic.js"
+      ],
+      "bin": true
     },
     "lightningcss-android-arm64@1.32.0": {
       "integrity": "sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==",
@@ -1625,8 +1673,8 @@
         "w3c-keyname"
       ]
     },
-    "prosemirror-model@1.25.5": {
-      "integrity": "sha512-dWa0mfQAX8a63zmDILRvBMCM9hPVqDie/Ch4pbObAujGVyHvrRMDiW1sKKBpkj7dwjVLOZvSHAtek2AqQHnyPw==",
+    "prosemirror-model@1.25.6": {
+      "integrity": "sha512-RIm+e9BiqAaJ1mRECv3vR3C+VG8ELoTTI+47tVudGi82yLnFOx3G/p/iSPK1HmHQdKhkkrJ68NJqxh7S+FBVmQ==",
       "dependencies": [
         "orderedmap"
       ]
@@ -1974,11 +2022,35 @@
         "signal-exit"
       ]
     },
+    "y-prosemirror@1.3.7_prosemirror-model@1.25.6_prosemirror-state@1.4.4_prosemirror-view@1.41.8_y-protocols@1.0.7__yjs@13.6.30_yjs@13.6.30": {
+      "integrity": "sha512-NpM99WSdD4Fx4if5xOMDpPtU3oAmTSjlzh5U4353ABbRHl1HtAFUx6HlebLZfyFxXN9jzKMDkVbcRjqOZVkYQg==",
+      "dependencies": [
+        "lib0",
+        "prosemirror-model",
+        "prosemirror-state",
+        "prosemirror-view",
+        "y-protocols",
+        "yjs"
+      ]
+    },
+    "y-protocols@1.0.7_yjs@13.6.30": {
+      "integrity": "sha512-YSVsLoXxO67J6eE/nV4AtFtT3QEotZf5sK5BHxFBXso7VDUT3Tx07IfA6hsu5Q5OmBdMkQVmFZ9QOA7fikWvnw==",
+      "dependencies": [
+        "lib0",
+        "yjs"
+      ]
+    },
     "yallist@5.0.0": {
       "integrity": "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw=="
     },
     "yaml@1.10.3": {
       "integrity": "sha512-vIYeF1u3CjlhAFekPPAk2h/Kv4T3mAkMox5OymRiJQB0spDP10LHvt+K7G9Ny6NuuMAb25/6n1qyUjAcGNf/AA=="
+    },
+    "yjs@13.6.30": {
+      "integrity": "sha512-vv/9h42eCMC81ZHDFswuu/MKzkl/vyq1BhaNGfHyOonwlG4CJbQF4oiBBJPvfdeCt/PlVDWh7Nov9D34YY09uQ==",
+      "dependencies": [
+        "lib0"
+      ]
     },
     "yocto-queue@0.1.0": {
       "integrity": "sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q=="
@@ -2000,7 +2072,23 @@
         "npm:@sveltejs/vite-plugin-svelte@7",
         "npm:@tailwindcss/vite@^4.2.2",
         "npm:@tiptap/core@^3.23.4",
+        "npm:@tiptap/extension-blockquote@^3.23.4",
+        "npm:@tiptap/extension-bold@^3.23.4",
+        "npm:@tiptap/extension-bullet-list@^3.23.4",
+        "npm:@tiptap/extension-code-block@^3.23.4",
+        "npm:@tiptap/extension-code@^3.23.4",
+        "npm:@tiptap/extension-collaboration@^3.23.4",
+        "npm:@tiptap/extension-document@^3.23.4",
+        "npm:@tiptap/extension-hard-break@^3.23.4",
+        "npm:@tiptap/extension-heading@^3.23.4",
+        "npm:@tiptap/extension-horizontal-rule@^3.23.4",
+        "npm:@tiptap/extension-italic@^3.23.4",
+        "npm:@tiptap/extension-list-item@^3.23.4",
+        "npm:@tiptap/extension-ordered-list@^3.23.4",
+        "npm:@tiptap/extension-paragraph@^3.23.4",
         "npm:@tiptap/extension-placeholder@^3.23.4",
+        "npm:@tiptap/extension-strike@^3.23.4",
+        "npm:@tiptap/extension-text@^3.23.4",
         "npm:@tiptap/pm@^3.23.4",
         "npm:@tiptap/starter-kit@^3.23.4",
         "npm:@tiptap/suggestion@^3.23.4",
@@ -2023,7 +2111,9 @@
         "npm:tippy.js@^6.3.7",
         "npm:typescript-eslint@^8.58.1",
         "npm:typescript@^6.0.2",
-        "npm:vite@^8.0.7"
+        "npm:vite@^8.0.7",
+        "npm:y-prosemirror@^1.3.7",
+        "npm:yjs@^13.6.30"
       ]
     }
   }
