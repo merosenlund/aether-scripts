@@ -14,6 +14,27 @@ export const BlockMetadata = Extension.create<BlockMetadataOptions>({
     };
   },
 
+  addKeyboardShortcuts() {
+    return {
+      'Enter': () => {
+        const { state } = this.editor;
+        const { selection } = state;
+        const { $from } = selection;
+        const node = $from.parent;
+
+        if (node.attrs.visibility === 'journal') {
+          // If we're in a journal block, Enter splits it and makes the NEW block public
+          return this.editor.chain()
+            .splitBlock()
+            .updateAttributes($from.parent.type.name, { visibility: 'public' })
+            .run();
+        }
+        return false;
+      },
+      'Mod-Enter': () => this.editor.commands.setHardBreak(),
+    };
+  },
+
   addGlobalAttributes() {
     return [
       {

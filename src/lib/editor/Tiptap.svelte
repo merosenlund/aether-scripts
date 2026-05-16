@@ -182,19 +182,48 @@
     outline: none;
   }
   :global([data-visibility="journal"]) {
-    opacity: 0.5;
+    background: rgba(120, 113, 108, 0.05);
+    border-left: 3px solid rgba(120, 113, 108, 0.3);
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0 0.5rem 0.5rem 0;
+    font-style: italic;
+    color: rgba(214, 211, 209, 0.8);
     position: relative;
   }
-  :global([data-visibility="journal"]::before) {
-    content: 'JOURNAL';
+
+  /* Block Type Tooltips */
+  :global([data-type="gm-note"], [data-visibility="journal"], [data-type="stat-block"]) {
+    position: relative;
+  }
+
+  :global([data-type="gm-note"]:hover::after, [data-visibility="journal"]:hover::after, [data-type="stat-block"]:hover::after) {
     position: absolute;
-    left: -76px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: -10px;
+    right: 12px;
+    padding: 4px 8px;
+    background: #1c1917;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
     font-size: 9px;
-    font-weight: 900;
-    letter-spacing: 0.15em;
-    color: #f59e0b;
-    opacity: 0.6;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #d6d3d1;
+    opacity: 0;
+    animation: fadeInLabel 0.2s forwards;
+    animation-delay: 1.2s; /* The "moment or two" delay */
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  :global([data-type="gm-note"]:hover::after) { content: 'GM Note'; }
+  :global([data-visibility="journal"]:hover::after) { content: 'Journal Entry'; }
+  :global([data-type="stat-block"]:hover::after) { content: 'Stat Block'; }
+
+  @keyframes fadeInLabel {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 </style>
