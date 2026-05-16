@@ -42,3 +42,15 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Push Notifications**: Browser-level push alerts for new scene releases and live-writing events.
 - [ ] **Offline Reading**: Cached scene content for reading your library without a connection.
 - [ ] **Kindle-Sync Logic**: Finalize cross-device scroll and block-level progress synchronization.
+
+## Phase 7: Community, Polling & Ethical Monetization
+- [ ] **Stripe Integration**: Secure payment processing (one-time & recurring) with a focus on flat, non-tiered support.
+- [ ] **Self-Serve Subscription Management**: Tools for users to turn off auto-renew or adjust future support amounts seamlessly.
+- [ ] **Ethical Billing & Refunds**: Generous manual refund policy (14 days) paired with an automated 30-day resubscription block to prevent fee abuse. Auto-cancellation of subscriptions for users inactive for 30+ days.
+- [ ] **Transparent "Runway" Goals**: Progress bars for sustainability milestones (e.g., host costs, securing 12 months of full-time runway).
+- [ ] **Art Commission & Fan Art Credits**: Public commemoration of users who fund specific art commissions, alongside a system for users to donate and select alternate fan-made cover art for series.
+- [ ] **Community Wall**: Dashboard feed celebrating reader milestones equally (e.g., "Account created", "Reading for 2 months", "Supported again") without displaying monetary amounts, streaks, or leaderboards.
+- [ ] **Targeted Polling System**: Ability to send story-decision polls to all users, or segment them to specific groups (e.g., long-time readers) using Admin CRM data.
+- [ ] **Admin Supporter CRM & Dedication Engine**: Private tools to view reader engagement and track who has received dedications (scenes, polls, blocks) to ensure equitable, human-driven gratitude. Includes cohort targeting (e.g., dedicating a poll to the "1-Year Club" at scale).
+- [ ] **Opt-In Transparent Analytics**: Analytics and inclusion in the Admin CRM are strictly opt-in (configurable during sign-up or in settings). Tracks meaningful engagement (milestones, comments) rather than speed metrics, and provides users a personal "Reading Stats" dashboard so data collection is a shared, transparent feature.
+- [ ] **Unified Community Experience**: Ensuring premium support enhances the reading experience without fragmenting the community (no paywalled comments, no FOMO mechanics).
