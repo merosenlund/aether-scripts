@@ -27,7 +27,7 @@
 </script>
 
 <aside 
-  class="relative h-full flex flex-col bg-stone-950/50 backdrop-blur-xl border-r border-white/5 transition-all duration-300 ease-in-out {collapsed ? 'w-20' : 'w-64'}"
+  class="relative z-10 h-full flex flex-col bg-stone-950/50 backdrop-blur-xl border-r border-white/5 transition-all duration-300 ease-in-out {collapsed ? 'w-20' : 'w-64'}"
 >
   <!-- Logo -->
   <div class="h-16 flex items-center px-6 mb-4">

@@ -14,13 +14,13 @@
 
   <div class="flex gap-4">
     <a 
-      href="/(author)" 
+      href="/dashboard" 
       class="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-bold text-lg hover:opacity-90 transition-all shadow-xl shadow-primary/20"
     >
       Start Writing
     </a>
     <a 
-      href="/(reader)" 
+      href="/library" 
       class="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-md"
     >
       Browse Library

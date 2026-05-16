@@ -49,52 +49,51 @@
   });
 </script>
 
-{#if editor}
-  <div class="border rounded-md flex flex-col bg-white dark:bg-stone-950">
-    <div class="border-b p-2 flex gap-2 flex-wrap">
+<div class="border border-white/10 rounded-2xl flex flex-col bg-stone-900/50 backdrop-blur-md overflow-hidden shadow-xl">
+  {#if editor}
+    <div class="border-b border-white/5 p-3 flex gap-2 flex-wrap bg-white/5">
       <button 
-        class="px-2 py-1 text-sm rounded hover:bg-stone-100 dark:hover:bg-stone-800 {editor.isActive('bold') ? 'bg-stone-200 dark:bg-stone-700' : ''}" 
+        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('bold') ? 'bg-primary/20 text-primary' : 'text-stone-400'}" 
         onclick={() => editor?.chain().focus().toggleBold().run()}
       >
         Bold
       </button>
       <button 
-        class="px-2 py-1 text-sm rounded hover:bg-stone-100 dark:hover:bg-stone-800 {editor.isActive('italic') ? 'bg-stone-200 dark:bg-stone-700' : ''}" 
+        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('italic') ? 'bg-primary/20 text-primary' : 'text-stone-400'}" 
         onclick={() => editor?.chain().focus().toggleItalic().run()}
       >
         Italic
       </button>
       <button 
-        class="px-2 py-1 text-sm rounded hover:bg-stone-100 dark:hover:bg-stone-800 {editor.isActive('heading', { level: 2 }) ? 'bg-stone-200 dark:bg-stone-700' : ''}" 
+        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('heading', { level: 2 }) ? 'bg-primary/20 text-primary' : 'text-stone-400'}" 
         onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
       >
         H2
       </button>
-      <div class="w-px h-6 bg-stone-300 dark:bg-stone-700 mx-1"></div>
+      <div class="w-px h-6 bg-white/10 mx-2 self-center"></div>
       <button 
-        class="px-2 py-1 text-sm rounded hover:bg-stone-100 dark:hover:bg-stone-800 {editor.isActive('gmNote') ? 'bg-stone-200 dark:bg-stone-700' : ''}" 
+        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('gmNote') ? 'bg-rose-500/20 text-rose-400' : 'text-stone-400'}" 
         onclick={() => editor?.chain().focus().toggleNode('gmNote', 'paragraph').run()}
       >
         GM Note
       </button>
       <button 
-        class="px-2 py-1 text-sm rounded hover:bg-stone-100 dark:hover:bg-stone-800 {editor.isActive('statBlock') ? 'bg-stone-200 dark:bg-stone-700' : ''}" 
+        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('statBlock') ? 'bg-indigo-500/20 text-indigo-400' : 'text-stone-400'}" 
         onclick={() => editor?.chain().focus().toggleNode('statBlock', 'paragraph').run()}
       >
         Stat Block
       </button>
       <button 
-        class="px-2 py-1 text-sm rounded hover:bg-stone-100 dark:hover:bg-stone-800" 
+        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors text-stone-400" 
         onclick={() => editor?.chain().focus().insertContent({ type: 'diceRoller', attrs: { formula: '1d20', result: Math.floor(Math.random() * 20) + 1 } }).run()}
       >
         Insert Roll
       </button>
     </div>
-    <div class="p-4 min-h-[400px] prose dark:prose-invert max-w-none focus:outline-none tiptap-container" bind:this={element}></div>
-  </div>
-{:else}
-  <div class="p-4 min-h-[400px] border rounded-md" bind:this={element}>Loading editor...</div>
-{/if}
+  {/if}
+  
+  <div class="p-8 min-h-[500px] prose prose-stone dark:prose-invert max-w-none focus:outline-none tiptap-container text-lg leading-relaxed text-stone-300" bind:this={element}></div>
+</div>
 
 <style>
   :global(.tiptap p.is-editor-empty:first-child::before) {
