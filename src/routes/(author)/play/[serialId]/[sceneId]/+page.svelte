@@ -14,6 +14,7 @@
   let visibleBlockIds = $state<string[]>([]);
   let activeTab = $state('wiki');
   let isPreview = $state(false);
+  let editorComponent = $state<any>();
 </script>
 
 <svelte:head>
@@ -22,10 +23,10 @@
 
 <div class="absolute inset-0 flex overflow-hidden bg-stone-950 font-sans text-stone-100">
   <!-- Main Editor Area -->
-  <div class="flex-1 overflow-y-auto overflow-x-hidden px-8 py-12 flex justify-center scroll-smooth relative">
-    <div class="w-full max-w-4xl space-y-12">
+  <div class="flex-1 flex flex-col items-center overflow-hidden px-8 pt-12 relative">
+    <div class="w-full max-w-4xl flex flex-col h-full min-h-0">
       <!-- Editor Header -->
-      <header class="flex justify-between items-end border-b border-white/5 pb-8">
+      <header class="flex justify-between items-end border-b border-white/5 pb-8 mb-12 shrink-0">
         <div class="space-y-2">
           <div class="flex items-center text-primary text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
             <span class="w-2 h-2 rounded-full bg-primary mr-2 shadow-[0_0_8px_rgba(var(--primary),0.5)] animate-pulse"></span>
@@ -45,25 +46,30 @@
             <Eye class="w-5 h-5" />
           </button>
           {#if !isPreview}
-            <button class="flex items-center px-6 py-2.5 bg-primary text-primary-foreground hover:opacity-90 rounded-xl shadow-lg shadow-primary/20 transition-all text-sm font-bold">
+            <button 
+              onclick={() => editorComponent?.save()}
+              disabled={editorComponent?.getIsSaving?.()}
+              class="flex items-center px-6 py-2.5 bg-primary text-primary-foreground hover:opacity-90 rounded-xl shadow-lg shadow-primary/20 transition-all text-sm font-bold disabled:opacity-50"
+            >
               <Save class="w-4 h-4 mr-2" />
-              Save Draft
+              {editorComponent?.getIsSaving?.() ? 'Saving...' : 'Create Snapshot'}
             </button>
           {/if}
         </div>
       </header>
 
-      <!-- Editor Canvas -->
-      <div class="relative group">
+      <div class="flex-1 min-h-0 relative group">
         {#if isPreview}
-          <div in:fade>
+          <div in:fade class="h-full overflow-y-auto pr-2 scroll-smooth">
             <Reader 
               {content} 
               onVisibleBlocksChange={(ids) => visibleBlockIds = ids} 
             />
+            <div class="h-32"></div>
           </div>
         {:else}
           <Tiptap 
+            bind:this={editorComponent}
             bind:content 
             bind:activeBlockId
             sceneId={data.scene.id}
@@ -71,9 +77,6 @@
           />
         {/if}
       </div>
-      
-      <!-- Bottom Padding -->
-      <div class="h-32"></div>
     </div>
 
     <!-- Ambient Background Glows -->

@@ -83,6 +83,19 @@ export const getSuggestionItems = ({ query }: { query: string }) => {
       },
     },
     {
+      title: 'Journal Entry',
+      description: 'Mark this block as a private journal entry',
+      icon: 'book',
+      command: ({ editor, range }: any) => {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .updateAttributes(editor.state.selection.$from.parent.type.name, { visibility: 'journal' })
+          .run();
+      },
+    },
+    {
       title: 'Scene Setup',
       description: 'Define scene expectations and goals',
       icon: 'pen',

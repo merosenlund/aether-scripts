@@ -2,6 +2,7 @@
   import { Editor } from '@tiptap/core';
   import StarterKit from '@tiptap/starter-kit';
   import Placeholder from '@tiptap/extension-placeholder';
+  import BubbleMenu from '@tiptap/extension-bubble-menu';
   import { onDestroy, onMount } from 'svelte';
   
   import { GMNote } from './extensions/GMNote';
@@ -20,7 +21,7 @@
   import { SupabaseYjsProvider } from './yjs';
   import { createSnapshot, type SceneStage } from '../api/versions';
   import { notifications } from '$lib/stores/notifications';
-  import { Sparkles } from '@lucide/svelte';
+
 
   let { 
     content = '', 
@@ -39,6 +40,8 @@
   }>();
 
   let element: HTMLElement;
+  let bubbleMenuElement = $state<HTMLElement>();
+  let isBubbleMenuVisible = $state(false);
   let editor = $state<Editor | undefined>(undefined);
   let ydoc: Y.Doc;
   let provider: SupabaseYjsProvider;
@@ -59,6 +62,15 @@
         }),
         BlockMetadata,
         Placeholder.configure({ placeholder }),
+        BubbleMenu.configure({
+          element: bubbleMenuElement,
+          shouldShow: ({ state, from, to }) => {
+            // Only show if there's a selection and it's not empty
+            const show = !state.selection.empty && from !== to;
+            isBubbleMenuVisible = show;
+            return show;
+          },
+        }),
         Collaboration.configure({
           document: ydoc,
         }),
@@ -90,7 +102,9 @@
     });
   });
 
-  async function handleSnapshot() {
+  export const getIsSaving = () => isSaving;
+
+  export async function save() {
     if (!editor || !sceneId) return;
     isSaving = true;
     try {
@@ -111,75 +125,13 @@
   });
 </script>
 
-<div class="border border-white/10 rounded-2xl flex flex-col bg-stone-900/50 backdrop-blur-md overflow-hidden shadow-xl">
-  {#if editor}
-    <div class="border-b border-white/5 p-3 flex gap-2 flex-wrap bg-white/5">
-      <button 
-        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('bold') ? 'bg-primary/20 text-primary' : 'text-stone-400'}" 
-        onclick={() => editor?.chain().focus().toggleBold().run()}
-      >
-        Bold
-      </button>
-      <button 
-        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('italic') ? 'bg-primary/20 text-primary' : 'text-stone-400'}" 
-        onclick={() => editor?.chain().focus().toggleItalic().run()}
-      >
-        Italic
-      </button>
-      <button 
-        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('heading', { level: 2 }) ? 'bg-primary/20 text-primary' : 'text-stone-400'}" 
-        onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-      >
-        H2
-      </button>
-      <div class="w-px h-6 bg-white/10 mx-2 self-center"></div>
-      <button 
-        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('gmNote') ? 'bg-rose-500/20 text-rose-400' : 'text-stone-400'}" 
-        onclick={() => editor?.chain().focus().toggleNode('gmNote', 'paragraph').run()}
-      >
-        GM Note
-      </button>
-      <button 
-        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('statBlock') ? 'bg-indigo-500/20 text-indigo-400' : 'text-stone-400'}" 
-        onclick={() => editor?.chain().focus().toggleNode('statBlock', 'paragraph').run()}
-      >
-        Stat Block
-      </button>
-      <button 
-        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors text-stone-400" 
-        onclick={() => editor?.chain().focus().insertContent({ type: 'diceRoller', attrs: { formula: '1d20', result: Math.floor(Math.random() * 20) + 1 } }).run()}
-      >
-        Insert Roll
-      </button>
+<div class="h-full border border-white/10 rounded-2xl flex flex-col bg-stone-900/50 backdrop-blur-md shadow-xl relative">
 
-      <div class="w-px h-6 bg-white/10 mx-2 self-center"></div>
-      <button 
-        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.getAttributes(editor.state.selection.$from.parent.type.name).visibility === 'journal' ? 'bg-amber-500/20 text-amber-400' : 'text-stone-400'}" 
-        onclick={() => {
-          const isJournal = editor.getAttributes(editor.state.selection.$from.parent.type.name).visibility === 'journal';
-          editor?.chain().focus().updateAttributes(editor.state.selection.$from.parent.type.name, { visibility: isJournal ? 'public' : 'journal' }).run();
-        }}
-      >
-        Journal
-      </button>
-
-      <div class="flex-1"></div>
-
-      <button 
-        class="px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 {isSaving ? 'bg-stone-800 text-stone-500' : 'bg-primary text-white hover:bg-primary/80 shadow-lg shadow-primary/20'}"
-        disabled={isSaving}
-        onclick={handleSnapshot}
-      >
-        <Sparkles size={14} class={isSaving ? 'animate-pulse' : ''} />
-        {isSaving ? 'Saving...' : 'Create Snapshot'}
-      </button>
-    </div>
-  {/if}
   
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div 
-    class="p-8 min-h-[500px] prose prose-stone dark:prose-invert max-w-none focus:outline-none tiptap-container text-lg leading-relaxed text-stone-300 cursor-text" 
+    class="flex-1 overflow-y-auto pl-24 pr-8 py-8 pb-64 prose prose-stone dark:prose-invert max-w-none focus:outline-none tiptap-container text-lg leading-relaxed text-stone-300 cursor-text" 
     bind:this={element}
     onclick={(e) => {
       if (e.target === element) {
@@ -187,6 +139,35 @@
       }
     }}
   ></div>
+
+  <div 
+    bind:this={bubbleMenuElement} 
+    class="absolute flex items-center gap-1 p-1 bg-stone-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 transition-all duration-200 {isBubbleMenuVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}"
+  >
+    {#if editor}
+      <button 
+        class="p-2 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('bold') ? 'bg-primary/20 text-primary' : 'text-stone-400'}" 
+        onclick={() => editor?.chain().focus().toggleBold().run()}
+        title="Bold (Cmd+B)"
+      >
+        B
+      </button>
+      <button 
+        class="p-2 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('italic') ? 'bg-primary/20 text-primary' : 'text-stone-400'}" 
+        onclick={() => editor?.chain().focus().toggleItalic().run()}
+        title="Italic (Cmd+I)"
+      >
+        I
+      </button>
+      <button 
+        class="p-2 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.isActive('heading', { level: 2 }) ? 'bg-primary/20 text-primary' : 'text-stone-400'}" 
+        onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+        title="Heading 2"
+      >
+        H2
+      </button>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -207,13 +188,13 @@
   :global([data-visibility="journal"]::before) {
     content: 'JOURNAL';
     position: absolute;
-    left: -70px;
+    left: -76px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 900;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em;
     color: #f59e0b;
-    opacity: 0.8;
+    opacity: 0.6;
   }
 </style>

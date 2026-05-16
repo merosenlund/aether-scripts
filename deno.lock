@@ -13,6 +13,7 @@
     "npm:@tiptap/core@^3.23.4": "3.23.4_@tiptap+pm@3.23.4",
     "npm:@tiptap/extension-blockquote@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
     "npm:@tiptap/extension-bold@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
+    "npm:@tiptap/extension-bubble-menu@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
     "npm:@tiptap/extension-bullet-list@^3.23.4": "3.23.4_@tiptap+extension-list@3.23.4__@tiptap+core@3.23.4___@tiptap+pm@3.23.4__@tiptap+pm@3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
     "npm:@tiptap/extension-code-block@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
     "npm:@tiptap/extension-code@^3.23.4": "3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4",
@@ -133,6 +134,22 @@
         "@eslint/core",
         "levn"
       ]
+    },
+    "@floating-ui/core@1.7.5": {
+      "integrity": "sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==",
+      "dependencies": [
+        "@floating-ui/utils"
+      ]
+    },
+    "@floating-ui/dom@1.7.6": {
+      "integrity": "sha512-9gZSAI5XM36880PPMm//9dfiEngYoC6Am2izES1FF406YFsjvyBMmeJ2g4SAju3xWwtuynNRFL2s9hgxpLI5SQ==",
+      "dependencies": [
+        "@floating-ui/core",
+        "@floating-ui/utils"
+      ]
+    },
+    "@floating-ui/utils@0.2.11": {
+      "integrity": "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="
     },
     "@humanfs/core@0.19.2": {
       "integrity": "sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==",
@@ -562,6 +579,14 @@
       "integrity": "sha512-3L9tnZ12i+98u5df2nV2zGu/sc3rhI87E3ocn1YYAO8PJUAgZnMwdet8JawCrS1uut5sRKlxo3SXEmdNfRVm/w==",
       "dependencies": [
         "@tiptap/core"
+      ]
+    },
+    "@tiptap/extension-bubble-menu@3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4": {
+      "integrity": "sha512-EPTpL/IFp/aTGZErBq/Mc3dKznj6G/qNEkVYWjueOn1oKApyT0P6WVHGvu/vpMdErhzmoGDuFPPGVS6T8Upx2Q==",
+      "dependencies": [
+        "@floating-ui/dom",
+        "@tiptap/core",
+        "@tiptap/pm"
       ]
     },
     "@tiptap/extension-bullet-list@3.23.4_@tiptap+extension-list@3.23.4__@tiptap+core@3.23.4___@tiptap+pm@3.23.4__@tiptap+pm@3.23.4_@tiptap+core@3.23.4__@tiptap+pm@3.23.4_@tiptap+pm@3.23.4": {
@@ -2112,6 +2137,7 @@
         "npm:@tiptap/core@^3.23.4",
         "npm:@tiptap/extension-blockquote@^3.23.4",
         "npm:@tiptap/extension-bold@^3.23.4",
+        "npm:@tiptap/extension-bubble-menu@^3.23.4",
         "npm:@tiptap/extension-bullet-list@^3.23.4",
         "npm:@tiptap/extension-code-block@^3.23.4",
         "npm:@tiptap/extension-code@^3.23.4",
