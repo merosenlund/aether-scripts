@@ -66,8 +66,8 @@
     entities.filter(e => e.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  function getIcon(type: string) {
-    switch (type) {
+  function getIcon(category: string) {
+    switch (category) {
       case 'character': return User;
       case 'location': return MapPin;
       case 'thread': return Flag;
@@ -102,7 +102,7 @@
     {:else}
       {#each filteredEntities as entity (entity.id)}
         {@const isRevealed = revealedEntityIds.has(entity.id)}
-        {@const Icon = getIcon(entity.type)}
+        {@const Icon = getIcon(entity.category)}
         <div 
           class="group p-4 rounded-2xl border transition-all shadow-sm {isRevealed ? 'bg-white/5 border-white/5 opacity-100' : 'bg-white/[0.01] border-transparent opacity-20'}"
           transition:slide
@@ -114,7 +114,7 @@
               </div>
               <div>
                 <h4 class="text-sm font-bold {isRevealed ? 'text-white' : 'text-stone-600'} leading-tight">{entity.name}</h4>
-                <span class="text-[10px] {isRevealed ? 'text-stone-500' : 'text-stone-700'} font-bold uppercase tracking-widest">{entity.type}</span>
+                <span class="text-[10px] {isRevealed ? 'text-stone-500' : 'text-stone-700'} font-bold uppercase tracking-widest">{entity.category}</span>
               </div>
             </div>
             

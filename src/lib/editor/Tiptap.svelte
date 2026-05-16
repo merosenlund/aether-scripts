@@ -10,6 +10,9 @@
   import { OddsCheck } from './extensions/OddsCheck';
   import { Commands } from './extensions/Commands';
   import { BlockMetadata } from './extensions/BlockMetadata';
+  import { ClockBlock } from './extensions/ClockBlock';
+  import { TrackBlock } from './extensions/TrackBlock';
+  import { OracleBlock } from './extensions/OracleBlock';
   import suggestion from './extensions/suggestion.svelte.ts';
   
   import Collaboration from '@tiptap/extension-collaboration';
@@ -63,6 +66,9 @@
         DiceRoller,
         StatBlock,
         OddsCheck,
+        ClockBlock,
+        TrackBlock,
+        OracleBlock,
         Commands.configure({
           suggestion,
         }),

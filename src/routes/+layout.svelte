@@ -5,6 +5,7 @@
   import favicon from '$lib/assets/favicon.svg';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
   import Toaster from '$lib/components/Toaster.svelte';
+  import PromptModal from '$lib/components/PromptModal.svelte';
 
   let { data, children } = $props();
   let { supabase, session } = $derived(data);
@@ -34,4 +35,5 @@
     </div>
   </main>
   <Toaster />
+  <PromptModal />
 </div>

@@ -3,8 +3,10 @@
   import Reader from '$lib/components/Reader.svelte';
   import Tiptap from '$lib/editor/Tiptap.svelte';
   import WikiSidebar from '$lib/components/WikiSidebar.svelte';
-  import { PenTool, Share2, Eye, Save, Dices, History, Trash2, Clock, BookOpen } from '@lucide/svelte';
+  import MechanicsTab from '$lib/components/mechanics/MechanicsTab.svelte';
+  import { PenTool, Share2, Eye, Save, Dices, History, Trash2, Clock, BookOpen, Activity } from '@lucide/svelte';
   import { fade, fly, slide } from 'svelte/transition';
+  import { gameSession } from '$lib/stores/gameSession.svelte';
 
   let { data } = $props<{ data: PageData }>();
   let content = $state(data.scene.content);
@@ -95,6 +97,13 @@
         <BookOpen class="w-3.5 h-3.5 mr-2" />
         Wiki
       </button>
+      <button 
+        onclick={() => activeTab = 'mechanics'}
+        class="flex-1 flex items-center justify-center py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all {activeTab === 'mechanics' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:text-white hover:bg-white/5'}"
+      >
+        <Activity class="w-3.5 h-3.5 mr-2" />
+        Mech
+      </button>
     </div>
     
     <div class="flex-1 overflow-hidden">
@@ -144,7 +153,14 @@
           {/if}
         </div>
       </div>
-    {:else}
+      {:else if activeTab === 'mechanics'}
+        <div class="h-full" in:fade>
+          <MechanicsTab 
+            serialId={data.scene.serial_id} 
+            sceneId={data.scene.id} 
+          />
+        </div>
+      {:else}
         <div class="h-full" in:fade>
           <WikiSidebar 
             serialId={data.scene.serial_id} 

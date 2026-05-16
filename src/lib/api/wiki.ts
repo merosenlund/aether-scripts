@@ -4,7 +4,7 @@ export interface WikiEntity {
   id: string;
   serial_id: string;
   name: string;
-  type: 'character' | 'thread' | 'clock' | 'location' | 'other';
+  category: 'character' | 'thread' | 'clock' | 'location' | 'other' | 'track';
   description: string;
   metadata: any;
   created_at: string;

@@ -1,5 +1,6 @@
 import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
+import { openPrompt } from '$lib/stores/prompt.svelte';
 
 export const Commands = Extension.create({
   name: 'slashCommands',
@@ -92,6 +93,49 @@ export const getSuggestionItems = ({ query }: { query: string }) => {
           .deleteRange(range)
           .insertContent('<h2>Scene Setup</h2><p>Expectations: </p>')
           .run();
+      },
+    },
+    {
+      title: 'Clock (4 Segment)',
+      description: 'Insert a 4-segment progress clock',
+      icon: 'clock',
+      command: ({ editor, range }: any) => {
+        editor.chain().focus().deleteRange(range).insertContent({ type: 'clockBlock', attrs: { segments: 4, filled: 0, name: 'New Clock' } }).run();
+      },
+    },
+    {
+      title: 'Track',
+      description: 'Insert a 10-step progress track',
+      icon: 'activity',
+      command: ({ editor, range }: any) => {
+        editor.chain().focus().deleteRange(range).insertContent({ type: 'trackBlock', attrs: { max: 10, current: 0, name: 'New Track' } }).run();
+      },
+    },
+    {
+      title: 'Oracle: Fate Check',
+      description: 'Ask a Yes/No question',
+      icon: 'help-circle',
+      command: async ({ editor, range }: any) => {
+        const question = await openPrompt('Oracle: Fate Check', 'What is your Fate question?') || '';
+        const rand = Math.random() * 100;
+        let result = 'Yes';
+        if (rand < 10) result = 'Exceptional Yes';
+        else if (rand > 90) result = 'Exceptional No';
+        else if (rand > 50) result = 'No';
+        
+        editor.chain().focus().deleteRange(range).insertContent({ type: 'oracleBlock', attrs: { type: 'fate', question, result } }).run();
+      },
+    },
+    {
+      title: 'Oracle: Theme',
+      description: 'Roll for a random theme/action',
+      icon: 'sparkles',
+      command: ({ editor, range }: any) => {
+        const actions = ['Seek', 'Oppose', 'Communicate', 'Move', 'Transform', 'Deceive', 'Reveal', 'Discover', 'Fight', 'Aid'];
+        const themes = ['Danger', 'Hope', 'Power', 'Wealth', 'Knowledge', 'Love', 'Death', 'Nature', 'Magic', 'Technology'];
+        const result = `${actions[Math.floor(Math.random() * actions.length)]} ${themes[Math.floor(Math.random() * themes.length)]}`;
+        
+        editor.chain().focus().deleteRange(range).insertContent({ type: 'oracleBlock', attrs: { type: 'theme', question: '', result } }).run();
       },
     },
   ];
