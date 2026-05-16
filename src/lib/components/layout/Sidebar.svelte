@@ -9,6 +9,7 @@
     ChevronRight,
     PenTool
   } from '@lucide/svelte';
+  import Logo from '$lib/components/Logo.svelte';
   import { page } from '$app/state';
 
   let collapsed = $state(false);
@@ -32,7 +33,7 @@
   <!-- Logo -->
   <div class="h-16 flex items-center px-6 mb-4">
     <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-      <span class="text-primary-foreground font-bold text-xl">A</span>
+      <Logo class="w-5 h-5 text-primary-foreground" />
     </div>
     {#if !collapsed}
       <span class="ml-3 font-bold text-lg tracking-tight text-foreground/90 transition-opacity">Aether Scripts</span>
