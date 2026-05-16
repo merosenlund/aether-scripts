@@ -21,11 +21,11 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] Interactive placeholder dashboards for Authors and Readers.
 - [x] Refined editor UI with smooth transitions and micro-animations.
 
-## Phase 3: Clocks, Tracks & Game Mechanics (IN PROGRESS)
-- [ ] **Interactive Clocks**: Multi-segment circular trackers (4, 6, 8, 10, 12 segments).
-- [ ] **Progress Tracks**: Horizontal bars for long-term narrative goals.
-- [ ] **Mechanical Dashboard**: Sidebar tab that aggregates all active clocks/tracks in a scene.
-- [ ] **Oracle Integration**: Deep integration with GM Emulator logic (Mythic style) in-editor.
+## Phase 3: Clocks, Tracks & Game Mechanics (COMPLETED)
+- [x] **Interactive Clocks**: Multi-segment circular trackers (4, 6, 8, 10, 12 segments).
+- [x] **Progress Tracks**: Horizontal bars for long-term narrative goals.
+- [x] **Mechanical Dashboard**: Sidebar tab that aggregates all active clocks/tracks in a scene.
+- [x] **Oracle Integration**: Deep integration with GM Emulator logic (Mythic style) in-editor.
 
 ## Phase 4: Serial Management & Arcs
 - [ ] **Arc Organization**: Drag-and-drop interface for grouping Scenes into Arcs.

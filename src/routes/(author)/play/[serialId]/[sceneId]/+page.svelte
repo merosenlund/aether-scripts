@@ -20,9 +20,9 @@
   <title>{data.scene.author_title} - Editor | Aether Scripts</title>
 </svelte:head>
 
-<div class="h-screen flex overflow-hidden bg-stone-950 font-sans text-stone-100">
+<div class="absolute inset-0 flex overflow-hidden bg-stone-950 font-sans text-stone-100">
   <!-- Main Editor Area -->
-  <main class="flex-1 overflow-y-auto px-8 py-12 flex justify-center scroll-smooth relative">
+  <div class="flex-1 overflow-y-auto overflow-x-hidden px-8 py-12 flex justify-center scroll-smooth relative">
     <div class="w-full max-w-4xl space-y-12">
       <!-- Editor Header -->
       <header class="flex justify-between items-end border-b border-white/5 pb-8">
@@ -78,7 +78,7 @@
 
     <!-- Ambient Background Glows -->
     <div class="absolute top-0 right-0 -z-10 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
-  </main>
+  </div>
 
   <!-- Sidebar: Assistive Tools -->
   <aside class="w-80 border-l border-white/5 bg-stone-950/40 backdrop-blur-3xl overflow-y-auto flex flex-col z-20 shadow-2xl">

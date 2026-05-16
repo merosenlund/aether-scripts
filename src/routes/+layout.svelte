@@ -25,12 +25,14 @@
 
 <div class="flex h-screen w-full bg-stone-950 overflow-hidden font-sans">
   <Sidebar />
-  <main class="flex-1 overflow-y-auto relative">
+  <main class="flex-1 overflow-hidden relative flex flex-col">
     <!-- Ambient Background Glows -->
-    <div class="absolute top-0 right-0 -z-10 w-96 h-96 bg-primary/10 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
-    <div class="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-indigo-500/5 blur-[120px] rounded-full -translate-x-1/2 translate-y-1/2"></div>
+    <div class="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+      <div class="absolute top-0 right-0 w-96 h-96 bg-primary/10 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
+      <div class="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/5 blur-[120px] rounded-full -translate-x-1/2 translate-y-1/2"></div>
+    </div>
     
-    <div class="min-h-full">
+    <div class="flex-1 flex flex-col relative z-0">
       {@render children()}
     </div>
   </main>
