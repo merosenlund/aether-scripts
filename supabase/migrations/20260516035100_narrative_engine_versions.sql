@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS wiki_anchors (
     entity_id UUID REFERENCES wiki_entities(id) ON DELETE CASCADE NOT NULL,
     scene_id UUID REFERENCES scenes(id) ON DELETE CASCADE NOT NULL,
     block_id TEXT NOT NULL, -- The specific Tiptap block ID
+    reveal_type TEXT NOT NULL DEFAULT 'scroll' CHECK (reveal_type IN ('scroll', 'manual')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
