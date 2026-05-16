@@ -44,9 +44,15 @@
         <div class="h-32 bg-gradient-to-br {serial.color_theme} relative overflow-hidden">
           <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
           <div class="absolute top-4 right-4">
-            <span class="px-2 py-1 rounded-md bg-black/40 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-white border border-white/10">
-              {serial.status}
-            </span>
+            {#if serial.status === 'pilot'}
+              <span class="px-2 py-1 rounded-md bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-lg shadow-primary/20">
+                Pilot Phase
+              </span>
+            {:else}
+              <span class="px-2 py-1 rounded-md bg-black/40 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-white border border-white/10">
+                {serial.status}
+              </span>
+            {/if}
           </div>
         </div>
 
