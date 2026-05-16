@@ -1,12 +1,17 @@
 <script lang="ts">
   import type { PageData } from './$types';
+  import Reader from '$lib/components/Reader.svelte';
   import Tiptap from '$lib/editor/Tiptap.svelte';
-  import { gameSession } from '$lib/stores/gameSession.svelte';
-  import { PenTool, Share2, Eye, Save, Dices, History, Trash2, Clock } from '@lucide/svelte';
+  import WikiSidebar from '$lib/components/WikiSidebar.svelte';
+  import { PenTool, Share2, Eye, Save, Dices, History, Trash2, Clock, BookOpen } from '@lucide/svelte';
   import { fade, fly, slide } from 'svelte/transition';
 
   let { data } = $props<{ data: PageData }>();
   let content = $state(data.scene.content);
+  let activeBlockId = $state('');
+  let visibleBlockIds = $state<string[]>([]);
+  let activeTab = $state('wiki');
+  let isPreview = $state(false);
 </script>
 
 <svelte:head>
@@ -22,7 +27,7 @@
         <div class="space-y-2">
           <div class="flex items-center text-primary text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
             <span class="w-2 h-2 rounded-full bg-primary mr-2 shadow-[0_0_8px_rgba(var(--primary),0.5)] animate-pulse"></span>
-            Session Active
+            {isPreview ? 'Reader Mode' : 'Session Active'}
           </div>
           <h1 class="text-4xl font-serif font-bold tracking-tight text-white/90 leading-tight">
             {data.scene.author_title}
@@ -30,23 +35,39 @@
         </div>
         
         <div class="flex gap-3 pb-1">
-          <button class="p-2.5 bg-white/5 border border-white/10 text-stone-400 hover:text-white hover:border-white/20 rounded-xl transition-all shadow-sm" title="Preview">
+          <button 
+            onclick={() => isPreview = !isPreview}
+            class="p-2.5 border transition-all shadow-sm rounded-xl {isPreview ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-white/10 text-stone-400 hover:text-white hover:border-white/20'}" 
+            title={isPreview ? "Back to Editor" : "Reader Preview"}
+          >
             <Eye class="w-5 h-5" />
           </button>
-          <button class="flex items-center px-6 py-2.5 bg-primary text-primary-foreground hover:opacity-90 rounded-xl shadow-lg shadow-primary/20 transition-all text-sm font-bold">
-            <Save class="w-4 h-4 mr-2" />
-            Save Draft
-          </button>
+          {#if !isPreview}
+            <button class="flex items-center px-6 py-2.5 bg-primary text-primary-foreground hover:opacity-90 rounded-xl shadow-lg shadow-primary/20 transition-all text-sm font-bold">
+              <Save class="w-4 h-4 mr-2" />
+              Save Draft
+            </button>
+          {/if}
         </div>
       </header>
 
       <!-- Editor Canvas -->
       <div class="relative group">
-        <Tiptap 
-          bind:content 
-          sceneId={data.scene.id}
-          onUpdate={(html) => content = html}
-        />
+        {#if isPreview}
+          <div in:fade>
+            <Reader 
+              {content} 
+              onVisibleBlocksChange={(ids) => visibleBlockIds = ids} 
+            />
+          </div>
+        {:else}
+          <Tiptap 
+            bind:content 
+            bind:activeBlockId
+            sceneId={data.scene.id}
+            onUpdate={(html) => content = html}
+          />
+        {/if}
       </div>
       
       <!-- Bottom Padding -->
@@ -59,16 +80,26 @@
 
   <!-- Sidebar: Assistive Tools -->
   <aside class="w-80 border-l border-white/5 bg-stone-950/40 backdrop-blur-3xl overflow-y-auto flex flex-col z-20 shadow-2xl">
-    <div class="p-6 border-b border-white/5 bg-white/5">
-      <h2 class="font-bold text-lg flex items-center tracking-tight">
-        <Dices class="w-5 h-5 mr-3 text-primary" />
-        Game State
-      </h2>
+    <div class="p-4 border-b border-white/5 bg-white/5 flex gap-2">
+      <button 
+        onclick={() => activeTab = 'log'}
+        class="flex-1 flex items-center justify-center py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all {activeTab === 'log' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:text-white hover:bg-white/5'}"
+      >
+        <Dices class="w-3.5 h-3.5 mr-2" />
+        Log
+      </button>
+      <button 
+        onclick={() => activeTab = 'wiki'}
+        class="flex-1 flex items-center justify-center py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all {activeTab === 'wiki' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:text-white hover:bg-white/5'}"
+      >
+        <BookOpen class="w-3.5 h-3.5 mr-2" />
+        Wiki
+      </button>
     </div>
     
-    <div class="flex-1 p-6 space-y-12">
-      <!-- Roll History -->
-      <div class="space-y-4">
+    <div class="flex-1 overflow-hidden">
+      {#if activeTab === 'log'}
+        <div class="p-6 space-y-4 h-full overflow-y-auto" in:fade>
         <div class="flex justify-between items-center">
           <h3 class="text-[10px] font-bold text-stone-500 uppercase tracking-[0.2em] flex items-center">
             Recent Log
@@ -113,6 +144,16 @@
           {/if}
         </div>
       </div>
+    {:else}
+        <div class="h-full" in:fade>
+          <WikiSidebar 
+            serialId={data.scene.serial_id} 
+            sceneId={data.scene.id} 
+            {activeBlockId} 
+            {visibleBlockIds}
+          />
+        </div>
+      {/if}
     </div>
   </aside>
 </div>

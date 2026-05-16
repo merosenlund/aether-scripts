@@ -1,7 +1,6 @@
-# Aether Scripts Roadmap
+# Aether Scripts - Product Roadmap
 
-This document outlines the high-level phases and milestones for the **Aether Scripts** platform.
-The project is a curated, digital-first actual play fiction platform designed for solo TTRPG journaling, serial novel editing, and a massively enhanced reading ecosystem.
+Aether Scripts is a curated, digital-first actual play fiction platform designed for solo TTRPG journaling, serial novel editing, and a massively enhanced reading ecosystem.
 
 ## Phase 1: Foundation & Setup
 - [x] Project initialization (SvelteKit + Deno + Tailwind + shadcn-svelte).
@@ -9,12 +8,12 @@ The project is a curated, digital-first actual play fiction platform designed fo
 - [x] Define core data models (Scenes, Arcs, Serial-Scoped Wikis, Inline Comments).
 - [x] Basic authentication (Email/Google OAuth) and protected routing setup.
 
-## Phase 2: Narrative Engine & Tiptap Editor
-- [x] Initialize Tiptap rich text editor.
-- [ ] Build Slash Command Engine (`/roll`, `/odds`, `/gm`, `/setup`).
-- [ ] Implement block-level visibility tags (Prose, Mechanics, Director's Cut).
-- [ ] Implement Dual-Layer Versioning (Yjs CRDT for granular history + Explicit Snapshot Versions).
-- [ ] Dynamic UI Modes (Journaling vs Editing toggle) operating on immutable snapshots.
+## Phase 2: Narrative Engine (COMPLETED)
+- [x] Slash Command Engine (`/roll`, `/odds`, `/gm`).
+- [x] Block-level visibility tags (Journal vs. Public).
+- [x] Dual-Layer Versioning (Yjs history + Explicit Snapshots).
+- [x] Block-ID Anchoring system for Wiki reveal logic.
+- [x] Reader Preview mode with scroll-spy reveal for anchored entities.
 
 ## Phase 2.5: UI Overhaul & Premium Aesthetics
 - [x] Global application shell with glassmorphism sidebar.
@@ -22,28 +21,18 @@ The project is a curated, digital-first actual play fiction platform designed fo
 - [x] Interactive placeholder dashboards for Authors and Readers.
 - [x] Refined editor UI with smooth transitions and micro-animations.
 
-## Phase 3: Serial Novel Editor & Flexible Wiki
-- [ ] Scene organization interface (grouping Scenes into Arcs).
-- [ ] Flexible Wiki implementation:
-  - Create generic Wiki Entities with custom properties/components (Characters, Clocks, Threads).
-  - Implement smart `wiki_anchors` tied to specific Tiptap `block_id`s.
-  - Anchor shift-forward logic when blocks are deleted during edit mode.
-- [ ] "Director's Cut" editing workflows and reader visibility filtering.
+## Phase 3: Clocks, Tracks & Game Mechanics (IN PROGRESS)
+- [ ] **Interactive Clocks**: Multi-segment circular trackers (4, 6, 8, 10, 12 segments).
+- [ ] **Progress Tracks**: Horizontal bars for long-term narrative goals.
+- [ ] **Mechanical Dashboard**: Sidebar tab that aggregates all active clocks/tracks in a scene.
+- [ ] **Oracle Integration**: Deep integration with GM Emulator logic (Mythic style) in-editor.
 
-## Phase 4: Digital-First Reading Ecosystem
-- [ ] Infinite scroll reader interface (responsive, accessible, seamless scene transitions).
-- [ ] "Director's Cut" toggle (allowing readers to see the hidden TTRPG mechanic blocks).
-- [ ] Progression-Aware Wiki UI (readers only see facts revealed at their current scene progress).
-- [ ] Custom Reading Lists:
-  - UI for mixing full prose, summaries, and descriptions to skip "slog" scenes.
-  - Sharing reading lists with the community.
-- [ ] Navigation controls & Arc Table of Contents.
+## Phase 4: Serial Management & Arcs
+- [ ] **Arc Organization**: Drag-and-drop interface for grouping Scenes into Arcs.
+- [ ] **Version Diffing**: UI to compare different snapshots of a scene.
+- [ ] **Director's Cut**: Advanced editing workflows for refining journaled sessions into public prose.
 
-## Phase 5: Community & Interaction
-- [ ] Google Docs-style inline comments (tied to exact characters/blocks).
-- [ ] Kindle-style private notes and highlights.
-- [ ] User Roles (Reader vs Beta Reader).
-- [ ] Beta reader exclusive features (polls, live writing previews).
-
----
-*Note: This roadmap is a living document and will be expanded with granular tasks as each phase commences.*
+## Phase 5: Social & Reader Engagement
+- [ ] **Reader Reactions**: Inline sentiment emoji reactions for readers.
+- [ ] **Wiki Deep-Links**: One-click navigation from reader prose to wiki lore.
+- [ ] **Author Notes**: Exclusive commentary layers for premium readers.

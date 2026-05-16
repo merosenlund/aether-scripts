@@ -9,6 +9,7 @@
   import { StatBlock } from './extensions/StatBlock';
   import { OddsCheck } from './extensions/OddsCheck';
   import { Commands } from './extensions/Commands';
+  import { BlockMetadata } from './extensions/BlockMetadata';
   import suggestion from './extensions/suggestion.svelte.ts';
   
   import Collaboration from '@tiptap/extension-collaboration';
@@ -23,13 +24,15 @@
     sceneId = '',
     stage = 'Draft' as SceneStage,
     onUpdate = (html: string) => {},
-    placeholder = 'Write your story...' 
+    placeholder = 'Write your story...',
+    activeBlockId = $bindable('')
   } = $props<{
     content?: string;
     sceneId?: string;
     stage?: SceneStage;
     onUpdate?: (html: string) => void;
     placeholder?: string;
+    activeBlockId?: string;
   }>();
 
   let element: HTMLElement;
@@ -51,6 +54,7 @@
           // History is handled by Collaboration
           history: false,
         }),
+        BlockMetadata,
         Placeholder.configure({ placeholder }),
         Collaboration.configure({
           document: ydoc,
@@ -71,6 +75,11 @@
       },
       onTransaction: () => {
         editor = editor;
+        if (editor) {
+          const { selection } = editor.state;
+          const node = selection.$from.parent;
+          activeBlockId = node.attrs.id || '';
+        }
       }
     });
   });
@@ -137,6 +146,17 @@
         Insert Roll
       </button>
 
+      <div class="w-px h-6 bg-white/10 mx-2 self-center"></div>
+      <button 
+        class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/10 transition-colors {editor.getAttributes(editor.state.selection.$from.parent.type.name).visibility === 'journal' ? 'bg-amber-500/20 text-amber-400' : 'text-stone-400'}" 
+        onclick={() => {
+          const isJournal = editor.getAttributes(editor.state.selection.$from.parent.type.name).visibility === 'journal';
+          editor?.chain().focus().updateAttributes(editor.state.selection.$from.parent.type.name, { visibility: isJournal ? 'public' : 'journal' }).run();
+        }}
+      >
+        Journal
+      </button>
+
       <div class="flex-1"></div>
 
       <button 
@@ -173,5 +193,21 @@
   }
   :global(.tiptap-container .tiptap:focus) {
     outline: none;
+  }
+  :global([data-visibility="journal"]) {
+    opacity: 0.5;
+    position: relative;
+  }
+  :global([data-visibility="journal"]::before) {
+    content: 'JOURNAL';
+    position: absolute;
+    left: -70px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    color: #f59e0b;
+    opacity: 0.8;
   }
 </style>
