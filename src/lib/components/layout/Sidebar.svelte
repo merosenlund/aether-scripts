@@ -14,12 +14,12 @@
 
   let collapsed = $state(false);
 
-  const navItems = [
+  let navItems = $derived([
     { name: 'Home', icon: LayoutDashboard, href: '/' },
-    { name: 'Writing', icon: PenTool, href: '/dashboard' },
+    ...(page.data.userRole === 'author' ? [{ name: 'Writing', icon: PenTool, href: '/dashboard' }] : []),
     { name: 'Library', icon: Library, href: '/library' },
     { name: 'Reading Lists', icon: BookOpen, href: '/lists' },
-  ];
+  ]);
 
   const bottomItems = [
     { name: 'Settings', icon: Settings, href: '/settings' },

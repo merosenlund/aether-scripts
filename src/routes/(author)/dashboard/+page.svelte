@@ -1,35 +1,23 @@
 <script lang="ts">
   import { Plus, Book, Users, Star, Clock } from '@lucide/svelte';
+  import type { PageData } from './$types';
 
-  const serials = [
-    { 
-      id: '1', 
-      title: 'The Obsidian Citadel', 
-      scenes: 24, 
-      readers: 1420, 
-      status: 'Active',
-      gradient: 'from-violet-600 to-indigo-600',
-      lastEdit: '2 hours ago'
-    },
-    { 
-      id: '2', 
-      title: 'Neon Drifters', 
-      scenes: 12, 
-      readers: 850, 
-      status: 'Draft',
-      gradient: 'from-emerald-600 to-teal-600',
-      lastEdit: '1 day ago'
-    },
-    { 
-      id: '3', 
-      title: 'Whispers of the Void', 
-      scenes: 45, 
-      readers: 3200, 
-      status: 'Active',
-      gradient: 'from-rose-600 to-orange-600',
-      lastEdit: '5 mins ago'
-    },
-  ];
+  export let data: PageData;
+
+  function timeAgo(date: string | Date) {
+    const now = new Date();
+    const then = new Date(date);
+    const seconds = Math.floor((now.getTime() - then.getTime()) / 1000);
+    
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return then.toLocaleDateString();
+  }
 </script>
 
 <div class="p-8 max-w-7xl mx-auto space-y-10">
@@ -47,13 +35,13 @@
 
   <!-- Serials Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {#each serials as serial}
+    {#each data.serials as serial}
       <a 
         href="/serials/{serial.id}"
         class="group relative flex flex-col bg-stone-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50"
       >
         <!-- Card Header / Cover Art Placeholder -->
-        <div class="h-32 bg-gradient-to-br {serial.gradient} relative overflow-hidden">
+        <div class="h-32 bg-gradient-to-br {serial.color_theme} relative overflow-hidden">
           <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
           <div class="absolute top-4 right-4">
             <span class="px-2 py-1 rounded-md bg-black/40 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-white border border-white/10">
@@ -69,11 +57,11 @@
           <div class="grid grid-cols-2 gap-4 mt-auto">
             <div class="flex items-center text-stone-400 text-sm">
               <Book class="w-4 h-4 mr-2 text-stone-500" />
-              {serial.scenes} Scenes
+              {serial.scenesCount} Scenes
             </div>
             <div class="flex items-center text-stone-400 text-sm">
               <Users class="w-4 h-4 mr-2 text-stone-500" />
-              {serial.readers} Readers
+              {serial.readersCount} Readers
             </div>
           </div>
         </div>
@@ -82,7 +70,7 @@
         <div class="px-5 py-3 border-t border-white/5 bg-stone-950/30 flex justify-between items-center text-xs text-stone-500">
           <div class="flex items-center">
             <Clock class="w-3 h-3 mr-1" />
-            Edited {serial.lastEdit}
+            Edited {timeAgo(serial.lastEdit)}
           </div>
           <Star class="w-4 h-4 hover:text-yellow-500 transition-colors cursor-pointer" />
         </div>
@@ -98,3 +86,4 @@
     </button>
   </div>
 </div>
+
