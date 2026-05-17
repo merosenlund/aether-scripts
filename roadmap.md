@@ -44,7 +44,7 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Kindle-Sync Logic**: Finalize cross-device scroll and block-level progress synchronization.
 
 ## Phase 7: Community, Polling & Ethical Monetization
-- [ ] **Stripe Integration**: Secure payment processing (one-time & recurring) with a focus on flat, non-tiered support.
+- [ ] **Merchant of Record (MoR) Integration**: Secure payment processing (e.g., Lemon Squeezy or Paddle) to handle global tax liability automatically. Focus on flat support with a budget-friendly yearly option (e.g., $3/month minimum or $10/year) to bypass micro-transaction fees.
 - [ ] **Self-Serve Subscription Management**: Tools for users to turn off auto-renew or adjust future support amounts seamlessly.
 - [ ] **Ethical Billing & Refunds**: Generous manual refund policy (14 days) paired with an automated 30-day resubscription block to prevent fee abuse. Auto-cancellation of subscriptions for users inactive for 30+ days.
 - [ ] **Transparent "Runway" Goals**: Progress bars for sustainability milestones (e.g., host costs, securing 12 months of full-time runway).

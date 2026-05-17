@@ -7,7 +7,8 @@
     User,
     ChevronLeft,
     ChevronRight,
-    PenTool
+    PenTool,
+    LogIn
   } from '@lucide/svelte';
   import Logo from '$lib/components/Logo.svelte';
   import { page } from '$app/state';
@@ -21,10 +22,16 @@
     { name: 'Reading Lists', icon: BookOpen, href: '/lists' },
   ]);
 
-  const bottomItems = [
-    { name: 'Settings', icon: Settings, href: '/settings' },
-    { name: 'Profile', icon: User, href: '/account/profile' },
-  ];
+  let bottomItems = $derived(
+    page.data.session 
+      ? [
+          { name: 'Settings', icon: Settings, href: '/settings' },
+          { name: 'Profile', icon: User, href: '/account/profile' },
+        ]
+      : [
+          { name: 'Log In', icon: LogIn, href: '/login' },
+        ]
+  );
 </script>
 
 <aside 
