@@ -36,14 +36,28 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Scheduled Status Changes**: Ability to queue a scene's status change (e.g., auto-publish at 8:00 AM).
 - [ ] **Arc Organization**: Drag-and-drop interface for grouping Scenes into Arcs.
 
+## Phase 4.5: Transparent Author Analytics
+- [ ] **Session Telemetry**: Track live author metrics including online status, active typing indicator, session word count, and Words Per Minute (WPM).
+- [ ] **Editing Insights (Churn)**: Track word churn during editing sessions (words added vs. deleted) to understand rewriting effort.
+- [ ] **Goal Tracking**: UI for the author to set and track personal writing goals (words per day/week/month/year).
+- [ ] **Status-Based Word Counts**: Track and compare the word count of a scene across its different lifecycle statuses (e.g., Raw Play vs. Published length).
+- [ ] **Public Dashboard & Scroll Teaser**: Inject these metrics directly into the end-of-scroll "preview" for readers. This includes showing if you are currently online, typing, working on another series, or if the next scene is queued with a "go live" date.
+
+
 ## Phase 5: Social & Reader Engagement
+- [ ] **Immersion-First Commenting**: Comments default to hidden to preserve reading immersion. Includes three viewing modes:
+  - *Proximity Reveal*: Making an inline comment temporarily reveals other comments in that paragraph to foster contextual discussion.
+  - *Global Toggle*: A reader setting to turn all comment indicators on for "second read-throughs".
+  - *End-of-Scene Aggregation*: A traditional bottom-of-page section that aggregates all inline comments (with context snippets and jump-links) alongside general scene-level comments.
+  - *Nested Threads & Reactions*: Supports Reddit-style nested replies and comment-level emoji reactions for deep discussion.
 - [ ] **Reader Reactions**: Inline sentiment emoji reactions for readers.
 - [ ] **Wiki Deep-Links**: One-click navigation from reader prose to wiki lore.
 - [ ] **Author Notes**: Exclusive commentary layers for premium readers.
+- [ ] **Comment Promotion**: UI to elevate a reader's comment directly into a narrative "Thread" or turn it into a community Poll, visually showing the community that their input is driving the story.
 
 ## Phase 6: PWA & Live Notifications
 - [ ] **PWA Transformation**: Manifest and Service Worker setup for "Install to Home Screen" support.
-- [ ] **Push Notifications**: Browser-level push alerts for new scene releases and live-writing events.
+- [ ] **Push Notifications & Personalized Delivery**: Browser-level push alerts for live-writing events and scene releases. Instead of global release times, scenes go live immediately but readers configure their own notification schedules (e.g., Morning Coffee, Bedtime Reading, or Saturday Batches).
 - [ ] **Offline Reading**: Cached scene content for reading your library without a connection.
 - [ ] **Kindle-Sync Logic**: Finalize cross-device scroll and block-level progress synchronization.
 
@@ -58,3 +72,6 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Admin Supporter CRM & Dedication Engine**: Private tools to view reader engagement and track who has received dedications (scenes, polls, blocks) to ensure equitable, human-driven gratitude. Includes cohort targeting (e.g., dedicating a poll to the "1-Year Club" at scale).
 - [ ] **Opt-In Transparent Analytics**: Analytics and inclusion in the Admin CRM are strictly opt-in (configurable during sign-up or in settings). Tracks meaningful engagement (milestones, comments) rather than speed metrics, and provides users a personal "Reading Stats" dashboard so data collection is a shared, transparent feature.
 - [ ] **Unified Community Experience**: Ensuring premium support enhances the reading experience without fragmenting the community (no paywalled comments, no FOMO mechanics).
+
+## Phase 8: Live Stream Writing (Stretch Goal)
+- [ ] **Live `/stream` Route**: A specialized route allowing readers to watch your cursor in real-time as you write or edit, complete with live word churn metrics and a chat interface for immediate back-and-forth interaction.
