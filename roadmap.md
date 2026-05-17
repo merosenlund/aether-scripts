@@ -27,10 +27,14 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Mechanical Dashboard**: Sidebar tab that aggregates all active clocks/tracks in a scene.
 - [x] **Oracle Integration**: Deep integration with GM Emulator logic (Mythic style) in-editor.
 
-## Phase 4: Serial Management & Arcs
+## Phase 4: Serial Management & Publishing Workflows
+- [ ] **Linear Snapshot Versioning**: A "single editable track" system where users save snapshots (V1, V2) that become read-only history. Older snapshots can be copied to create a new editable track if needed.
+- [ ] **Cherry-Picking Diff Tool**: UI to diff the active track against historical snapshots and selectively pull elements from the past into the present.
+- [ ] **Semantic Scene Versioning**: Reader-facing manual versioning (Major.Minor.Patch) to communicate the significance of scene updates (typo fix vs minor polish vs major rewrite), displayed subtly in the reader UI.
+- [ ] **Workflow Routing**: Explicit routes for different modes of operation (`/play`, `/edit`, `/history`, `/share`) rather than complex internal state toggles, with seamless UI switching. Newly created scenes drop immediately into `/play`.
+- [ ] **Database Statuses & Progress Teasers**: Access-based hierarchy (`Hidden` -> `Published` -> `Beta` -> `Editing` -> `Playing`) to control feed visibility. The Serial model will track `next_scene_completion_percentage` and `next_scene_update_note` to tease upcoming content when a reader hits the end of their available scroll.
+- [ ] **Scheduled Status Changes**: Ability to queue a scene's status change (e.g., auto-publish at 8:00 AM).
 - [ ] **Arc Organization**: Drag-and-drop interface for grouping Scenes into Arcs.
-- [ ] **Version Diffing**: UI to compare different snapshots of a scene.
-- [ ] **Author's Cut**: Advanced editing workflows for refining journaled sessions into public prose.
 
 ## Phase 5: Social & Reader Engagement
 - [ ] **Reader Reactions**: Inline sentiment emoji reactions for readers.
