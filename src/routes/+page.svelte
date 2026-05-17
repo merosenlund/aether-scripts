@@ -111,7 +111,7 @@
       <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
         <Users class="w-6 h-6" />
       </div>
-      <h3 class="font-bold text-lg">Director's Cut</h3>
+      <h3 class="font-bold text-lg">Author's Cut</h3>
       <p class="text-zinc-500 text-sm leading-relaxed">Toggle the "Mechanical Mode" to see the dice rolls, stat blocks, and GM notes that shaped the narrative behind the scenes.</p>
     </div>
     <div class="bg-zinc-900/50 border border-white/5 p-6 rounded-2xl space-y-3">

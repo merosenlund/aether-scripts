@@ -30,7 +30,7 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 ## Phase 4: Serial Management & Arcs
 - [ ] **Arc Organization**: Drag-and-drop interface for grouping Scenes into Arcs.
 - [ ] **Version Diffing**: UI to compare different snapshots of a scene.
-- [ ] **Director's Cut**: Advanced editing workflows for refining journaled sessions into public prose.
+- [ ] **Author's Cut**: Advanced editing workflows for refining journaled sessions into public prose.
 
 ## Phase 5: Social & Reader Engagement
 - [ ] **Reader Reactions**: Inline sentiment emoji reactions for readers.

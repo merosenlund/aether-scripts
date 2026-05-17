@@ -8,7 +8,7 @@ Aether Scripts is built to solve the "static screen" problem of digital serials.
 
 ### Key Features
 
-- **Director's Cut Reading**: Seamlessly toggle between pure prose and the underlying TTRPG mechanics (dice rolls, GM notes, and game decisions) that shaped the story.
+- **Author's Cut Reading**: Seamlessly toggle between pure prose and the underlying TTRPG mechanics (dice rolls, GM notes, and game decisions) that shaped the story.
 - **Progression-Aware Wiki**: A built-in world bible that knows exactly where you are in the story. No more spoilers from community wikis—information is revealed only after you've read the corresponding scenes.
 - **Infinite Scroll Experience**: A seamless, unified reading experience where "next chapter" is as smooth as scrolling to the next paragraph.
 - **Custom Reading Lists**: Don't like fight scenes? Want to skip the "slog"? Create or follow reading lists that mix full prose, summaries, and quick descriptions to curate your perfect experience.
