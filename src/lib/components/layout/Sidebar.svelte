@@ -85,7 +85,8 @@
   <!-- Collapse Toggle -->
   <button 
     onclick={() => collapsed = !collapsed}
-    class="absolute -right-3 top-20 w-6 h-6 rounded-full bg-stone-900 border border-white/10 flex items-center justify-center text-stone-400 hover:text-white hover:bg-stone-800 transition-colors z-20 shadow-lg"
+    class="absolute -right-3 bottom-6 w-6 h-6 rounded-full bg-stone-900 border border-white/10 flex items-center justify-center text-stone-400 hover:text-white hover:bg-stone-800 transition-colors z-20 shadow-lg"
+    title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
   >
     {#if collapsed}
       <ChevronRight class="w-4 h-4" />
