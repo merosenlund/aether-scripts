@@ -14,6 +14,7 @@
   import { ClockBlock } from './extensions/ClockBlock';
   import { TrackBlock } from './extensions/TrackBlock';
   import { OracleBlock } from './extensions/OracleBlock';
+  import { TelemetryExtension } from './extensions/TelemetryExtension';
   import suggestion from './extensions/suggestion.svelte.ts';
   
   import Collaboration from '@tiptap/extension-collaboration';
@@ -49,6 +50,30 @@
   let provider: SupabaseYjsProvider;
   let isSaving = $state(false);
 
+  import { supabase } from '$lib/supabaseClient';
+
+  let saveTimeout: any;
+
+  function queueAutosave() {
+    if (!sceneId || !editable || !editor) return;
+    
+    if (saveTimeout) clearTimeout(saveTimeout);
+    
+    saveTimeout = setTimeout(async () => {
+      if (!editor) return;
+      const json = editor.getJSON();
+      
+      const { error } = await supabase
+        .from('scenes')
+        .update({ content_blocks: json })
+        .eq('id', sceneId);
+        
+      if (error) {
+        console.error('Error autosaving content_blocks:', error);
+      }
+    }, 1500);
+  }
+
   onMount(() => {
     ydoc = new Y.Doc();
     if (sceneId && editable) {
@@ -77,6 +102,7 @@
         ...(editable && sceneId ? [Collaboration.configure({
           document: ydoc,
         })] : []),
+        ...(editable ? [TelemetryExtension] : []),
         GMNote,
         DiceRoller,
         StatBlock,
@@ -98,6 +124,7 @@
       content: content || undefined,
       onUpdate: ({ editor: e }) => {
         onUpdate(e.getHTML());
+        queueAutosave();
       },
       onTransaction: () => {
         editor = editor;

@@ -36,12 +36,12 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Scheduled Status Changes**: Ability to queue a scene's status change (e.g., auto-publish at 8:00 AM).
 - [x] **Arc Organization**: Drag-and-drop interface for grouping Scenes into Arcs.
 
-## Phase 4.5: Transparent Author Analytics
-- [ ] **Session Telemetry**: Track live author metrics including online status, active typing indicator, session word count, and Words Per Minute (WPM).
-- [ ] **Editing Insights (Churn)**: Track word churn during editing sessions (words added vs. deleted) to understand rewriting effort.
-- [ ] **Goal Tracking**: UI for the author to set and track personal writing goals (words per day/week/month/year).
-- [ ] **Status-Based Word Counts**: Track and compare the word count of a scene across its different lifecycle statuses (e.g., Raw Play vs. Published length).
-- [ ] **Public Dashboard & Scroll Teaser**: Inject these metrics directly into the end-of-scroll "preview" for readers. This includes showing if you are currently online, typing, working on another series, or if the next scene is queued with a "go live" date.
+## Phase 4.5: Transparent Author Analytics (COMPLETED)
+- [x] **Session Telemetry**: Track live author metrics including online status, active typing indicator, session word count, and Words Per Minute (WPM).
+- [x] **Editing Insights (Churn)**: Track word churn during editing sessions (words added vs. deleted) to understand rewriting effort.
+- [x] **Goal Tracking**: UI for the author to set and track personal writing goals (words per day/week/month/year).
+- [x] **Status-Based Word Counts**: Track and compare the word count of a scene across its different lifecycle statuses (e.g., Raw Play vs. Published length).
+- [x] **Public Dashboard & Scroll Teaser**: Inject these metrics directly into the end-of-scroll "preview" for readers. This includes showing if you are currently online, typing, working on another series, or if the next scene is queued with a "go live" date.
 
 
 ## Phase 5: Social & Reader Engagement

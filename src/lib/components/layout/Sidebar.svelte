@@ -8,7 +8,8 @@
     ChevronLeft,
     ChevronRight,
     PenTool,
-    LogIn
+    LogIn,
+    BarChart2
   } from '@lucide/svelte';
   import Logo from '$lib/components/Logo.svelte';
   import { page } from '$app/state';
@@ -20,6 +21,7 @@
     ...(page.data.userRole === 'author' ? [{ name: 'Writing', icon: PenTool, href: '/write' }] : []),
     { name: 'Library', icon: Library, href: '/library' },
     { name: 'Reading Lists', icon: BookOpen, href: '/lists' },
+    { name: 'Writing Analytics', icon: BarChart2, href: '/analytics' },
   ]);
 
   let bottomItems = $derived(

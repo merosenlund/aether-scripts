@@ -24,7 +24,8 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
       status,
       next_scene_completion_percentage,
       next_scene_update_note,
-      teaser_target_scene_id
+      teaser_target_scene_id,
+      author_id
     `)
     .eq('id', serialId)
     .single();
@@ -46,6 +47,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
       status, 
       scheduled_status, 
       scheduled_status_at,
+      content_blocks,
       scene_versions(content)
     `)
     .eq('serial_id', serialId)
@@ -68,9 +70,13 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
   }).map(scene => {
     let contentHtml = '';
     const activeVersion = (scene.scene_versions as any)?.[0];
-    if (activeVersion && activeVersion.content) {
+    
+    // Fallback logic: check for snapshot version first, then fall back to live content_blocks
+    const jsonContent = (activeVersion && activeVersion.content) || scene.content_blocks;
+
+    if (jsonContent) {
       try {
-        contentHtml = generateHTML(activeVersion.content, [
+        contentHtml = generateHTML(jsonContent, [
           StarterKit,
           GMNote,
           DiceRoller,

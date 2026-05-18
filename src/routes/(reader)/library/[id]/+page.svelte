@@ -1,5 +1,6 @@
 <script lang="ts">
   import Reader from '$lib/components/Reader.svelte';
+  import { authorPresence } from '$lib/stores/authorPresence.svelte';
   import { BookOpen, Compass, ChevronRight, Activity, Calendar, Award, AlertCircle } from '@lucide/svelte';
   import { fade, slide } from 'svelte/transition';
 
@@ -28,6 +29,16 @@
       year: 'numeric'
     });
   }
+
+  // Subscribe to author presence
+  $effect(() => {
+    if (data.serial?.author_id) {
+      authorPresence.subscribeToAuthor(data.serial.author_id);
+    }
+    return () => {
+      authorPresence.cleanup();
+    };
+  });
 
   // Svelte 5 effect to spy on the user's scroll position and auto-highlight Table of Contents
   $effect(() => {
@@ -217,6 +228,41 @@
                     <p class="text-xs text-zinc-400 leading-relaxed italic">
                       "{data.serial.next_scene_update_note}"
                     </p>
+                  </div>
+                {/if}
+
+                <!-- Live Presence Sync indicator -->
+                {#if authorPresence.authorStatus.isOnline}
+                  <div class="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/[0.02] border border-emerald-500/10 shadow-sm animate-fade-in" transition:slide>
+                    <div class="flex items-center gap-3">
+                      <div class="relative flex h-2.5 w-2.5">
+                        {#if authorPresence.authorStatus.isTyping}
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-purple-500 animate-pulse"></span>
+                        {:else}
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        {/if}
+                      </div>
+                      
+                      <div class="space-y-0.5">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">Author Activity</span>
+                        {#if authorPresence.authorStatus.isTyping}
+                          <span class="block text-xs text-purple-400 font-bold">Typing live...</span>
+                        {:else}
+                          <span class="block text-xs text-emerald-400 font-semibold">Active online</span>
+                        {/if}
+                      </div>
+                    </div>
+
+                    {#if authorPresence.authorStatus.currentSerialTitle}
+                      <div class="text-right hidden sm:block">
+                        <span class="block text-[9px] font-bold uppercase tracking-wider text-zinc-600 font-mono">Working On</span>
+                        <span class="block text-xs text-zinc-300 font-serif italic max-w-[200px] truncate">
+                          "{authorPresence.authorStatus.currentSerialTitle}"
+                        </span>
+                      </div>
+                    {/if}
                   </div>
                 {/if}
               </div>
