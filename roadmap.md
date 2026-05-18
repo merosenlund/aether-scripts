@@ -43,6 +43,10 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Status-Based Word Counts**: Track and compare the word count of a scene across its different lifecycle statuses (e.g., Raw Play vs. Published length).
 - [x] **Public Dashboard & Scroll Teaser**: Inject these metrics directly into the end-of-scroll "preview" for readers. This includes showing if you are currently online, typing, working on another series, or if the next scene is queued with a "go live" date.
 
+## Phase 4.8: Reader Lists & Discovery
+- [ ] **Curated Lists (`/lists`)**: Build out the `/lists` route to allow users to group, manage, and share serials/scenes.
+- [ ] **List Management**: UI for creating new lists, adding/removing entries, and setting lists as public or private.
+- [ ] **Discovery**: Feature public lists on the dashboard to help readers discover new content curated by the community.
 
 ## Phase 5: Social & Reader Engagement
 - [ ] **Immersion-First Commenting**: Comments default to hidden to preserve reading immersion. Includes three viewing modes:
