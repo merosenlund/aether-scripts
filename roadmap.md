@@ -74,4 +74,6 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Unified Community Experience**: Ensuring premium support enhances the reading experience without fragmenting the community (no paywalled comments, no FOMO mechanics).
 
 ## Phase 8: Live Stream Writing (Stretch Goal)
-- [ ] **Live `/stream` Route**: A specialized route allowing readers to watch your cursor in real-time as you write or edit, complete with live word churn metrics and a chat interface for immediate back-and-forth interaction.
+- [ ] **Twitch/YouTube Companion UI**: The `/stream` route acts as a high-fidelity, interactive companion to a video stream (e.g., embedding a Twitch player). It solves the "blurry text on a 1080p stream" problem by letting readers read the raw, crisp text updates locally while listening to your audio/video commentary.
+- [ ] **Audience Oracle (Crowdsourced GM)**: A `/chat_poll` feature where the author can prompt the audience with a story decision. The vote is cast natively in the app and the winning result is injected directly into the editor.
+- [ ] **Live Inline Reactions**: Readers watching the raw feed can highlight specific sentences as they are written and drop "cheer" emoji reactions, providing immediate positive feedback to the author.
