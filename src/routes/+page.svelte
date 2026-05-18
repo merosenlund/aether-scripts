@@ -1,6 +1,6 @@
 <script lang="ts">
   import { BookOpen, ArrowRight, Clock, Users, PenTool } from '@lucide/svelte';
-  let { data } = $props();
+  let { data } = $props<{ data: any }>();
 
   function timeAgo(date: string) {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);

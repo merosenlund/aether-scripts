@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { supabase, getSession } }) => {
@@ -58,4 +58,44 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
   return {
     serials: serialsWithUpdates
   };
+};
+
+export const actions = {
+  create: async ({ request, locals: { supabase, getSession } }) => {
+    const session = await getSession();
+    if (!session) {
+      throw redirect(303, '/login');
+    }
+
+    const formData = await request.formData();
+    const title = (formData.get('title') as string || 'Untitled Serial').trim();
+
+    const gradients = [
+      'from-rose-500 to-orange-500',
+      'from-emerald-400 to-cyan-500',
+      'from-blue-500 to-indigo-500',
+      'from-purple-500 to-pink-500',
+      'from-amber-400 to-rose-500',
+      'from-violet-600 to-indigo-600'
+    ];
+    const colorTheme = gradients[Math.floor(Math.random() * gradients.length)];
+
+    const { data: newSerial, error: createError } = await supabase
+      .from('serials')
+      .insert({
+        author_id: session.user.id,
+        title,
+        color_theme: colorTheme,
+        status: 'pilot'
+      })
+      .select('id')
+      .single();
+
+    if (createError || !newSerial) {
+      console.error('Error creating serial:', createError);
+      return fail(500, { error: 'Failed to create serial' });
+    }
+
+    throw redirect(303, `/serials/${newSerial.id}`);
+  }
 };

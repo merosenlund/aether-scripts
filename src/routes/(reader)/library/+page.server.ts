@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals: { supabase } }) => {
       title,
       color_theme,
       status,
-      scenes!inner(published_at, count),
+      scenes!inner(published_at),
       readers:reading_progress(count)
     `)
     .not('scenes.published_at', 'is', null)

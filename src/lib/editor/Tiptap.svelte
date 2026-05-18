@@ -24,19 +24,21 @@
 
 
   let { 
-    content = '', 
+    content = $bindable(''), 
     sceneId = '',
     stage = 'Draft' as SceneStage,
     onUpdate = (html: string) => {},
     placeholder = 'Write your story...',
-    activeBlockId = $bindable('')
+    activeBlockId = $bindable(''),
+    editable = true
   } = $props<{
-    content?: string;
+    content?: any;
     sceneId?: string;
     stage?: SceneStage;
     onUpdate?: (html: string) => void;
     placeholder?: string;
     activeBlockId?: string;
+    editable?: boolean;
   }>();
 
   let element: HTMLElement;
@@ -49,20 +51,21 @@
 
   onMount(() => {
     ydoc = new Y.Doc();
-    if (sceneId) {
+    if (sceneId && editable) {
       provider = new SupabaseYjsProvider(ydoc, sceneId);
     }
 
     editor = new Editor({
       element,
+      editable,
       extensions: [
         StarterKit.configure({
-          // History is handled by Collaboration
-          history: false,
-        }),
+          // History is handled by Collaboration when editing, but can be enabled for non-collaborative
+          history: !editable,
+        } as any),
         BlockMetadata,
         Placeholder.configure({ placeholder }),
-        BubbleMenu.configure({
+        ...(editable ? [BubbleMenu.configure({
           element: bubbleMenuElement,
           shouldShow: ({ state, from, to }) => {
             // Only show if there's a selection and it's not empty
@@ -70,10 +73,10 @@
             isBubbleMenuVisible = show;
             return show;
           },
-        }),
-        Collaboration.configure({
+        })] : []),
+        ...(editable && sceneId ? [Collaboration.configure({
           document: ydoc,
-        }),
+        })] : []),
         GMNote,
         DiceRoller,
         StatBlock,
@@ -83,8 +86,13 @@
         OracleBlock,
         Commands.configure({
           suggestion,
-        }),
+        } as any),
       ],
+      editorProps: {
+        attributes: {
+          class: 'prose prose-stone dark:prose-invert max-w-none focus:outline-none text-lg leading-relaxed text-stone-300 pl-24 pr-8 py-8 pb-64 min-h-full cursor-text',
+        },
+      },
       // When using collaboration, content is loaded from the Y.Doc
       // but we can provide initial content if needed
       content: content || undefined,
@@ -93,13 +101,27 @@
       },
       onTransaction: () => {
         editor = editor;
-        if (editor) {
+        if (editor && editable) {
           const { selection } = editor.state;
           const node = selection.$from.parent;
           activeBlockId = node.attrs.id || '';
         }
       }
     });
+  });
+
+  $effect(() => {
+    if (editor && !editable && content) {
+      let parsedContent = content;
+      if (typeof content === 'string' && content.trim().startsWith('{')) {
+        try {
+          parsedContent = JSON.parse(content);
+        } catch (e) {
+          console.error('Error parsing content JSON inside Tiptap:', e);
+        }
+      }
+      editor.commands.setContent(parsedContent);
+    }
   });
 
   export const getIsSaving = () => isSaving;
@@ -131,7 +153,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div 
-    class="flex-1 overflow-y-auto pl-24 pr-8 py-8 pb-64 prose prose-stone dark:prose-invert max-w-none focus:outline-none tiptap-container text-lg leading-relaxed text-stone-300 cursor-text" 
+    class="flex-1 overflow-y-auto tiptap-container scroll-container relative" 
     bind:this={element}
     onclick={(e) => {
       if (e.target === element) {

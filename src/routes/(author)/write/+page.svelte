@@ -1,8 +1,28 @@
 <script lang="ts">
   import { Plus, Book, Users, Star, Clock } from '@lucide/svelte';
   import type { PageData } from './$types';
+  import { openPrompt } from '$lib/stores/prompt.svelte';
 
   let { data } = $props();
+
+  let titleInput = $state('');
+  let formRef: HTMLFormElement | undefined = $state(undefined);
+
+  async function handleCreateSerial() {
+    const title = await openPrompt(
+      'Create New Serial',
+      'Enter a title for your new actual-play interactive story:',
+      'My New Serial'
+    );
+    if (title && title.trim()) {
+      titleInput = title.trim();
+      setTimeout(() => {
+        if (formRef) {
+          formRef.submit();
+        }
+      }, 0);
+    }
+  }
 
   function timeAgo(date: string | Date) {
     const now = new Date();
@@ -27,7 +47,10 @@
       <h1 class="text-4xl font-bold tracking-tight">Your Serials</h1>
       <p class="text-stone-400">Manage your stories, worlds, and reader community.</p>
     </div>
-    <button class="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+    <button 
+      onclick={handleCreateSerial}
+      class="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+    >
       <Plus class="w-5 h-5 mr-2" />
       New Serial
     </button>
@@ -84,7 +107,10 @@
     {/each}
 
     <!-- Empty/Create Card -->
-    <button class="group flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-2xl p-8 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 text-stone-500 hover:text-primary">
+    <button 
+      onclick={handleCreateSerial}
+      class="group flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-2xl p-8 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 text-stone-500 hover:text-primary"
+    >
       <div class="w-12 h-12 rounded-full bg-stone-900 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
         <Plus class="w-6 h-6" />
       </div>
@@ -92,4 +118,14 @@
     </button>
   </div>
 </div>
+
+<!-- Hidden Form to trigger SvelteKit creation action -->
+<form 
+  bind:this={formRef} 
+  method="POST" 
+  action="?/create" 
+  class="hidden"
+>
+  <input type="hidden" name="title" value={titleInput} />
+</form>
 
