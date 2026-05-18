@@ -74,6 +74,8 @@
     }, 1500);
   }
 
+  import { telemetryStore } from '$lib/stores/telemetry.svelte';
+
   onMount(() => {
     ydoc = new Y.Doc();
     if (sceneId && editable) {
@@ -118,6 +120,14 @@
         attributes: {
           class: 'prose prose-stone dark:prose-invert max-w-none focus:outline-none text-lg leading-relaxed text-stone-300 pl-24 pr-8 py-8 pb-64 min-h-full cursor-text',
         },
+        handleDOMEvents: {
+          beforeinput: () => {
+            telemetryStore.activateSession();
+          },
+          keydown: () => {
+            telemetryStore.activateSession();
+          }
+        }
       },
       // When using collaboration, content is loaded from the Y.Doc
       // but we can provide initial content if needed

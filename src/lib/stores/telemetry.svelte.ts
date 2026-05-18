@@ -67,20 +67,31 @@ function createTelemetryStore() {
     }
   }
 
+  function activateSession() {
+    if (!state.isInitialized || state.isActive) return;
+    const now = Date.now();
+    state.isActive = true;
+    state.startTime = now;
+    state.lastActive = now;
+
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      tick();
+    }, 1000);
+  }
+
+  function setInitialWordCount(count: number) {
+    if (!state.isActive) {
+      state.startingWordCount = count;
+      state.currentWordCount = count;
+    }
+  }
+
   function recordActivity(wordCount: number) {
     if (!state.isInitialized) return;
 
     if (!state.isActive) {
-      // Lazy start on the very first editor change!
-      const now = Date.now();
-      state.isActive = true;
-      state.startTime = now;
-      state.lastActive = now;
-
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        tick();
-      }, 1000);
+      activateSession();
     }
 
     state.currentWordCount = wordCount;
@@ -173,6 +184,8 @@ function createTelemetryStore() {
     get startingWordCount() { return state.startingWordCount; },
     get wpm() { return wpm; },
     startSession,
+    activateSession,
+    setInitialWordCount,
     recordActivity,
     endSession,
   };

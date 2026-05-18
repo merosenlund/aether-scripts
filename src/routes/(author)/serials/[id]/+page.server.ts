@@ -12,13 +12,26 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, getSess
   // 1. Fetch Serial Details
   const { data: serial, error: serialError } = await supabase
     .from('serials')
-    .select('*')
+    .select(`
+      *,
+      teaser_target_scene:scenes!serials_teaser_target_scene_id_fkey (
+        status,
+        word_count
+      )
+    `)
     .eq('id', serialId)
     .single();
 
   if (serialError || !serial) {
     console.error('Error fetching serial:', serialError);
     throw error(404, 'Serial not found');
+  }
+
+  // Calculate dynamic teaser percentage for 'Playing' scenes targeting 1000 words
+  const targetScene = (serial as any).teaser_target_scene;
+  if (targetScene && targetScene.status === 'Playing') {
+    const autoPercent = Math.min(100, Math.round(((targetScene.word_count || 0) / 1000) * 100));
+    serial.next_scene_completion_percentage = autoPercent;
   }
 
   // 2. Fetch Arcs
@@ -125,7 +138,7 @@ export const actions: Actions = {
       .insert({
         serial_id: serialId,
         order_index: nextIndex,
-        author_title: `Untitled Scene ${nextIndex}`,
+        author_title: `Scene ${nextIndex}`,
         status: 'Playing'
       })
       .select()
@@ -137,5 +150,33 @@ export const actions: Actions = {
     }
 
     throw redirect(303, `/play/${serialId}/${newScene.id}`);
+  },
+
+  updateSerialSettings: async ({ request, params, locals: { supabase } }) => {
+    const { id: serialId } = params;
+    const formData = await request.formData();
+    const title = formData.get('title')?.toString();
+    const status = formData.get('status')?.toString();
+    const colorTheme = formData.get('colorTheme')?.toString();
+
+    if (!title || !status || !colorTheme) {
+      return { success: false, error: 'Missing required fields' };
+    }
+
+    const { error } = await supabase
+      .from('serials')
+      .update({
+        title,
+        status,
+        color_theme: colorTheme
+      })
+      .eq('id', serialId);
+
+    if (error) {
+      console.error('Error updating serial settings:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
   }
 };

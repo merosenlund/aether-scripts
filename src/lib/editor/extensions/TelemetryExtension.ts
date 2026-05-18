@@ -8,7 +8,12 @@ export const TelemetryExtension = Extension.create({
     if (transaction.docChanged) {
       const text = this.editor.state.doc.textContent;
       const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-      telemetryStore.recordActivity(words);
+      
+      if (!telemetryStore.isActive) {
+        telemetryStore.setInitialWordCount(words);
+      } else {
+        telemetryStore.recordActivity(words);
+      }
     }
   }
 });

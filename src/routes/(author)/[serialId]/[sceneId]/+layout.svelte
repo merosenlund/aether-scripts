@@ -33,7 +33,7 @@
           {data.scene.serials?.title || 'Serial'}
         </h2>
         <h1 class="text-sm font-bold text-white/95 leading-none truncate max-w-xs sm:max-w-md">
-          {data.scene.author_title || 'Untitled Scene'}
+          {data.scene.author_title || `Scene ${data.scene.order_index}`}
         </h1>
       </div>
     </div>

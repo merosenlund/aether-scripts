@@ -12,6 +12,19 @@
   let newArcTitle = $state('');
   let isSavingOrder = $state(false);
   let orderSaved = $state(false);
+  
+  let showSettings = $state(false);
+  let editTitle = $state('');
+  let editStatus = $state('');
+  let editColorTheme = $state('');
+
+  $effect(() => {
+    if (data.serial) {
+      editTitle = data.serial.title;
+      editStatus = data.serial.status || 'draft';
+      editColorTheme = data.serial.color_theme || 'from-violet-600 to-indigo-600';
+    }
+  });
 
   // Group scenes by Arc reactive to data.scenes
   let scenesByArc = $state<Record<string, any[]>>({});
@@ -136,7 +149,21 @@
         {/if}
         
         <button 
-          onclick={() => showAddArc = !showAddArc}
+          onclick={() => {
+            showSettings = !showSettings;
+            showAddArc = false;
+          }}
+          class="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/15 backdrop-blur-md rounded-xl font-bold text-xs transition-all flex items-center shadow-lg"
+        >
+          <Settings class="w-4 h-4 mr-2" />
+          Settings
+        </button>
+
+        <button 
+          onclick={() => {
+            showAddArc = !showAddArc;
+            showSettings = false;
+          }}
           class="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/15 backdrop-blur-md rounded-xl font-bold text-xs transition-all flex items-center shadow-lg"
         >
           <FolderPlus class="w-4 h-4 mr-2" />
@@ -185,6 +212,131 @@
       </div>
     {/if}
 
+    <!-- Series Settings Slide-down Dialog -->
+    {#if showSettings}
+      <div transition:slide class="max-w-5xl mx-auto mb-8 bg-stone-900/60 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-xl relative overflow-hidden shadow-2xl">
+        <!-- Ambient decorative glow inside settings panel -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2 -z-10"></div>
+        
+        <h3 class="text-sm font-bold uppercase tracking-widest text-primary flex items-center gap-2 mb-6 pb-3 border-b border-white/5">
+          <Settings class="w-4.5 h-4.5 text-primary" />
+          Series Console Settings
+        </h3>
+
+        <form 
+          method="POST" 
+          action="?/updateSerialSettings" 
+          onsubmit={() => showSettings = false} 
+          class="space-y-6"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Title and Status column -->
+            <div class="space-y-4">
+              <div class="space-y-1.5">
+                <label for="serial_title" class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Series Title</label>
+                <input 
+                  id="serial_title"
+                  name="title"
+                  type="text" 
+                  required
+                  bind:value={editTitle}
+                  class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-primary/50 transition-all font-serif"
+                  placeholder="e.g. My Amazing Serial"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="serial_status" class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Publication Status</label>
+                <select 
+                  id="serial_status"
+                  name="status"
+                  bind:value={editStatus}
+                  class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-primary/50 transition-all cursor-pointer"
+                >
+                  <option value="draft" class="bg-stone-900 text-stone-300">Draft (In planning / secret)</option>
+                  <option value="pilot" class="bg-stone-900 text-stone-300">Pilot (Testing narrative rules)</option>
+                  <option value="active" class="bg-stone-900 text-stone-300">Active (Regularly publishing)</option>
+                  <option value="hiatus" class="bg-stone-900 text-stone-300">On Hiatus (Temporarily paused)</option>
+                  <option value="complete" class="bg-stone-900 text-stone-300">Complete (Story is finished)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Color Theme Column -->
+            <div class="space-y-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400 block mb-1">Color Theme Preset</span>
+              <input type="hidden" name="colorTheme" value={editColorTheme} />
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button 
+                  type="button" 
+                  onclick={() => editColorTheme = 'from-violet-600 to-indigo-600'}
+                  class="p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all {editColorTheme === 'from-violet-600 to-indigo-600' ? 'border-violet-500 bg-violet-500/10 shadow-lg shadow-violet-500/5' : 'border-white/5 bg-black/20 hover:border-white/10 hover:bg-black/30'}"
+                >
+                  <span class="text-xs font-bold text-stone-200">Royal Indigo</span>
+                  <div class="w-4 h-4 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 border border-white/10"></div>
+                </button>
+
+                <button 
+                  type="button" 
+                  onclick={() => editColorTheme = 'from-amber-500 to-rose-600'}
+                  class="p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all {editColorTheme === 'from-amber-500 to-rose-600' ? 'border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/5' : 'border-white/5 bg-black/20 hover:border-white/10 hover:bg-black/30'}"
+                >
+                  <span class="text-xs font-bold text-stone-200">Sunset Amber</span>
+                  <div class="w-4 h-4 rounded-full bg-gradient-to-br from-amber-500 to-rose-600 border border-white/10"></div>
+                </button>
+
+                <button 
+                  type="button" 
+                  onclick={() => editColorTheme = 'from-emerald-600 to-teal-600'}
+                  class="p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all {editColorTheme === 'from-emerald-600 to-teal-600' ? 'border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/5' : 'border-white/5 bg-black/20 hover:border-white/10 hover:bg-black/30'}"
+                >
+                  <span class="text-xs font-bold text-stone-200">Forest Emerald</span>
+                  <div class="w-4 h-4 rounded-full bg-gradient-to-br from-emerald-600 to-teal-600 border border-white/10"></div>
+                </button>
+
+                <button 
+                  type="button" 
+                  onclick={() => editColorTheme = 'from-fuchsia-600 to-pink-600'}
+                  class="p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all {editColorTheme === 'from-fuchsia-600 to-pink-600' ? 'border-fuchsia-500 bg-fuchsia-500/10 shadow-lg shadow-fuchsia-500/5' : 'border-white/5 bg-black/20 hover:border-white/10 hover:bg-black/30'}"
+                >
+                  <span class="text-xs font-bold text-stone-200">Midnight Nebula</span>
+                  <div class="w-4 h-4 rounded-full bg-gradient-to-br from-fuchsia-600 to-pink-600 border border-white/10"></div>
+                </button>
+
+                <button 
+                  type="button" 
+                  onclick={() => editColorTheme = 'from-blue-600 to-cyan-600'}
+                  class="p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all {editColorTheme === 'from-blue-600 to-cyan-600' ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/5' : 'border-white/5 bg-black/20 hover:border-white/10 hover:bg-black/30'}"
+                >
+                  <span class="text-xs font-bold text-stone-200">Deep Ocean</span>
+                  <div class="w-4 h-4 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 border border-white/10"></div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="flex justify-end gap-3 pt-3 border-t border-white/5">
+            <button 
+              type="button" 
+              onclick={() => showSettings = false}
+              class="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-bold text-xs transition-all text-stone-300"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              class="px-6 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl text-xs hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center gap-1.5"
+            >
+              <Save class="w-4 h-4" />
+              Save Settings
+            </button>
+          </div>
+        </form>
+      </div>
+    {/if}
+
     <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
       
       <!-- Main Columns: Arcs & Scene boards -->
@@ -229,7 +381,7 @@
                             <PenTool class="w-3.5 h-3.5 text-stone-400" />
                           </div>
                           <div>
-                            <h4 class="font-bold text-sm text-stone-200">{scene.author_title || 'Untitled Scene'}</h4>
+                            <h4 class="font-bold text-sm text-stone-200">{scene.author_title || `Scene ${scene.order_index}`}</h4>
                             <div class="flex items-center text-[10px] text-stone-500 font-medium gap-3">
                               <span class="uppercase tracking-wider font-semibold text-[9px] text-primary">{scene.status}</span>
                               <div class="flex items-center gap-1">
@@ -275,7 +427,7 @@
                           <PenTool class="w-3.5 h-3.5 text-stone-400" />
                         </div>
                         <div>
-                          <h4 class="font-bold text-sm text-stone-200">{scene.author_title || 'Untitled Scene'}</h4>
+                          <h4 class="font-bold text-sm text-stone-200">{scene.author_title || `Scene ${scene.order_index}`}</h4>
                           <div class="flex items-center text-[10px] text-stone-500 font-medium gap-3">
                             <span class="uppercase tracking-wider font-semibold text-[9px] text-primary">{scene.status}</span>
                             <div class="flex items-center gap-1">

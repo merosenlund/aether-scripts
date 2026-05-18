@@ -89,10 +89,14 @@
 
   async function saveSerialTeaser() {
     isSavingTeaser = true;
+    const percentToSave = activeStatus === 'Playing'
+      ? Math.min(100, Math.round(((data.scene.word_count || 0) / 1000) * 100))
+      : teaserPercent;
+
     const { error } = await supabase
       .from('serials')
       .update({
-        next_scene_completion_percentage: teaserPercent,
+        next_scene_completion_percentage: percentToSave,
         next_scene_update_note: teaserNote,
         teaser_target_scene_id: data.scene.id
       })
@@ -263,19 +267,35 @@
           </h3>
 
           <div class="space-y-4">
-            <div class="space-y-1.5">
+            <div class="space-y-2">
               <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
                 <label for="teaser_percent" class="text-stone-400">Completion</label>
-                <span class="text-primary font-mono">{teaserPercent}%</span>
+                <span class="text-primary font-mono">
+                  {activeStatus === 'Playing' 
+                    ? Math.min(100, Math.round(((data.scene.word_count || 0) / 1000) * 100)) 
+                    : teaserPercent}%
+                </span>
               </div>
-              <input 
-                id="teaser_percent"
-                type="range" 
-                min="0" 
-                max="100" 
-                bind:value={teaserPercent}
-                class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
-              />
+              
+              {#if activeStatus === 'Playing'}
+                <div class="p-3.5 bg-white/[0.02] border border-white/5 rounded-2xl text-[10px] text-stone-500 font-medium leading-relaxed" transition:fade>
+                  ℹ️ Live word count automatic teaser: calculated based on your 1000 words rule-of-thumb while in <span class="text-primary font-bold">Playing</span> status. Current scene word count: <span class="text-white font-bold">{data.scene.word_count || 0} / 1000</span> words.
+                </div>
+              {:else}
+                <div transition:slide>
+                  <input 
+                    id="teaser_percent"
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    bind:value={teaserPercent}
+                    class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                  />
+                  <p class="text-[9px] text-stone-500 font-medium leading-relaxed mt-1.5">
+                    Adjust this slider manually to represent your editing progress for readers.
+                  </p>
+                </div>
+              {/if}
             </div>
 
             <div class="space-y-1.5">

@@ -25,7 +25,11 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
       next_scene_completion_percentage,
       next_scene_update_note,
       teaser_target_scene_id,
-      author_id
+      author_id,
+      teaser_target_scene:scenes!serials_teaser_target_scene_id_fkey (
+        status,
+        word_count
+      )
     `)
     .eq('id', serialId)
     .single();
@@ -33,6 +37,45 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
   if (serialError || !serial) {
     console.error('Error fetching serial for reader:', serialError);
     throw error(404, 'Serial not found');
+  }
+
+  // Calculate dynamic teaser percentage for 'Playing' scenes targeting 1000 words
+  const targetScene = (serial as any).teaser_target_scene;
+  const autoPlayPercent = targetScene
+    ? Math.min(100, Math.round(((targetScene.word_count || 0) / 1000) * 100))
+    : 0;
+  const manualEditPercent = serial.next_scene_completion_percentage || 0;
+
+  // Aggregate writing session metrics for teaser scene
+  let teaserMetrics = {
+    playTimeSeconds: 0,
+    editTimeSeconds: 0,
+    playKeystrokes: 0,
+    editKeystrokes: 0,
+    playNetWords: 0,
+    editNetWords: 0,
+  };
+
+  if (serial && serial.teaser_target_scene_id) {
+    const { data: sessions } = await supabase
+      .from('writing_sessions')
+      .select('session_type, active_duration_seconds, keystrokes, starting_word_count, ending_word_count')
+      .eq('scene_id', serial.teaser_target_scene_id);
+
+    if (sessions) {
+      sessions.forEach(s => {
+        const net = Math.max(0, (s.ending_word_count || 0) - (s.starting_word_count || 0));
+        if (s.session_type === 'play') {
+          teaserMetrics.playTimeSeconds += s.active_duration_seconds || 0;
+          teaserMetrics.playKeystrokes += s.keystrokes || 0;
+          teaserMetrics.playNetWords += net;
+        } else if (s.session_type === 'edit') {
+          teaserMetrics.editTimeSeconds += s.active_duration_seconds || 0;
+          teaserMetrics.editKeystrokes += s.keystrokes || 0;
+          teaserMetrics.editNetWords += net;
+        }
+      });
+    }
   }
 
   // 2. Fetch all scenes for this Serial along with their active versions
@@ -107,6 +150,9 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
 
   return {
     serial,
-    scenes: visibleScenes
+    scenes: visibleScenes,
+    teaserMetrics,
+    autoPlayPercent,
+    manualEditPercent
   };
 };

@@ -388,7 +388,7 @@
                       <td class="py-4 max-w-xs truncate">
                         <span class="block text-stone-200 font-bold truncate">{session.serials?.title || 'Unknown Serial'}</span>
                         <span class="block text-[10px] text-stone-400 font-normal truncate mt-0.5">
-                          {session.scenes?.display_title || session.scenes?.author_title || 'Untitled Scene'}
+                          {session.scenes?.display_title || session.scenes?.author_title || `Scene ${session.scenes?.order_index || ''}`}
                         </span>
                       </td>
                       <td class="py-4 text-stone-300 font-mono">
