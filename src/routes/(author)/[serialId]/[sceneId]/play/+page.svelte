@@ -9,7 +9,7 @@
   import { gameSession } from '$lib/stores/gameSession.svelte';
 
   let { data } = $props<{ data: any }>();
-  let content = $state(data.scene.content || '');
+  let content = $state(data.scene.content_blocks || '');
   let activeBlockId = $state('');
   let visibleBlockIds = $state<string[]>([]);
   let activeTab = $state('wiki');
@@ -56,12 +56,14 @@
             </div>
           {:else}
             <Tiptap 
-              bind:this={editorComponent}
-              bind:content 
-              bind:activeBlockId
-              sceneId={data.scene.id}
-              onUpdate={(html) => content = html}
-            />
+            bind:this={editorComponent}
+            bind:content 
+            initialContent={data.scene.content_blocks || null}
+            bind:activeBlockId
+            sceneId={data.scene.id}
+            onUpdate={(html) => content = html}
+            editable={false}
+          />
           {/if}
         </div>
       </div>
@@ -167,6 +169,6 @@
     sceneId={data.scene.id}
     serialTitle={data.scene.serials?.title || ''}
     sessionType="play"
-    initialContent={data.scene.content || ''}
+    initialContent={data.scene.content_blocks || ''}
   />
 </div>

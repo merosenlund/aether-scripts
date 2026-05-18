@@ -26,6 +26,7 @@
 
   let { 
     content = $bindable(''), 
+    initialContent = null,
     sceneId = '',
     stage = 'Draft' as SceneStage,
     onUpdate = (html: string) => {},
@@ -76,10 +77,16 @@
 
   import { telemetryStore } from '$lib/stores/telemetry.svelte';
 
+  let yjsLoaded = $state(false);
+  let hasYjsData = $state(true);
+
   onMount(() => {
     ydoc = new Y.Doc();
     if (sceneId && editable) {
-      provider = new SupabaseYjsProvider(ydoc, sceneId);
+      provider = new SupabaseYjsProvider(ydoc, sceneId, (hasData) => {
+        hasYjsData = hasData;
+        yjsLoaded = true;
+      });
     }
 
     editor = new Editor({
@@ -148,16 +155,39 @@
   });
 
   $effect(() => {
-    if (editor && !editable && content) {
-      let parsedContent = content;
-      if (typeof content === 'string' && content.trim().startsWith('{')) {
-        try {
-          parsedContent = JSON.parse(content);
-        } catch (e) {
-          console.error('Error parsing content JSON inside Tiptap:', e);
+    // Determine the source of truth for the initial injection
+    const sourceContent = initialContent || content;
+    
+    if (editor && sourceContent) {
+      // If not editable, we always set content. 
+      // If editable, we only set it if Yjs has finished loading and told us it was empty.
+      if (!editable || (yjsLoaded && !hasYjsData)) {
+        let parsedContent = sourceContent;
+        if (typeof sourceContent === 'string' && sourceContent.trim().startsWith('{')) {
+          try {
+            parsedContent = JSON.parse(sourceContent);
+          } catch (e) {
+            console.error('Error parsing content JSON inside Tiptap:', e);
+          }
         }
+        
+        console.log('[Tiptap] Injecting fallback content into Yjs document:', parsedContent);
+        
+        // Extract inner content if it's a full document
+        let nodesToInsert = parsedContent;
+        if (parsedContent.type === 'doc' && parsedContent.content) {
+          nodesToInsert = parsedContent.content;
+        }
+        
+        // Ensure we only set it once for editable docs
+        // Use clearContent and insertContent instead of setContent to avoid replacing the root doc node, which Collaboration hates.
+        editor.chain().clearContent().insertContent(nodesToInsert).run();
+        
+        if (editable) {
+          hasYjsData = true; // Prevent re-triggering
+        }
+        console.log('[Tiptap] Fallback content injected.');
       }
-      editor.commands.setContent(parsedContent);
     }
   });
 

@@ -7,7 +7,7 @@ async function getRedirectPath(supabase: any, userId: string) {
     .eq('user_id', userId)
     .single();
     
-  return roleData?.role === 'author' ? '/dashboard' : '/';
+  return roleData?.role === 'author' ? '/write' : '/';
 }
 
 export const load = async ({ locals: { supabase, getSession } }) => {

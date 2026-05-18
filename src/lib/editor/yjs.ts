@@ -6,12 +6,14 @@ export class SupabaseYjsProvider {
   private sceneId: string;
   private saving: boolean = false;
 
-  constructor(doc: Y.Doc, sceneId: string) {
+  constructor(doc: Y.Doc, sceneId: string, onLoaded?: (hasData: boolean) => void) {
     this.doc = doc;
     this.sceneId = sceneId;
 
     // Load initial state
-    this.loadState();
+    this.loadState().then(hasData => {
+      if (onLoaded) onLoaded(hasData);
+    });
 
     // Listen for updates and save them
     this.doc.on('update', (update) => {
@@ -19,7 +21,7 @@ export class SupabaseYjsProvider {
     });
   }
 
-  private async loadState() {
+  private async loadState(): Promise<boolean> {
     const { data, error } = await supabase
       .from('scene_updates')
       .select('update_data')
@@ -28,7 +30,7 @@ export class SupabaseYjsProvider {
 
     if (error) {
       console.error('Error loading Yjs state:', error);
-      return;
+      return false;
     }
 
     if (data && data.length > 0) {
@@ -66,7 +68,10 @@ export class SupabaseYjsProvider {
           }
         });
       }, 'load');
+      return true;
     }
+    
+    return false;
   }
 
   private async saveUpdate(update: Uint8Array) {

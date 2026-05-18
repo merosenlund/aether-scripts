@@ -16,7 +16,7 @@
     sceneId: string;
     serialTitle: string;
     sessionType: 'play' | 'edit';
-    initialContent?: string;
+    initialContent?: any;
   }>();
 
   let otherScenesWordCount = $state(0);
@@ -70,7 +70,22 @@
     // We calculate the starting word count directly from the initial content HTML passed in
     let initialWordCount = 0;
     if (initialContent) {
-      const text = initialContent.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ');
+      let text = '';
+      if (typeof initialContent === 'string') {
+        text = initialContent.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ');
+      } else if (typeof initialContent === 'object') {
+        const extractText = (node: any): string => {
+          if (!node) return '';
+          if (node.type === 'text' && node.text) return node.text + ' ';
+          if (node.content && Array.isArray(node.content)) {
+            let inner = node.content.map(extractText).join('');
+            if (node.type === 'paragraph' || node.type === 'heading') inner += ' ';
+            return inner;
+          }
+          return '';
+        };
+        text = extractText(initialContent);
+      }
       initialWordCount = text.trim() ? text.trim().split(/\s+/).filter((w: string) => w.length > 0).length : 0;
     }
     

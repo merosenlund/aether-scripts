@@ -7,7 +7,7 @@
   import { supabase } from '$lib/supabaseClient';
 
   let { data } = $props<{ data: any }>();
-  let content = $state(data.scene.content || '');
+  let content = $state(data.scene.content_blocks || '');
   let authorTitle = $state(data.scene.author_title || '');
   let displayTitle = $state(data.scene.display_title || '');
   let description = $state(data.scene.description || '');
@@ -63,6 +63,7 @@
           <Tiptap 
             bind:this={editorComponent}
             bind:content 
+            initialContent={data.scene.content_blocks || null}
             bind:activeBlockId
             sceneId={data.scene.id}
             onUpdate={(html) => content = html}
@@ -178,6 +179,6 @@
     sceneId={data.scene.id}
     serialTitle={data.scene.serials?.title || ''}
     sessionType="edit"
-    initialContent={data.scene.content || ''}
+    initialContent={data.scene.content_blocks || ''}
   />
 </div>

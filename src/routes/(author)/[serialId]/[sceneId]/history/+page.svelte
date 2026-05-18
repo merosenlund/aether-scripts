@@ -6,7 +6,7 @@
 
   let { data } = $props<{ data: any }>();
   
-  let currentSceneContent = $state(data.scene.content || '');
+  let currentSceneContent = $state(data.scene.content_blocks || '');
   let selectedVersionId = $state<string | null>(null);
   let selectedVersionNumber = $state<number | null>(null);
   let selectedVersionContent = $state<any>('');
