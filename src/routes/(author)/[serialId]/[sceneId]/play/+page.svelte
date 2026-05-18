@@ -62,7 +62,6 @@
             bind:activeBlockId
             sceneId={data.scene.id}
             onUpdate={(html) => content = html}
-            editable={false}
           />
           {/if}
         </div>

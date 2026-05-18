@@ -35,6 +35,7 @@
     editable = true
   } = $props<{
     content?: any;
+    initialContent?: any;
     sceneId?: string;
     stage?: SceneStage;
     onUpdate?: (html: string) => void;
