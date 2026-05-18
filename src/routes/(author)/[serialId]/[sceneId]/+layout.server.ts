@@ -15,7 +15,7 @@ export const load: LayoutServerLoad = async ({ params, locals: { supabase, getSe
     .from('scenes')
     .select(`
       *,
-      serials (
+      serials!scenes_serial_id_fkey (
         id,
         title,
         color_theme,

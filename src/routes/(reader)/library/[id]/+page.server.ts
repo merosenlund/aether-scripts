@@ -23,7 +23,8 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
       color_theme,
       status,
       next_scene_completion_percentage,
-      next_scene_update_note
+      next_scene_update_note,
+      teaser_target_scene_id
     `)
     .eq('id', serialId)
     .single();

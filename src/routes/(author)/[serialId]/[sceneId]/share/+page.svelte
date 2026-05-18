@@ -93,7 +93,8 @@
       .from('serials')
       .update({
         next_scene_completion_percentage: teaserPercent,
-        next_scene_update_note: teaserNote
+        next_scene_update_note: teaserNote,
+        teaser_target_scene_id: data.scene.id
       })
       .eq('id', data.scene.serial_id);
     

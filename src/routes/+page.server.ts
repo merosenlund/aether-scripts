@@ -12,10 +12,10 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
       title,
       color_theme,
       status,
-      scenes!inner(published_at),
+      scenes!scenes_serial_id_fkey!inner(published_at),
       readers:reading_progress(count)
     `)
-    .not('scenes.published_at', 'is', null)
+    .not('scenes!scenes_serial_id_fkey.published_at', 'is', null)
     .order('published_at', { referencedTable: 'scenes', ascending: false })
     .limit(6);
 

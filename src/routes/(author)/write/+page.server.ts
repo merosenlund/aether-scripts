@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
       color_theme,
       status,
       created_at,
-      scenes:scenes(count),
+      scenes:scenes!scenes_serial_id_fkey(count),
       readers:reading_progress(count)
     `)
     .eq('author_id', session.user.id)

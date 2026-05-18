@@ -8,8 +8,16 @@
   // State
   let activeSceneIndex = $state(0);
   let showMechanics = $state(false);
+  let containerElement = $state<HTMLElement | null>(null);
 
-  let activeScene = $derived(data.scenes[activeSceneIndex] || null);
+  // Smoothly scroll the content viewport to the targeted scene
+  function scrollToScene(sceneId: string, index: number) {
+    activeSceneIndex = index;
+    const element = document.getElementById(`scene-${sceneId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 
   // Formatting date
   function formatDate(dateStr: string | null) {
@@ -20,6 +28,35 @@
       year: 'numeric'
     });
   }
+
+  // Svelte 5 effect to spy on the user's scroll position and auto-highlight Table of Contents
+  $effect(() => {
+    if (!containerElement) return;
+
+    const sections = containerElement.querySelectorAll('.scene-section');
+    const observerOptions = {
+      root: containerElement,
+      rootMargin: '-20% 0px -60% 0px', // Focus the active threshold triggers in the upper center of viewport
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const indexAttr = entry.target.getAttribute('data-index');
+          if (indexAttr !== null) {
+            activeSceneIndex = parseInt(indexAttr, 10);
+          }
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      observer.disconnect();
+    };
+  });
 </script>
 
 <div class="h-screen flex bg-zinc-950 text-zinc-100 font-sans overflow-hidden">
@@ -56,7 +93,7 @@
       {:else}
         {#each data.scenes as scene, index (scene.id)}
           <button
-            onclick={() => activeSceneIndex = index}
+            onclick={() => scrollToScene(scene.id, index)}
             class="w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3 group 
               {activeSceneIndex === index 
                 ? 'bg-primary/10 border-primary text-white shadow-[0_0_12px_rgba(var(--primary),0.03)]' 
@@ -85,8 +122,8 @@
       <div class="flex items-center gap-3">
         <BookOpen class="w-5 h-5 text-primary" />
         <span class="text-sm font-bold text-zinc-300">
-          {#if activeScene}
-            {activeScene.display_title || activeScene.author_title || `Scene ${activeSceneIndex + 1}`}
+          {#if data.scenes[activeSceneIndex]}
+            {data.scenes[activeSceneIndex].display_title || data.scenes[activeSceneIndex].author_title || `Scene ${activeSceneIndex + 1}`}
           {:else}
             Story Overview
           {/if}
@@ -107,20 +144,49 @@
     </header>
 
     <!-- Content Scroller -->
-    <div class="flex-1 overflow-y-auto p-8 md:p-12 relative scroll-smooth {showMechanics ? 'mechanics-active' : ''}">
-      <div class="max-w-3xl mx-auto space-y-16 pb-48">
+    <div 
+      bind:this={containerElement}
+      class="flex-1 overflow-y-auto p-8 md:p-12 relative scroll-smooth {showMechanics ? 'mechanics-active' : ''}"
+    >
+      <div class="max-w-3xl mx-auto space-y-24 pb-48">
         
-        {#if activeScene}
-          <!-- Scene Text -->
-          <article class="prose-wrapper">
-            <Reader 
-              content={activeScene.content || ''} 
-              onVisibleBlocksChange={() => {}}
-            />
-          </article>
+        {#if data.scenes.length === 0}
+          <!-- Empty State -->
+          <div class="text-center py-24 space-y-4">
+            <BookOpen class="w-12 h-12 text-zinc-700 mx-auto" />
+            <h3 class="text-lg font-bold text-zinc-300">No Published Chapters</h3>
+            <p class="text-zinc-500 max-w-sm mx-auto text-sm">There are no published scenes available to read for this serial yet.</p>
+          </div>
+        {:else}
+          <!-- Continuous Scroll Stream of Scenes -->
+          {#each data.scenes as scene, index (scene.id)}
+            <section 
+              id="scene-{scene.id}" 
+              class="scene-section border-b border-white/5 pb-20 last:border-b-0 last:pb-0" 
+              data-index={index}
+            >
+              <!-- Scene Header Header -->
+              <div class="mb-10 flex items-center gap-3 select-none">
+                <span class="w-6 h-[1px] bg-zinc-800"></span>
+                <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] font-mono">
+                  {scene.display_title || scene.author_title || `Scene ${index + 1}`}
+                </h4>
+                <span class="flex-1 h-[1px] bg-zinc-800/40"></span>
+                <span class="text-[9px] font-mono text-zinc-600 font-bold uppercase">{formatDate(scene.published_at)}</span>
+              </div>
 
-          <!-- If last scene, show future teasers -->
-          {#if activeSceneIndex === data.scenes.length - 1}
+              <!-- Scene Text Canvas -->
+              <article class="prose-wrapper">
+                <Reader 
+                  content={scene.content || ''} 
+                  onVisibleBlocksChange={() => {}}
+                />
+              </article>
+            </section>
+          {/each}
+
+          <!-- Ambient Bottom Progress Teaser (End of Scroll Reward) -->
+          {#if data.serial.next_scene_completion_percentage > 0 || data.serial.next_scene_update_note}
             <div 
               transition:fade 
               class="border border-white/5 bg-gradient-to-br from-zinc-900/60 to-zinc-900/20 backdrop-blur-md rounded-3xl p-6 md:p-8 space-y-6 relative overflow-hidden"
@@ -145,22 +211,17 @@
                   ></div>
                 </div>
                 
-                <div class="flex gap-3 items-start bg-white/[0.01] border border-white/5 p-4 rounded-2xl">
-                  <AlertCircle class="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
-                  <p class="text-xs text-zinc-400 leading-relaxed italic">
-                    "{data.serial.next_scene_update_note || 'No teaser updates set.'}"
-                  </p>
-                </div>
+                {#if data.serial.next_scene_update_note}
+                  <div class="flex gap-3 items-start bg-white/[0.01] border border-white/5 p-4 rounded-2xl">
+                    <AlertCircle class="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
+                    <p class="text-xs text-zinc-400 leading-relaxed italic">
+                      "{data.serial.next_scene_update_note}"
+                    </p>
+                  </div>
+                {/if}
               </div>
             </div>
           {/if}
-        {:else}
-          <!-- Empty State -->
-          <div class="text-center py-24 space-y-4">
-            <BookOpen class="w-12 h-12 text-zinc-700 mx-auto" />
-            <h3 class="text-lg font-bold text-zinc-300">Select a Scene to Begin</h3>
-            <p class="text-zinc-500 max-w-sm mx-auto text-sm">Pick any of the published chapters from the table of contents sidebar to start reading.</p>
-          </div>
         {/if}
 
       </div>
