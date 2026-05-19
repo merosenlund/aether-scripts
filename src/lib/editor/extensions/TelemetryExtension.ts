@@ -2,18 +2,18 @@ import { Extension } from '@tiptap/core';
 import { telemetryStore } from '../../stores/telemetry.svelte';
 
 export const TelemetryExtension = Extension.create({
-  name: 'telemetry',
+	name: 'telemetry',
 
-  onTransaction({ transaction }) {
-    if (transaction.docChanged) {
-      const text = this.editor.state.doc.textContent;
-      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-      
-      if (!telemetryStore.isActive) {
-        telemetryStore.setInitialWordCount(words);
-      } else {
-        telemetryStore.recordActivity(words);
-      }
-    }
-  }
+	onTransaction({ transaction }) {
+		if (transaction.docChanged) {
+			const text = this.editor.state.doc.textContent;
+			const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+
+			if (!telemetryStore.isActive) {
+				telemetryStore.setInitialWordCount(words);
+			} else {
+				telemetryStore.recordActivity(words);
+			}
+		}
+	}
 });

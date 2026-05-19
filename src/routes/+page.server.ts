@@ -1,36 +1,39 @@
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { supabase, getSession } }) => {
-  const session = await getSession();
-  
-  // 1. Fetch "Recently Updated" serials (serials that have at least one published scene)
-  // We'll sort by the most recent published_at among their scenes
-  const { data: recentlyUpdated } = await supabase
-    .from('serials')
-    .select(`
+	const session = await getSession();
+
+	// 1. Fetch "Recently Updated" serials (serials that have at least one published scene)
+	// We'll sort by the most recent published_at among their scenes
+	const { data: recentlyUpdated } = await supabase
+		.from('serials')
+		.select(
+			`
       id,
       title,
       color_theme,
       status,
       scenes!scenes_serial_id_fkey!inner(published_at),
       readers:reading_progress(count)
-    `)
-    .not('scenes!scenes_serial_id_fkey.published_at', 'is', null)
-    .order('published_at', { referencedTable: 'scenes', ascending: false })
-    .limit(6);
+    `
+		)
+		.not('scenes!scenes_serial_id_fkey.published_at', 'is', null)
+		.order('published_at', { referencedTable: 'scenes', ascending: false })
+		.limit(6);
 
-  // Group by serial ID and take the top one (Supabase join might return multiple rows per serial if not careful)
-  // Actually, we want unique serials. The above might return multiple rows if a serial has multiple published scenes.
-  // We'll deduplicate in JS for now or use a more precise query.
-  const uniqueSerials = Array.from(new Map(recentlyUpdated?.map(s => [s.id, s])).values());
+	// Group by serial ID and take the top one (Supabase join might return multiple rows per serial if not careful)
+	// Actually, we want unique serials. The above might return multiple rows if a serial has multiple published scenes.
+	// We'll deduplicate in JS for now or use a more precise query.
+	const uniqueSerials = Array.from(new Map(recentlyUpdated?.map((s) => [s.id, s])).values());
 
-  let continueReading = null;
+	let continueReading = null;
 
-  // 2. If signed in, fetch the most recently read item
-  if (session) {
-    const { data: progress } = await supabase
-      .from('reading_progress')
-      .select(`
+	// 2. If signed in, fetch the most recently read item
+	if (session) {
+		const { data: progress } = await supabase
+			.from('reading_progress')
+			.select(
+				`
         serial_id,
         current_scene_id,
         current_block_id,
@@ -45,26 +48,28 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
           display_title,
           author_title
         )
-      `)
-      .eq('user_id', session.user.id)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      `
+			)
+			.eq('user_id', session.user.id)
+			.order('updated_at', { ascending: false })
+			.limit(1)
+			.maybeSingle();
 
-    if (progress) {
-      continueReading = {
-        serial: progress.serial,
-        scene: progress.scene,
-        blockId: progress.current_block_id,
-        updatedAt: progress.updated_at
-      };
-    }
-  }
+		if (progress) {
+			continueReading = {
+				serial: progress.serial,
+				scene: progress.scene,
+				blockId: progress.current_block_id,
+				updatedAt: progress.updated_at
+			};
+		}
+	}
 
-  // 3. Fetch Featured Curation Playlists (Public reading lists with their serial info)
-  const { data: featuredLists } = await supabase
-    .from('reading_lists')
-    .select(`
+	// 3. Fetch Featured Curation Playlists (Public reading lists with their serial info)
+	const { data: featuredLists } = await supabase
+		.from('reading_lists')
+		.select(
+			`
       id,
       title,
       is_public,
@@ -77,30 +82,31 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
       items:reading_list_items (
         id
       )
-    `)
-    .eq('is_public', true)
-    .order('created_at', { ascending: false })
-    .limit(3);
+    `
+		)
+		.eq('is_public', true)
+		.order('created_at', { ascending: false })
+		.limit(3);
 
-  return {
-    recentlyUpdated: uniqueSerials.map(s => {
-      // Find the most recent published_at among the joined scenes
-      const scenes = (s.scenes as any) || [];
-      const latestPublishedAt = scenes.reduce((latest: string, current: any) => {
-        return (!latest || current.published_at > latest) ? current.published_at : latest;
-      }, null);
+	return {
+		recentlyUpdated: uniqueSerials.map((s) => {
+			// Find the most recent published_at among the joined scenes
+			const scenes = (s.scenes as any) || [];
+			const latestPublishedAt = scenes.reduce((latest: string, current: any) => {
+				return !latest || current.published_at > latest ? current.published_at : latest;
+			}, null);
 
-      return {
-        id: s.id,
-        title: s.title,
-        color_theme: s.color_theme,
-        status: s.status,
-        updated_at: latestPublishedAt,
-        scenesCount: scenes.length,
-        readersCount: (s.readers as any)?.[0]?.count || 0
-      };
-    }),
-    continueReading,
-    featuredLists: featuredLists || []
-  };
+			return {
+				id: s.id,
+				title: s.title,
+				color_theme: s.color_theme,
+				status: s.status,
+				updated_at: latestPublishedAt,
+				scenesCount: scenes.length,
+				readersCount: (s.readers as any)?.[0]?.count || 0
+			};
+		}),
+		continueReading,
+		featuredLists: featuredLists || []
+	};
 };

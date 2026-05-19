@@ -3,61 +3,64 @@ import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
-  event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
-    cookies: {
-      getAll: () => event.cookies.getAll(),
-      setAll: (cookiesToSet) => {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          event.cookies.set(name, value, { ...options, path: '/' });
-        });
-      },
-    },
-  });
+	event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+		cookies: {
+			getAll: () => event.cookies.getAll(),
+			setAll: (cookiesToSet) => {
+				cookiesToSet.forEach(({ name, value, options }) => {
+					event.cookies.set(name, value, { ...options, path: '/' });
+				});
+			}
+		}
+	});
 
-  event.locals.getSession = async () => {
-    const {
-      data: { session },
-    } = await event.locals.supabase.auth.getSession();
-    
-    if (session) {
-      const { data: { user }, error } = await event.locals.supabase.auth.getUser();
-      if (error || !user) {
-        await event.locals.supabase.auth.signOut();
-        return null;
-      }
-    }
-    return session;
-  };
+	event.locals.getSession = async () => {
+		const {
+			data: { session }
+		} = await event.locals.supabase.auth.getSession();
 
-  const session = await event.locals.getSession();
+		if (session) {
+			const {
+				data: { user },
+				error
+			} = await event.locals.supabase.auth.getUser();
+			if (error || !user) {
+				await event.locals.supabase.auth.signOut();
+				return null;
+			}
+		}
+		return session;
+	};
 
-  // Basic route protection
-  const routeId = event.route.id || '';
-  const isAuthorRoute = routeId.startsWith('/(author)');
-  const isAccountRoute = routeId.startsWith('/account');
+	const session = await event.locals.getSession();
 
-  if (isAuthorRoute || isAccountRoute) {
-    if (!session) {
-      return new Response('Redirect', { status: 303, headers: { Location: '/login' } });
-    }
+	// Basic route protection
+	const routeId = event.route.id || '';
+	const isAuthorRoute = routeId.startsWith('/(author)');
+	const isAccountRoute = routeId.startsWith('/account');
 
-    if (isAuthorRoute) {
-      // Check role
-      const { data: roleData } = await event.locals.supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
+	if (isAuthorRoute || isAccountRoute) {
+		if (!session) {
+			return new Response('Redirect', { status: 303, headers: { Location: '/login' } });
+		}
 
-      if (roleData?.role !== 'author') {
-        return new Response('Redirect', { status: 303, headers: { Location: '/' } });
-      }
-    }
-  }
+		if (isAuthorRoute) {
+			// Check role
+			const { data: roleData } = await event.locals.supabase
+				.from('user_roles')
+				.select('role')
+				.eq('user_id', session.user.id)
+				.single();
 
-  return resolve(event, {
-    filterSerializedResponseHeaders(name) {
-      return name === 'content-range' || name === 'x-supabase-api-version';
-    },
-  });
+			if (roleData?.role !== 'author') {
+				return new Response('Redirect', { status: 303, headers: { Location: '/' } });
+			}
+		}
+	}
+
+	return resolve(event, {
+		filterSerializedResponseHeaders(name) {
+			return name === 'content-range' || name === 'x-supabase-api-version';
+		}
+	});
 };

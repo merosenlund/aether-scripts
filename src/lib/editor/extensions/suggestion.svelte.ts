@@ -4,71 +4,71 @@ import CommandsList from '../components/CommandsList.svelte';
 import { getSuggestionItems } from './Commands';
 
 export default {
-  items: getSuggestionItems,
+	items: getSuggestionItems,
 
-  render: () => {
-    let component: any;
-    let popup: any;
-    // Create a reactive state object for the props
-    let state = $state({
-      items: [] as any[],
-      command: (item: any) => {},
-    });
+	render: () => {
+		let component: any;
+		let popup: any;
+		// Create a reactive state object for the props
+		let state = $state({
+			items: [] as any[],
+			command: (item: any) => {}
+		});
 
-    return {
-      onStart: (props: any) => {
-        state.items = props.items;
-        state.command = props.command;
+		return {
+			onStart: (props: any) => {
+				state.items = props.items;
+				state.command = props.command;
 
-        const container = document.createElement('div');
-        
-        component = mount(CommandsList, {
-          target: container,
-          props: state, // Pass the reactive state object
-        });
+				const container = document.createElement('div');
 
-        if (!props.clientRect) {
-          return;
-        }
+				component = mount(CommandsList, {
+					target: container,
+					props: state // Pass the reactive state object
+				});
 
-        popup = tippy('body', {
-          getReferenceClientRect: props.clientRect,
-          appendTo: () => document.body,
-          content: container,
-          showOnCreate: true,
-          interactive: true,
-          trigger: 'manual',
-          placement: 'bottom-start',
-        });
-      },
+				if (!props.clientRect) {
+					return;
+				}
 
-      onUpdate(props: any) {
-        state.items = props.items;
-        state.command = props.command;
+				popup = tippy('body', {
+					getReferenceClientRect: props.clientRect,
+					appendTo: () => document.body,
+					content: container,
+					showOnCreate: true,
+					interactive: true,
+					trigger: 'manual',
+					placement: 'bottom-start'
+				});
+			},
 
-        if (!props.clientRect) {
-          return;
-        }
+			onUpdate(props: any) {
+				state.items = props.items;
+				state.command = props.command;
 
-        popup[0].setProps({
-          getReferenceClientRect: props.clientRect,
-        });
-      },
+				if (!props.clientRect) {
+					return;
+				}
 
-      onKeyDown(props: any) {
-        if (props.event.key === 'Escape') {
-          popup[0].hide();
-          return true;
-        }
+				popup[0].setProps({
+					getReferenceClientRect: props.clientRect
+				});
+			},
 
-        // Call the method on the component instance
-        return component.onKeyDown?.(props);
-      },
+			onKeyDown(props: any) {
+				if (props.event.key === 'Escape') {
+					popup[0].hide();
+					return true;
+				}
 
-      onExit() {
-        if (popup) popup[0].destroy();
-        if (component) unmount(component);
-      },
-    };
-  },
+				// Call the method on the component instance
+				return component.onKeyDown?.(props);
+			},
+
+			onExit() {
+				if (popup) popup[0].destroy();
+				if (component) unmount(component);
+			}
+		};
+	}
 };

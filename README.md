@@ -47,6 +47,7 @@ Aether Scripts is built to solve the "static screen" problem of digital serials.
 ### Development
 
 Start the development server:
+
 ```bash
 deno task dev
 ```
@@ -54,6 +55,7 @@ deno task dev
 ### Building
 
 Build for production (using `svelte-adapter-deno`):
+
 ```bash
 deno task build
 ```

@@ -1,3 +1,9 @@
 {
-  "allowScripts": ["npm:supabase@2.98.2"]
+	"allowScripts": ["npm:supabase@2.98.2"],
+	"nodeModulesDir": "auto",
+	"imports": {
+		"$lib/api/wiki": "./src/tests/wiki.mock.ts",
+		"$lib/": "./src/lib/",
+		"svelte/reactivity": "npm:svelte@^5.55.2/reactivity"
+	}
 }
