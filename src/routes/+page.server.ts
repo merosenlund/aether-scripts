@@ -61,6 +61,27 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
     }
   }
 
+  // 3. Fetch Featured Curation Playlists (Public reading lists with their serial info)
+  const { data: featuredLists } = await supabase
+    .from('reading_lists')
+    .select(`
+      id,
+      title,
+      is_public,
+      created_at,
+      serial:serials (
+        id,
+        title,
+        color_theme
+      ),
+      items:reading_list_items (
+        id
+      )
+    `)
+    .eq('is_public', true)
+    .order('created_at', { ascending: false })
+    .limit(3);
+
   return {
     recentlyUpdated: uniqueSerials.map(s => {
       // Find the most recent published_at among the joined scenes
@@ -79,6 +100,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
         readersCount: (s.readers as any)?.[0]?.count || 0
       };
     }),
-    continueReading
+    continueReading,
+    featuredLists: featuredLists || []
   };
 };

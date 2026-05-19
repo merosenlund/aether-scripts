@@ -182,4 +182,63 @@
       </div>
     {/if}
   </div>
+
+  <!-- Community Curations / Reading Playlists -->
+  <div class="max-w-6xl mx-auto px-8 space-y-12 py-12 border-t border-white/5">
+    <div class="flex items-end justify-between">
+      <div class="space-y-1">
+        <h2 class="text-3xl font-bold tracking-tight">Community Playlists</h2>
+        <p class="text-zinc-500">Custom narrative paths, alternate cuts, and filler-free curations by readers.</p>
+      </div>
+      {#if data.featuredLists.length > 0}
+        <a href="/lists" class="text-primary font-semibold hover:underline flex items-center gap-1">
+          Explore Playlists <ArrowRight class="w-4 h-4" />
+        </a>
+      {/if}
+    </div>
+
+    {#if data.featuredLists.length > 0}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {#each data.featuredLists as list}
+          <a href="/lists/{list.id}" class="group block relative bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden p-8 hover:border-white/10 hover:bg-zinc-900/60 transition-all duration-300 flex flex-col justify-between min-h-[220px] shadow-lg">
+            <!-- Top Gradient bar matching serial theme -->
+            <div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r {list.serial?.color_theme || 'from-violet-600 to-indigo-600'} opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="space-y-4">
+              <span class="block text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest truncate">
+                {list.serial?.title}
+              </span>
+              <h3 class="font-bold text-xl font-serif leading-tight group-hover:text-primary transition-colors text-white line-clamp-2">
+                {list.title}
+              </h3>
+            </div>
+
+            <div class="flex items-center justify-between border-t border-white/5 pt-4 mt-6">
+              <span class="text-zinc-400 text-xs font-semibold">
+                {list.items?.length || 0} {list.items?.length === 1 ? 'chapter' : 'chapters'}
+              </span>
+              
+              <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-zinc-300 group-hover:text-white group-hover:bg-primary group-hover:border-primary flex items-center justify-center transition-all duration-300">
+                <ArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </div>
+            </div>
+          </a>
+        {/each}
+      </div>
+    {:else}
+      <div class="bg-zinc-900/30 border border-dashed border-white/10 rounded-3xl p-20 text-center space-y-4">
+        <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto text-zinc-600">
+          <BookOpen class="w-8 h-8" />
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-xl font-bold text-zinc-300">No public cuts yet.</h3>
+          <p class="text-zinc-500 max-w-sm mx-auto">Be the first to create an alternate reading order, GM analysis, or skip-filler edition!</p>
+        </div>
+        <a href="/lists" class="inline-flex items-center gap-2 text-primary font-bold hover:underline">
+          Go to Playlists
+          <ArrowRight class="w-4 h-4" />
+        </a>
+      </div>
+    {/if}
+  </div>
 </div>
