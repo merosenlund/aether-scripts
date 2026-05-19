@@ -1,6 +1,7 @@
 import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
 import { openPrompt } from '$lib/stores/prompt.svelte';
+import { supabase } from '$lib/supabaseClient';
 
 export const Commands = Extension.create({
   name: 'slashCommands',
@@ -9,6 +10,7 @@ export const Commands = Extension.create({
     return {
       suggestion: {
         char: '/',
+        allowSpaces: true,
         command: ({ editor, range, props }: any) => {
           props.command({ editor, range });
         },
@@ -26,14 +28,13 @@ export const Commands = Extension.create({
   },
 });
 
-export const getSuggestionItems = ({ query }: { query: string }) => {
+export const getSuggestionItems = ({ query, editor }: { query: string; editor: any }) => {
   const items = [
     {
       title: 'Roll Dice',
       description: 'Roll a custom dice formula (e.g. /roll 1d100)',
       icon: 'dice',
       command: ({ editor, range }: any) => {
-        // If query is like "d20" or "2d6", use that
         const formula = query.match(/^\d*d\d+$/i) ? query : '1d100';
         editor
           .chain()
@@ -43,7 +44,7 @@ export const getSuggestionItems = ({ query }: { query: string }) => {
             type: 'diceRoller', 
             attrs: { 
               formula, 
-              result: Math.floor(Math.random() * 100) + 1 // Simplified for now
+              result: Math.floor(Math.random() * 100) + 1 
             } 
           })
           .run();
@@ -109,11 +110,80 @@ export const getSuggestionItems = ({ query }: { query: string }) => {
       },
     },
     {
-      title: 'Clock (4 Segment)',
-      description: 'Insert a 4-segment progress clock',
+      title: 'Clock (Custom)',
+      description: 'Insert a progress clock with custom segments and name',
       icon: 'clock',
-      command: ({ editor, range }: any) => {
-        editor.chain().focus().deleteRange(range).insertContent({ type: 'clockBlock', attrs: { segments: 4, filled: 0, name: 'New Clock' } }).run();
+      command: async ({ editor, range }: any) => {
+        editor.chain().focus().deleteRange(range).run();
+        
+        const name = await openPrompt('Create Clock', 'Enter a name for the clock:') || '';
+        if (!name) return;
+        
+        const segmentsStr = await openPrompt('Create Clock', 'Enter number of segments (4, 6, 8, etc.):') || '4';
+        const segments = parseInt(segmentsStr) || 4;
+        
+        const serialId = editor.serialId;
+        const sceneId = editor.sceneId;
+        const entityId = crypto.randomUUID();
+        
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'clockBlock',
+            attrs: {
+              entityId,
+              name,
+              segments,
+              filled: 0,
+              action: 'create'
+            }
+          })
+          .run();
+
+        if (serialId && sceneId) {
+          await supabase.from('wiki_entities').insert({ id: entityId, serial_id: serialId, name, category: 'Clock' });
+          await supabase.from('wiki_facts').insert({ entity_id: entityId, valid_from_scene_id: sceneId, content: JSON.stringify({ filled: 0, segments }) });
+        }
+      },
+    },
+    {
+      title: 'Increment Clock',
+      description: 'Increment an existing clock',
+      icon: 'clock',
+      command: async ({ editor, range }: any) => {
+        editor.chain().focus().deleteRange(range).run();
+        
+        const name = await openPrompt('Increment Clock', 'Enter clock name to increment:') || '';
+        if (!name) return;
+        
+        const serialId = editor.serialId;
+        const sceneId = editor.sceneId;
+        let entityId = '';
+        
+        if (serialId) {
+          const { data } = await supabase
+            .from('wiki_entities')
+            .select('id')
+            .eq('serial_id', serialId)
+            .ilike('name', name)
+            .eq('category', 'Clock')
+            .maybeSingle();
+          if (data) entityId = data.id;
+        }
+        
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'clockBlock',
+            attrs: {
+              entityId,
+              name,
+              action: 'increment'
+            }
+          })
+          .run();
       },
     },
     {
@@ -152,6 +222,129 @@ export const getSuggestionItems = ({ query }: { query: string }) => {
       },
     },
   ];
+
+  // 1. Check for dynamic /clock <segments> <name> or /clock inc <name>
+  if (query.toLowerCase().startsWith('clock ')) {
+    const argsStr = query.slice(6).trim();
+
+    // Match /clock inc <name> or /clock + <name>
+    const incMatch = argsStr.match(/^(?:inc|increment|\+)\s+(.+)$/i);
+    if (incMatch) {
+      const name = incMatch[1];
+      return [{
+        title: `Increment Clock: "${name}"`,
+        description: `Tally up 1 segment on the "${name}" clock`,
+        icon: 'clock',
+        command: async ({ editor, range }: any) => {
+          const serialId = editor.serialId;
+          let entityId = '';
+          
+          if (serialId) {
+            const { data } = await supabase
+              .from('wiki_entities')
+              .select('id')
+              .eq('serial_id', serialId)
+              .ilike('name', name)
+              .eq('category', 'Clock')
+              .maybeSingle();
+            if (data) entityId = data.id;
+          }
+
+          editor
+            .chain()
+            .focus()
+            .deleteRange(range)
+            .insertContent({
+              type: 'clockBlock',
+              attrs: {
+                entityId,
+                name,
+                action: 'increment'
+              }
+            })
+            .run();
+        }
+      }];
+    }
+
+    // Match /clock dec <name> or /clock - <name>
+    const decMatch = argsStr.match(/^(?:dec|decrement|-)\s+(.+)$/i);
+    if (decMatch) {
+      const name = decMatch[1];
+      return [{
+        title: `Decrement Clock: "${name}"`,
+        description: `Remove 1 segment from the "${name}" clock`,
+        icon: 'clock',
+        command: async ({ editor, range }: any) => {
+          const serialId = editor.serialId;
+          let entityId = '';
+          
+          if (serialId) {
+            const { data } = await supabase
+              .from('wiki_entities')
+              .select('id')
+              .eq('serial_id', serialId)
+              .ilike('name', name)
+              .eq('category', 'Clock')
+              .maybeSingle();
+            if (data) entityId = data.id;
+          }
+
+          editor
+            .chain()
+            .focus()
+            .deleteRange(range)
+            .insertContent({
+              type: 'clockBlock',
+              attrs: {
+                entityId,
+                name,
+                action: 'decrement'
+              }
+            })
+            .run();
+        }
+      }];
+    }
+
+    // Match /clock <segments> <name>
+    const createMatch = argsStr.match(/^(\d+)?\s*(.*)$/);
+    if (createMatch) {
+      const segments = parseInt(createMatch[1]) || 4;
+      const name = createMatch[2].trim() || 'New Clock';
+      return [{
+        title: `Create ${segments}-Segment Clock: "${name}"`,
+        description: `Insert a new ${segments}-segment progress clock`,
+        icon: 'clock',
+        command: async ({ editor, range }: any) => {
+          const serialId = editor.serialId;
+          const sceneId = editor.sceneId;
+          const entityId = crypto.randomUUID();
+
+          editor
+            .chain()
+            .focus()
+            .deleteRange(range)
+            .insertContent({
+              type: 'clockBlock',
+              attrs: {
+                entityId,
+                name,
+                segments,
+                filled: 0,
+                action: 'create'
+              }
+            })
+            .run();
+
+          if (serialId && sceneId) {
+            await supabase.from('wiki_entities').insert({ id: entityId, serial_id: serialId, name, category: 'Clock' });
+            await supabase.from('wiki_facts').insert({ entity_id: entityId, valid_from_scene_id: sceneId, content: JSON.stringify({ filled: 0, segments }) });
+          }
+        }
+      }];
+    }
+  }
 
   // If query is a pure number, prioritize the odds check
   if (/^\d+$/.test(query)) {

@@ -28,19 +28,23 @@
     content = $bindable(''), 
     initialContent = null,
     sceneId = '',
+    serialId = '',
     stage = 'Draft' as SceneStage,
     onUpdate = (html: string) => {},
     placeholder = 'Write your story...',
     activeBlockId = $bindable(''),
+    cursorState = $bindable({ clocks: {} }),
     editable = true
   } = $props<{
     content?: any;
     initialContent?: any;
     sceneId?: string;
+    serialId?: string;
     stage?: SceneStage;
     onUpdate?: (html: string) => void;
     placeholder?: string;
     activeBlockId?: string;
+    cursorState?: any;
     editable?: boolean;
   }>();
 
@@ -80,8 +84,23 @@
 
   let yjsLoaded = $state(false);
   let hasYjsData = $state(true);
+  let baseClocks = $state<any[]>([]);
 
-  onMount(() => {
+  onMount(async () => {
+    if (serialId) {
+      const { data } = await supabase
+        .from('wiki_entities')
+        .select('*')
+        .eq('serial_id', serialId)
+        .eq('category', 'Clock');
+      if (data) {
+        baseClocks = data;
+        if (editor) {
+          (editor as any).baseClocks = baseClocks;
+        }
+      }
+    }
+
     ydoc = new Y.Doc();
     if (sceneId && editable) {
       provider = new SupabaseYjsProvider(ydoc, sceneId, (hasData) => {
@@ -122,6 +141,8 @@
         OracleBlock,
         Commands.configure({
           suggestion,
+          serialId,
+          sceneId,
         } as any),
       ],
       editorProps: {
@@ -150,9 +171,47 @@
           const { selection } = editor.state;
           const node = selection.$from.parent;
           activeBlockId = node.attrs.id || '';
+
+          // Compute the state of all clocks up to the cursor selection!
+          const cursorStateLocal = { clocks: {} as Record<string, { entityId: string, name: string, segments: number, filled: number }> };
+          const currentPos = selection.$from.pos;
+          
+          editor.state.doc.nodesBetween(0, currentPos, (childNode, childPos) => {
+            if (childNode.type.name === 'clockBlock') {
+              const entityId = childNode.attrs.entityId || childNode.attrs.name;
+              const name = childNode.attrs.name;
+              const action = childNode.attrs.action;
+              
+              if (!cursorStateLocal.clocks[entityId]) {
+                const baseClock = baseClocks.find(bc => bc.id === entityId || bc.name === name);
+                cursorStateLocal.clocks[entityId] = {
+                  entityId: childNode.attrs.entityId,
+                  name,
+                  segments: childNode.attrs.segments || baseClock?.metadata?.segments || 4,
+                  filled: baseClock?.metadata?.filled || 0
+                };
+              }
+              
+              const clock = cursorStateLocal.clocks[entityId];
+              if (action === 'create') {
+                clock.segments = childNode.attrs.segments || 4;
+                clock.filled = childNode.attrs.filled || 0;
+              } else if (action === 'increment') {
+                clock.filled = Math.min(clock.segments, clock.filled + 1);
+              } else if (action === 'decrement') {
+                clock.filled = Math.max(0, clock.filled - 1);
+              }
+            }
+          });
+          
+          cursorState = cursorStateLocal;
         }
       }
     });
+
+    (editor as any).serialId = serialId;
+    (editor as any).sceneId = sceneId;
+    (editor as any).baseClocks = baseClocks;
   });
 
   $effect(() => {

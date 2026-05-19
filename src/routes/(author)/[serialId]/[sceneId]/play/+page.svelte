@@ -15,6 +15,7 @@
   let activeTab = $state('wiki');
   let isPreview = $state(false);
   let editorComponent = $state<any>();
+  let cursorState = $state<any>({ clocks: {} });
 </script>
 
 <div class="absolute inset-0 flex flex-col overflow-hidden bg-stone-950 font-sans text-stone-100">
@@ -60,7 +61,9 @@
             bind:content 
             initialContent={data.scene.content_blocks || null}
             bind:activeBlockId
+            bind:cursorState
             sceneId={data.scene.id}
+            serialId={data.scene.serial_id}
             onUpdate={(html) => content = html}
           />
           {/if}
@@ -146,6 +149,7 @@
             <MechanicsTab 
               serialId={data.scene.serial_id} 
               sceneId={data.scene.id} 
+              {cursorState}
             />
           </div>
         {:else}

@@ -7,9 +7,10 @@
   import { supabase } from '$lib/supabaseClient';
   import { openPrompt } from '$lib/stores/prompt.svelte';
 
-  let { serialId, sceneId } = $props<{
+  let { serialId, sceneId, cursorState = { clocks: {} } } = $props<{
     serialId: string;
     sceneId: string;
+    cursorState?: any;
   }>();
 
   let entities = $state<WikiEntity[]>([]);
@@ -18,7 +19,7 @@
   async function loadMechanics() {
     try {
       const data = await getWikiEntities(serialId);
-      entities = data.filter(e => e.category === 'clock' || e.category === 'track');
+      entities = data.filter(e => e.category?.toLowerCase() === 'clock' || e.category?.toLowerCase() === 'track');
     } catch (e) {
       console.error(e);
       notifications.error('Failed to load mechanics.');
@@ -50,7 +51,7 @@
         .insert({
           serial_id: serialId,
           name,
-          category: type,
+          category: type === 'clock' ? 'Clock' : 'Track',
           metadata
         })
         .select()
@@ -68,9 +69,9 @@
   async function updateProgress(entity: WikiEntity, delta: number) {
     let newMetadata = { ...entity.metadata };
     
-    if (entity.category === 'clock') {
+    if (entity.category?.toLowerCase() === 'clock') {
       newMetadata.filled = Math.max(0, Math.min(newMetadata.segments, (newMetadata.filled || 0) + delta));
-    } else if (entity.category === 'track') {
+    } else if (entity.category?.toLowerCase() === 'track') {
       newMetadata.current = Math.max(0, Math.min(newMetadata.max || 10, (newMetadata.current || 0) + delta));
     }
 
@@ -107,18 +108,31 @@
       </div>
     {:else}
       {#each entities as entity (entity.id)}
-        <div class="p-4 rounded-2xl border border-white/5 bg-white/[0.02] shadow-sm" transition:slide>
+        {@const isClock = entity.category?.toLowerCase() === 'clock'}
+        {@const cursorClock = isClock ? (cursorState?.clocks?.[entity.id] || cursorState?.clocks?.[entity.name]) : null}
+        
+        <div class="p-4 rounded-2xl border border-white/5 bg-white/[0.02] shadow-sm relative overflow-hidden transition-all duration-300 hover:bg-white/[0.03] group" transition:slide>
+          {#if cursorClock}
+            <div class="absolute inset-0 bg-primary/[0.01] pointer-events-none border border-primary/10 rounded-2xl"></div>
+          {/if}
+          
           <div class="flex items-center gap-3 mb-3">
-            <div class="p-2 rounded-lg bg-primary/10 text-primary">
-              {#if entity.category === 'clock'}
+            <div class="p-2 rounded-lg bg-primary/10 text-primary transition-all group-hover:scale-105">
+              {#if isClock}
                 <Timer size={16} />
               {:else}
                 <Activity size={16} />
               {/if}
             </div>
             <div>
-              <h4 class="text-sm font-bold text-white leading-tight">{entity.name}</h4>
-              <span class="text-[10px] text-stone-500 font-bold uppercase tracking-widest">{entity.category}</span>
+              <h4 class="text-sm font-bold text-white leading-tight transition-colors group-hover:text-primary">{entity.name}</h4>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="text-[10px] text-stone-500 font-bold uppercase tracking-widest">{entity.category}</span>
+                {#if cursorClock}
+                  <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" title="Cursor Contextual Value"></span>
+                  <span class="text-[8px] text-primary font-bold uppercase tracking-wider">Live</span>
+                {/if}
+              </div>
             </div>
           </div>
           
@@ -130,9 +144,13 @@
               -
             </button>
             
-            <div class="flex-1 text-center font-bold font-mono text-xl text-primary">
-              {#if entity.category === 'clock'}
-                {entity.metadata.filled || 0} / {entity.metadata.segments}
+            <div class="flex-1 text-center font-bold font-mono text-xl text-primary drop-shadow-[0_0_8px_rgba(245,158,11,0.2)]">
+              {#if isClock}
+                {#if cursorClock}
+                  {cursorClock.filled || 0} / {cursorClock.segments}
+                {:else}
+                  {entity.metadata.filled || 0} / {entity.metadata.segments}
+                {/if}
               {:else}
                 {entity.metadata.current || 0} / {entity.metadata.max || 10}
               {/if}

@@ -66,6 +66,7 @@
             initialContent={data.scene.content_blocks || null}
             bind:activeBlockId
             sceneId={data.scene.id}
+            serialId={data.scene.serial_id}
             onUpdate={(html) => content = html}
           />
         </div>
