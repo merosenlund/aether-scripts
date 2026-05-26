@@ -55,13 +55,13 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **List Management**: UI for creating new lists, adding/removing entries, and setting lists as public or private.
 - [x] **Discovery**: Feature public lists on the dashboard to help readers discover new content curated by the community.
 
-## Phase 5: Architectural Reboot (Block-Level Event Sourcing)
+## Phase 5: Architectural Reboot (Block-Level Event Sourcing) (COMPLETED)
 
-- [ ] **Database Foundation**: Rebuild Supabase schema around a strict Event-Sourcing pattern (`wiki_entities`, `wiki_events`).
-- [ ] **Block-Level Temporal Granularity**: Ensure all facts, clocks, and game mechanics are stored as immutable events tied to specific Tiptap `block_id`s, enabling mathematically perfect, spoiler-free time-travel.
-- [ ] **Dedicated World Manager UI**: Create a robust `/serial/[id]/wiki` dashboard for authors to explicitly manage entities and events, removing "magic" hidden metadata from the prose editor.
-- [ ] **Context Engine Refactor**: Rebuild the Reader Context Engine to derive entity state by chronologically reducing database events up to the reader's current block ID.
-- [ ] **Extensive Codebase Cleanup**: Perform a deep purge of deprecated code, old Tiptap extensions (e.g., hidden metadata blocks), obsolete API endpoints, and unused database tables to ensure the new foundation isn't poisoned by technical debt from previous iterations.
+- [x] **Database Foundation**: Rebuild Supabase schema around a strict Event-Sourcing pattern (`wiki_entities`, `wiki_events`).
+- [x] **Block-Level Temporal Granularity**: Ensure all facts, clocks, and game mechanics are stored as immutable events tied to specific Tiptap `block_id`s, enabling mathematically perfect, spoiler-free time-travel.
+- [x] **Dedicated World Manager UI**: Create a robust `/serial/[id]/wiki` dashboard for authors to explicitly manage entities and events, removing "magic" hidden metadata from the prose editor.
+- [x] **Context Engine Refactor**: Rebuild the Reader Context Engine to derive entity state by chronologically reducing database events up to the reader's current block ID.
+- [x] **Extensive Codebase Cleanup**: Perform a deep purge of deprecated code, old Tiptap extensions (e.g., hidden metadata blocks), obsolete API endpoints, and unused database tables to ensure the new foundation isn't poisoned by technical debt from previous iterations.
 
 ## Phase 6: Social & Reader Engagement
 
