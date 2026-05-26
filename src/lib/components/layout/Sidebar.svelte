@@ -30,7 +30,7 @@
 		page.data.session
 			? [
 					{ name: 'Settings', icon: Settings, href: '/settings' },
-					{ name: 'Profile', icon: User, href: '/account/profile' }
+					{ name: 'Profile', icon: User, href: '/account' }
 				]
 			: [{ name: 'Log In', icon: LogIn, href: '/login' }]
 	);
