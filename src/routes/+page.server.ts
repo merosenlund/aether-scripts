@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
       title,
       color_theme,
       status,
-      scenes!scenes_serial_id_fkey!inner(published_at),
+      scenes!scenes_serial_id_fkey!inner(published_at, status, scheduled_status, scheduled_status_at),
       readers:reading_progress(count)
     `
 		)
@@ -91,9 +91,20 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
 	return {
 		recentlyUpdated: uniqueSerials.map((s) => {
 			// Find the most recent published_at among the joined scenes
-			const scenes = (s.scenes as any) || [];
-			const latestPublishedAt = scenes.reduce((latest: string, current: any) => {
-				return !latest || current.published_at > latest ? current.published_at : latest;
+			const rawScenes = (s.scenes as any) || [];
+			const now = new Date();
+			const visibleScenes = rawScenes.filter((scene: any) => {
+				if (scene.published_at !== null) return true;
+				if (scene.status === 'Published') return true;
+				if (scene.scheduled_status === 'Published' && scene.scheduled_status_at) {
+					return new Date(scene.scheduled_status_at) <= now;
+				}
+				return false;
+			});
+
+			const latestPublishedAt = visibleScenes.reduce((latest: string, current: any) => {
+				const currentPublishedAt = current.published_at || current.scheduled_status_at;
+				return !latest || currentPublishedAt > latest ? currentPublishedAt : latest;
 			}, null);
 
 			return {
@@ -102,7 +113,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
 				color_theme: s.color_theme,
 				status: s.status,
 				updated_at: latestPublishedAt,
-				scenesCount: scenes.length,
+				scenesCount: visibleScenes.length,
 				readersCount: (s.readers as any)?.[0]?.count || 0
 			};
 		}),
