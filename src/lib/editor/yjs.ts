@@ -13,11 +13,13 @@ export class SupabaseYjsProvider {
 		// Load initial state
 		this.loadState().then((hasData) => {
 			if (onLoaded) onLoaded(hasData);
-		});
 
-		// Listen for updates and save them
-		this.doc.on('update', (update) => {
-			this.saveUpdate(update);
+			// Listen for updates and save them only after initial load completes
+			this.doc.on('update', (update, origin) => {
+				if (origin !== 'load') {
+					this.saveUpdate(update);
+				}
+			});
 		});
 	}
 

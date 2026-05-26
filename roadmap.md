@@ -75,6 +75,16 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Author Notes**: Exclusive commentary layers for premium readers.
 - [ ] **Comment Promotion**: UI to elevate a reader's comment directly into a narrative "Thread" or turn it into a community Poll, visually showing the community that their input is driving the story.
 
+## Phase 6.5: Deployment Readiness & Security
+
+- [ ] **Supabase Row Level Security (RLS) & Policies**: Enable RLS on all 15 active tables (including `scenes`, `scene_updates`, `wiki_events`, `serials`) and write precise, tested policies to prevent public access/tampering via the `anon` key while keeping public read access open for published items.
+- [ ] **SvelteKit Production Build Verification**: Ensure the SvelteKit production build (`deno task build` or equivalent) compiles successfully with zero TypeScript or bundler errors.
+- [ ] **Environment Variable & Secret Management Audit**: Securely configure and verify all production secrets (Supabase Service Keys, OAuth Client Credentials, JWT Secrets, App URLs) within the hosting provider's environment variables.
+- [ ] **CORS & Domain Configurations**: Configure CORS settings in the Supabase instance and SvelteKit endpoints to strictly allow only the final production domain.
+- [ ] **SSL, Custom Domains & DNS Routing**: Connect the custom domain, configure DNS records, and verify that SSL is properly issued and enforced.
+- [ ] **Supabase Database Backups & Point-in-Time Recovery**: Confirm database backups are enabled and point-in-time recovery is verified for production peace of mind.
+- [ ] **Basic Error Tracking & Logging**: Integrate simple runtime error monitoring (e.g., Sentry, Supabase Logs, or structured logging) to catch any silent production crashes.
+
 ## Phase 7: PWA & Live Notifications
 
 - [ ] **PWA Transformation**: Manifest and Service Worker setup for "Install to Home Screen" support.
@@ -100,3 +110,7 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Twitch/YouTube Companion UI**: The `/stream` route acts as a high-fidelity, interactive companion to a video stream (e.g., embedding a Twitch player). It solves the "blurry text on a 1080p stream" problem by letting readers read the raw, crisp text updates locally while listening to your audio/video commentary.
 - [ ] **Audience Oracle (Crowdsourced GM)**: A `/chat_poll` feature where the author can prompt the audience with a story decision. The vote is cast natively in the app and the winning result is injected directly into the editor.
 - [ ] **Live Inline Reactions**: Readers watching the raw feed can highlight specific sentences as they are written and drop "cheer" emoji reactions, providing immediate positive feedback to the author.
+
+## Future Technical Enhancements
+
+- [ ] **Yjs Database Compaction**: Add a background process (e.g., Supabase Edge Function cron job) to periodically squash granular `scene_updates` CRDT rows into single snapshots. This will prevent editor load times from degrading on massive scenes containing tens of thousands of keystrokes while preserving edit history for any future "Time Travel" UI.

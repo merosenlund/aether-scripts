@@ -65,24 +65,35 @@
 
 	let saveTimeout: ReturnType<typeof setTimeout> | undefined;
 
+	async function saveCurrentContent() {
+		if (!editor || !sceneId) return;
+		const json = editor.getJSON();
+
+		const { error } = await supabase
+			.from('scenes')
+			.update({ content_blocks: json })
+			.eq('id', sceneId);
+
+		if (error) {
+			console.error('Error autosaving content_blocks:', error);
+		}
+	}
+
 	function queueAutosave() {
 		if (!sceneId || !editable || !editor) return;
 
 		if (saveTimeout) clearTimeout(saveTimeout);
 
 		saveTimeout = setTimeout(async () => {
-			if (!editor) return;
-			const json = editor.getJSON();
-
-			const { error } = await supabase
-				.from('scenes')
-				.update({ content_blocks: json })
-				.eq('id', sceneId);
-
-			if (error) {
-				console.error('Error autosaving content_blocks:', error);
-			}
+			await saveCurrentContent();
 		}, 1500);
+	}
+
+	function handleUnload() {
+		if (saveTimeout) {
+			clearTimeout(saveTimeout);
+			saveCurrentContent();
+		}
 	}
 
 	async function checkDeletedBlocks(currentEditor: Editor) {
@@ -225,27 +236,6 @@
 					if (activeBlockId) {
 						contextEngine.markAsRead(activeBlockId);
 					}
-
-					// Compute the state of all clocks up to the cursor selection from contextEngine!
-					const cursorStateLocal = {
-						clocks: {} as Record<
-							string,
-							{ entityId: string; name: string; segments: number; filled: number }
-						>
-					};
-
-					for (const [entityId, entity] of contextEngine.reducedEntities.entries()) {
-						if (entity.category?.toLowerCase() === 'clock') {
-							cursorStateLocal.clocks[entityId] = {
-								entityId,
-								name: entity.name,
-								segments: (entity.metadata?.segments as number) || 4,
-								filled: (entity.metadata?.filled as number) || 0
-							};
-						}
-					}
-
-					cursorState = cursorStateLocal;
 				}
 			}
 		});
@@ -253,6 +243,36 @@
 		(editor as unknown as Record<string, unknown>).serialId = serialId;
 		(editor as unknown as Record<string, unknown>).sceneId = sceneId;
 		(editor as unknown as Record<string, unknown>).baseClocks = baseClocks;
+
+		if (typeof window !== 'undefined') {
+			window.addEventListener('pagehide', handleUnload);
+			window.addEventListener('beforeunload', handleUnload);
+		}
+	});
+
+	$effect(() => {
+		// Keep cursorState synchronized with contextEngine reducedEntities reactively
+		if (editor && editable && contextEngine.reducedEntities) {
+			const cursorStateLocal = {
+				clocks: {} as Record<
+					string,
+					{ entityId: string; name: string; segments: number; filled: number }
+				>
+			};
+
+			for (const [entityId, entity] of contextEngine.reducedEntities.entries()) {
+				if (entity.category?.toLowerCase() === 'clock') {
+					cursorStateLocal.clocks[entityId] = {
+						entityId,
+						name: entity.name,
+						segments: (entity.metadata?.segments as number) || 4,
+						filled: (entity.metadata?.filled as number) || 0
+					};
+				}
+			}
+
+			cursorState = cursorStateLocal;
+		}
 	});
 
 	$effect(() => {
@@ -309,6 +329,14 @@
 	}
 
 	onDestroy(() => {
+		if (saveTimeout) {
+			clearTimeout(saveTimeout);
+			saveCurrentContent();
+		}
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('pagehide', handleUnload);
+			window.removeEventListener('beforeunload', handleUnload);
+		}
 		if (editor) {
 			editor.destroy();
 		}
