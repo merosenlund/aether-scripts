@@ -11,7 +11,8 @@ export const OracleBlock = Node.create({
 		return {
 			type: { default: 'fate' },
 			question: { default: '' },
-			result: { default: '' }
+			result: { default: '' },
+			odds: { default: 50 }
 		};
 	},
 

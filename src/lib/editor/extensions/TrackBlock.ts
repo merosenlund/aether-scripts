@@ -20,7 +20,8 @@ export const TrackBlock = Node.create({
 			entityId: { default: null },
 			name: { default: '' },
 			max: { default: 10 },
-			current: { default: 0 }
+			current: { default: 0 },
+			action: { default: 'create' } // 'create' | 'advance'
 		};
 	},
 

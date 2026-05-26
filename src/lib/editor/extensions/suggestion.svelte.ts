@@ -9,6 +9,9 @@ export default {
 	render: () => {
 		let component: any;
 		let popup: any;
+		let editorRef: any = null;
+		let currentRange: any = null;
+
 		// Create a reactive state object for the props
 		let state = $state({
 			items: [] as any[],
@@ -17,6 +20,8 @@ export default {
 
 		return {
 			onStart: (props: any) => {
+				editorRef = props.editor;
+				currentRange = props.range;
 				state.items = props.items;
 				state.command = props.command;
 
@@ -24,7 +29,7 @@ export default {
 
 				component = mount(CommandsList, {
 					target: container,
-					props: state // Pass the reactive state object
+					props: state
 				});
 
 				if (!props.clientRect) {
@@ -43,6 +48,8 @@ export default {
 			},
 
 			onUpdate(props: any) {
+				editorRef = props.editor;
+				currentRange = props.range;
 				state.items = props.items;
 				state.command = props.command;
 
@@ -61,7 +68,52 @@ export default {
 					return true;
 				}
 
-				// Call the method on the component instance
+				// Tab: insert a tab character into the editor to advance
+				// to the next parameter. Only when we're in hint mode
+				// (a command has been matched and has params).
+				if (props.event.key === 'Tab' && editorRef) {
+					const inHintMode =
+						state.items.length === 1 &&
+						state.items[0].hintState != null;
+
+					if (inHintMode) {
+						props.event.preventDefault();
+						const { state: edState, dispatch } = editorRef.view;
+						dispatch(edState.tr.insertText('\t'));
+						return true;
+					}
+				}
+
+				// Enter: autocomplete for browsing items with params.
+				// Instead of executing, replace the query text with the
+				// full command name + space. The suggestion plugin stays
+				// open and transitions to hint mode.
+				if (props.event.key === 'Enter' && editorRef && currentRange) {
+					const inBrowsingMode =
+						state.items.length > 0 &&
+						!state.items[0]?.hintState;
+
+					if (inBrowsingMode) {
+						const selected = component.getSelectedItem?.();
+
+						if (selected?.commandDef && selected.commandDef.params.length > 0) {
+							props.event.preventDefault();
+							const cmdName = selected.commandDef.name;
+							// Replace text after the `/` trigger with the command name + space.
+							// range.from is the position of `/`, so from+1 is after it.
+							// This keeps the suggestion plugin active (we never call command()).
+							const tr = editorRef.state.tr.insertText(
+								cmdName + ' ',
+								currentRange.from + 1,
+								currentRange.to
+							);
+							editorRef.view.dispatch(tr);
+							return true;
+						}
+					}
+				}
+
+				// Delegate all other keys to the component
 				return component.onKeyDown?.(props);
 			},
 

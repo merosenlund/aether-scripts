@@ -70,12 +70,12 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Reactive Sidebars**: Update sidebars to read directly from `contextEngine.entities` so they update instantaneously across the app without manual refresh.
 - [x] **Dynamic Node Views**: Refactor NodeViews (like `ClockBlock.ts`) to derive their state reactively by scanning `contextEngine.rawEvents`, ensuring PERFECT sync between what the sidebars see and what the prose displays.
 
-### Phase 6.2: Command Formula Engine
-- [ ] **Command Formula & UI Upgrades**: Build out a formula-like interface for commands (Google Sheets style) that shows parameter expectations and default values, allowing seamless transitions between dropdown selections and free text entry.
-- [ ] **Unified `/oracle` Fate Check**: Move to the formula structure (e.g., `/oracle [odds:50/50] [question]`). Implement UI/UX for skipping parameters (e.g. hitting space) and robust parsing.
-- [ ] **Improved `/roll` Dice Roller**: Accept custom dice formulas via the new command engine, insert a stylized inline node, and automatically log the result to the sidebar's roll log.
-- [ ] **Intelligent Clock Commands**: Keep `/clock` creation as a simple number input for speed. Update `/increment` and `/decrement` to populate a dropdown of active clocks dynamically pulled from the new context engine state.
-- [ ] **New `/advance` Track Command**: Add a dedicated command to advance progress tracks using active tracks from the context engine.
+### Phase 6.2: Command Formula Engine ✅
+- [x] **Command Formula & UI Upgrades**: Built a passive Google Sheets-style hint panel that shows parameter expectations inline. Cursor stays in the editor — space triggers hint mode, Tab advances params, arrow keys navigate select dropdowns, Enter executes.
+- [x] **Unified `/oracle` Fate Check**: Accepts raw odds number + question via inline params (e.g., `/oracle 75 Is the door locked?`). Implements 20% exceptional threshold (Exceptional Yes/No).
+- [x] **Improved `/roll` Dice Roller**: Accepts custom dice formulas (e.g., `2d6+3`), validates with real-time feedback (✓/✗), inserts stylized inline node, and logs to sidebar roll log via `gameSession.addRoll()`.
+- [x] **Intelligent Clock Commands**: `/increment` and `/decrement` populate a dropdown of active clocks from contextEngine. Arrow keys navigate, Enter selects.
+- [x] **New `/advance` Track Command**: Advances progress tracks with optional amount param, using active tracks from contextEngine.
 
 ### Phase 6.3: Editor Synchronization & Rewind Logic
 - [ ] **Mechanics Feedback & Rewind Mode**: When active at the end of the document, incrementing/decrementing a clock should auto-inject visual feedback into the prose. Disable this automatic feedback when the cursor is in "rewind" mode (editing past blocks) to prevent logical timeline conflicts. Force manual re-attachment of events when editing past prose instead.
