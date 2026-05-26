@@ -1,18 +1,66 @@
 <script lang="ts">
+	import { contextEngine, reduceWikiEvents } from '$lib/stores/contextEngine.svelte';
+
 	let {
+		entityId = null,
+		blockId = null,
 		segments = 4,
 		filled = 0,
 		name = '',
 		action = 'create'
 	} = $props<{
+		entityId?: string | null;
+		blockId?: string | null;
 		segments?: number;
 		filled?: number;
 		name?: string;
 		action?: 'create' | 'increment' | 'decrement';
 	}>();
 
+	const derivedState = $derived.by(() => {
+		if (!entityId) return null;
+
+		let slicedEvents = contextEngine.rawEvents;
+		if (blockId) {
+			const index = contextEngine.rawEvents.findIndex((e) => e.block_id === blockId);
+			if (index !== -1) {
+				slicedEvents = contextEngine.rawEvents.slice(0, index + 1);
+			} else {
+				// Fallback: if event not in database yet, filter using block sequence in document
+				const blockIndex = contextEngine.orderedBlockIds.indexOf(blockId);
+				if (blockIndex !== -1) {
+					const visibleBlocks = new Set(contextEngine.orderedBlockIds.slice(0, blockIndex + 1));
+					slicedEvents = contextEngine.rawEvents.filter(
+						(e) => !e.block_id || visibleBlocks.has(e.block_id)
+					);
+				}
+			}
+		}
+
+		const reducedMap = reduceWikiEvents(
+			slicedEvents,
+			null, // No additional block-visibility filtering needed
+			contextEngine.baseEntities
+		);
+		return reducedMap.get(entityId) || null;
+	});
+
+	const finalSegments = $derived(
+		derivedState?.metadata?.segments !== undefined
+			? (derivedState.metadata.segments as number)
+			: segments
+	);
+
+	const finalFilled = $derived(
+		derivedState?.metadata?.filled !== undefined
+			? (derivedState.metadata.filled as number)
+			: filled
+	);
+
+	const finalName = $derived(derivedState?.name || name);
+
 	// Validate segments (must be an even number between 4 and 12 for standard clocks)
-	const validSegments = [4, 6, 8, 10, 12].includes(segments) ? segments : 4;
+	const validSegments = $derived([4, 6, 8, 10, 12].includes(finalSegments) ? finalSegments : 4);
 
 	// Calculate SVG paths for segments
 	function getSegmentPath(index: number, total: number) {
@@ -56,23 +104,23 @@
 		{#each Array(validSegments) as _, i}
 			<path
 				d={getSegmentPath(i, validSegments)}
-				class="stroke-stone-950 stroke-[1.5] transition-all duration-500 {i < filled
+				class="stroke-stone-950 stroke-[1.5] transition-all duration-500 {i < finalFilled
 					? 'fill-primary drop-shadow-[0_0_4px_var(--color-primary)]'
 					: 'fill-stone-900/60'}"
 			/>
 		{/each}
 	</svg>
-	{#if name}
+	{#if finalName}
 		<div class="flex flex-col items-center">
 			<span
 				class="text-center text-xs leading-tight font-bold text-stone-300 transition-colors group-hover:text-white"
-				>{name}</span
+				>{finalName}</span
 			>
 			<span class="mt-1 text-[9px] font-bold tracking-widest text-stone-500 uppercase">
 				{#if action === 'create'}
-					Start ({filled}/{validSegments})
+					Start ({finalFilled}/{validSegments})
 				{:else}
-					{action}d ({filled}/{validSegments})
+					{action}d ({finalFilled}/{validSegments})
 				{/if}
 			</span>
 		</div>

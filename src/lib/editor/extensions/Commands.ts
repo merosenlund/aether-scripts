@@ -167,7 +167,7 @@ export const getSuggestionItems = ({ query }: { query: string; editor: CustomEdi
 						event_type: 'create',
 						payload: { name, category: 'Clock', metadata: { segments, filled: 0 } }
 					});
-					await contextEngine.initScene(sceneId, editor.getJSON());
+					await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
 				}
 			}
 		},
@@ -219,7 +219,7 @@ export const getSuggestionItems = ({ query }: { query: string; editor: CustomEdi
 						event_type: 'increment_clock',
 						payload: { amount: 1 }
 					});
-					await contextEngine.initScene(sceneId, editor.getJSON());
+					await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
 				}
 			}
 		},
@@ -272,7 +272,7 @@ export const getSuggestionItems = ({ query }: { query: string; editor: CustomEdi
 						event_type: 'create',
 						payload: { name, category: 'Track', metadata: { max, current: 0 } }
 					});
-					await contextEngine.initScene(sceneId, editor.getJSON());
+					await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
 				}
 			}
 		},
@@ -338,8 +338,191 @@ export const getSuggestionItems = ({ query }: { query: string; editor: CustomEdi
 		}
 	];
 
-	// 1. Check for dynamic /clock <segments> <name> or /clock inc <name>
-	if (query.toLowerCase().startsWith('clock ')) {
+	const queryLower = query.toLowerCase().trim();
+
+	// 1. Dynamic /increment or /inc
+	if (queryLower.startsWith('increment ') || queryLower.startsWith('inc ')) {
+		const name = query.slice(queryLower.startsWith('increment ') ? 10 : 4).trim();
+		if (name) {
+			return [
+				{
+					title: `Increment Clock: "${name}"`,
+					description: `Tally up 1 segment on the "${name}" clock`,
+					icon: 'clock',
+					command: async ({ editor, range }: CommandArgs) => {
+						const serialId = editor.serialId;
+						const sceneId = editor.sceneId;
+						let entityId = '';
+
+						if (serialId) {
+							const { data } = await supabase
+								.from('wiki_entities')
+								.select('id')
+								.eq('serial_id', serialId)
+								.ilike('name', name)
+								.eq('category', 'Clock')
+								.maybeSingle();
+							if (data) entityId = data.id;
+						}
+
+						const blockId = crypto.randomUUID();
+						editor
+							.chain()
+							.focus()
+							.deleteRange(range)
+							.insertContent({
+								type: 'clockBlock',
+								attrs: {
+									id: blockId,
+									entityId,
+									name,
+									action: 'increment'
+								}
+							})
+							.run();
+
+						if (serialId && sceneId && entityId) {
+							await supabase.from('wiki_events').insert({
+								entity_id: entityId,
+								scene_id: sceneId,
+								block_id: blockId,
+								event_type: 'increment_clock',
+								payload: { amount: 1 }
+							});
+							await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
+						}
+					}
+				}
+			];
+		}
+	}
+
+	// 2. Dynamic /decrement or /dec
+	if (queryLower.startsWith('decrement ') || queryLower.startsWith('dec ')) {
+		const name = query.slice(queryLower.startsWith('decrement ') ? 10 : 4).trim();
+		if (name) {
+			return [
+				{
+					title: `Decrement Clock: "${name}"`,
+					description: `Remove 1 segment from the "${name}" clock`,
+					icon: 'clock',
+					command: async ({ editor, range }: CommandArgs) => {
+						const serialId = editor.serialId;
+						const sceneId = editor.sceneId;
+						let entityId = '';
+
+						if (serialId) {
+							const { data } = await supabase
+								.from('wiki_entities')
+								.select('id')
+								.eq('serial_id', serialId)
+								.ilike('name', name)
+								.eq('category', 'Clock')
+								.maybeSingle();
+							if (data) entityId = data.id;
+						}
+
+						const blockId = crypto.randomUUID();
+						editor
+							.chain()
+							.focus()
+							.deleteRange(range)
+							.insertContent({
+								type: 'clockBlock',
+								attrs: {
+									id: blockId,
+									entityId,
+									name,
+									action: 'decrement'
+								}
+							})
+							.run();
+
+						if (serialId && sceneId && entityId) {
+							await supabase.from('wiki_events').insert({
+								entity_id: entityId,
+								scene_id: sceneId,
+								block_id: blockId,
+								event_type: 'decrement_clock',
+								payload: { amount: 1 }
+							});
+							await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
+						}
+					}
+				}
+			];
+		}
+	}
+
+	// 3. Dynamic /roll
+	if (queryLower.startsWith('roll ')) {
+		const formula = query.slice(5).trim();
+		if (formula) {
+			return [
+				{
+					title: `Roll Dice: "${formula}"`,
+					description: `Roll a custom dice formula (e.g. ${formula})`,
+					icon: 'dice',
+					command: ({ editor, range }: CommandArgs) => {
+						const match = formula.match(/^(\d*)d(\d+)$/i);
+						let result = 0;
+						if (match) {
+							const count = parseInt(match[1]) || 1;
+							const sides = parseInt(match[2]) || 6;
+							for (let i = 0; i < count; i++) {
+								result += Math.floor(Math.random() * sides) + 1;
+							}
+						} else {
+							result = Math.floor(Math.random() * 100) + 1;
+						}
+
+						editor
+							.chain()
+							.focus()
+							.deleteRange(range)
+							.insertContent({
+								type: 'diceRoller',
+								attrs: {
+									formula,
+									result
+								}
+							})
+							.run();
+					}
+				}
+			];
+		}
+	}
+
+	// 4. Dynamic /odds
+	if (queryLower.startsWith('odds ')) {
+		const targetStr = query.slice(5).trim();
+		const target = parseInt(targetStr) || 50;
+		return [
+			{
+				title: `Roll vs ${target}%`,
+				description: `Check odds with target ${target}`,
+				icon: 'dice',
+				command: ({ editor, range }: CommandArgs) => {
+					editor
+						.chain()
+						.focus()
+						.deleteRange(range)
+						.insertContent({
+							type: 'oddsCheck',
+							attrs: {
+								target,
+								roll: Math.floor(Math.random() * 100) + 1
+							}
+						})
+						.run();
+				}
+			}
+		];
+	}
+
+	// 5. Check for dynamic /clock <segments> <name> or /clock inc/dec <name>
+	if (queryLower.startsWith('clock ')) {
 		const argsStr = query.slice(6).trim();
 
 		// Match /clock inc <name> or /clock + <name>
@@ -391,7 +574,7 @@ export const getSuggestionItems = ({ query }: { query: string; editor: CustomEdi
 								event_type: 'increment_clock',
 								payload: { amount: 1 }
 							});
-							await contextEngine.initScene(sceneId, editor.getJSON());
+							await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
 						}
 					}
 				}
@@ -447,7 +630,7 @@ export const getSuggestionItems = ({ query }: { query: string; editor: CustomEdi
 								event_type: 'decrement_clock',
 								payload: { amount: 1 }
 							});
-							await contextEngine.initScene(sceneId, editor.getJSON());
+							await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
 						}
 					}
 				}
@@ -502,7 +685,7 @@ export const getSuggestionItems = ({ query }: { query: string; editor: CustomEdi
 								event_type: 'create',
 								payload: { name, category: 'Clock', metadata: { segments, filled: 0 } }
 							});
-							await contextEngine.initScene(sceneId, editor.getJSON());
+							await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
 						}
 					}
 				}

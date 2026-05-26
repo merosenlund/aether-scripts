@@ -151,25 +151,10 @@
 
 	let yjsLoaded = $state(false);
 	let hasYjsData = $state(true);
-	let baseClocks = $state<unknown[]>([]);
 
 	onMount(async () => {
 		if (sceneId) {
-			await contextEngine.initScene(sceneId, initialContent || content);
-		}
-
-		if (serialId) {
-			const { data } = await supabase
-				.from('wiki_entities')
-				.select('*')
-				.eq('serial_id', serialId)
-				.eq('category', 'Clock');
-			if (data) {
-				baseClocks = data;
-				if (editor) {
-					(editor as unknown as Record<string, unknown>).baseClocks = baseClocks;
-				}
-			}
+			await contextEngine.initScene(sceneId, initialContent || content, serialId);
 		}
 
 		ydoc = new Y.Doc();
@@ -252,6 +237,7 @@
 				onUpdate(e.getHTML());
 				queueAutosave();
 				checkDeletedBlocks(e);
+				contextEngine.parseDocBlocks(e.getJSON());
 			},
 			onTransaction: () => {
 				editor = editor;
@@ -269,7 +255,6 @@
 
 		(editor as unknown as Record<string, unknown>).serialId = serialId;
 		(editor as unknown as Record<string, unknown>).sceneId = sceneId;
-		(editor as unknown as Record<string, unknown>).baseClocks = baseClocks;
 
 		if (typeof window !== 'undefined') {
 			window.addEventListener('pagehide', handleUnload);

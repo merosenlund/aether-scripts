@@ -224,3 +224,48 @@ Deno.test('ContextEngineStore: markAsRead updates readBlockIds state chronologic
 	contextEngine.revealAll();
 	assertEquals(contextEngine.readBlockIds.size, 0);
 });
+
+Deno.test('reduceWikiEvents: seeds state from baseEntities even without events', () => {
+	const baseEntities: any[] = [
+		{
+			id: 'entity-base-1',
+			serial_id: 'serial-1',
+			name: 'Gondor',
+			category: 'location',
+			description: 'A grand kingdom.',
+			metadata: { population: 'many' },
+			created_at: '2026-05-19T00:00:00Z'
+		}
+	];
+
+	const result = reduceWikiEvents([], null, baseEntities);
+	const entity = result.get('entity-base-1');
+	assertEquals(entity?.name, 'Gondor');
+	assertEquals(entity?.category, 'location');
+	assertEquals(entity?.description, 'A grand kingdom.');
+	assertEquals(entity?.metadata.population, 'many');
+	assertEquals(entity?.facts.length, 0);
+});
+
+Deno.test('Chronological slicing: Clock blocks show states up to their anchoring event', () => {
+	const baseEntities = [
+		{ id: 'clock-1', name: 'Alert Level', category: 'clock', metadata: { segments: 6, filled: 0 } }
+	];
+	const events = [
+		{ id: 'ev-1', entity_id: 'clock-1', event_type: 'create', payload: {}, block_id: 'block-1' },
+		{ id: 'ev-2', entity_id: 'clock-1', event_type: 'increment_clock', payload: {}, block_id: null }, // sidebar trigger
+		{ id: 'ev-3', entity_id: 'clock-1', event_type: 'increment_clock', payload: {}, block_id: 'block-3' }
+	];
+
+	// For Block 1 (anchored to ev-1)
+	const index1 = events.findIndex(e => e.block_id === 'block-1');
+	const sliced1 = events.slice(0, index1 + 1);
+	const res1 = reduceWikiEvents(sliced1 as any, null, baseEntities as any);
+	assertEquals(res1.get('clock-1')?.metadata.filled, 0); // Should be 0 (ignores the sidebar event and later events)
+
+	// For Block 3 (anchored to ev-3)
+	const index3 = events.findIndex(e => e.block_id === 'block-3');
+	const sliced3 = events.slice(0, index3 + 1);
+	const res3 = reduceWikiEvents(sliced3 as any, null, baseEntities as any);
+	assertEquals(res3.get('clock-1')?.metadata.filled, 2); // Should be 2 (includes sidebar event + block-3 increment)
+});

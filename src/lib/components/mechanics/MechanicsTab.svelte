@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getWikiEntities, getWikiEvents, type WikiEntity } from '$lib/api/wiki';
+	import { getWikiEvents, type WikiEntity } from '$lib/api/wiki';
 	import { Plus, Timer, Activity } from '@lucide/svelte';
 	import { notifications } from '$lib/stores/notifications';
 	import { slide } from 'svelte/transition';
@@ -20,15 +20,19 @@
 		};
 	}>();
 
-	let entities = $state<WikiEntity[]>([]);
 	let isLoading = $state(true);
+
+	const entities = $derived(
+		contextEngine.baseEntities.filter(
+			(e) => e.category?.toLowerCase() === 'clock' || e.category?.toLowerCase() === 'track'
+		)
+	);
 
 	async function loadMechanics() {
 		try {
-			const data = await getWikiEntities(serialId);
-			entities = data.filter(
-				(e) => e.category?.toLowerCase() === 'clock' || e.category?.toLowerCase() === 'track'
-			);
+			if (contextEngine.baseEntities.length === 0) {
+				await contextEngine.loadBaseEntities(serialId);
+			}
 
 			// Initialize events in contextEngine if not loaded
 			if (contextEngine.rawEvents.length === 0) {
@@ -91,7 +95,8 @@
 			// Refresh events in contextEngine
 			contextEngine.rawEvents = await getWikiEvents(sceneId);
 
-			entities = [...entities, data as WikiEntity];
+			// Update baseEntities reactively
+			contextEngine.baseEntities = [...contextEngine.baseEntities, data as WikiEntity];
 			notifications.success(`${type} created!`);
 		} catch (e) {
 			console.error(e);

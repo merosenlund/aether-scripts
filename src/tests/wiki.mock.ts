@@ -31,3 +31,7 @@ export interface WikiEvent {
 export async function getWikiEvents(sceneId: string): Promise<WikiEvent[]> {
 	return [];
 }
+
+export async function getWikiEntities(serialId: string): Promise<WikiEntity[]> {
+	return [];
+}

@@ -1,4 +1,4 @@
-import { getWikiEvents, type WikiEvent } from '$lib/api/wiki';
+import { getWikiEvents, getWikiEntities, type WikiEvent, type WikiEntity } from '$lib/api/wiki';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 export interface ReducedEntity {
@@ -12,9 +12,22 @@ export interface ReducedEntity {
 
 export function reduceWikiEvents(
 	events: WikiEvent[],
-	activeBlockIdsSet: Set<string> | SvelteSet<string> | null
+	activeBlockIdsSet: Set<string> | SvelteSet<string> | null,
+	baseEntities: WikiEntity[] = []
 ) {
 	const entitiesMap = new SvelteMap<string, ReducedEntity>();
+
+	// Initialize with baseEntities if provided, to ensure base properties exist
+	for (const entity of baseEntities) {
+		entitiesMap.set(entity.id, {
+			id: entity.id,
+			name: entity.name || '',
+			category: entity.category || 'other',
+			description: entity.description || '',
+			metadata: entity.metadata || {},
+			facts: []
+		});
+	}
 
 	// Filter events based on block-level chronological visibility
 	const filteredEvents = events.filter((event) => {
@@ -113,6 +126,9 @@ class ContextEngineStore {
 	// Raw event streams
 	rawEvents = $state<WikiEvent[]>([]);
 
+	// Base wiki entities list
+	baseEntities = $state<WikiEntity[]>([]);
+
 	// Sequence of blocks in the active document
 	orderedBlockIds = $state<string[]>([]);
 
@@ -121,18 +137,23 @@ class ContextEngineStore {
 
 	// Derive the reduced entities state reactively
 	reducedEntities = $derived.by(() => {
-		// If readBlockIds is empty, we default to author mode (show all events)
 		const filterSet = this.readBlockIds.size > 0 ? this.readBlockIds : null;
-		return this.rawEvents.length > 0
-			? reduceWikiEvents(this.rawEvents, filterSet)
-			: new SvelteMap<string, ReducedEntity>();
+		return reduceWikiEvents(this.rawEvents, filterSet, this.baseEntities);
 	});
 
+	// Load base entities
+	async loadBaseEntities(serialId: string) {
+		this.baseEntities = await getWikiEntities(serialId);
+	}
+
 	// Helper to load events for a scene
-	async initScene(sceneId: string, docJson: unknown) {
+	async initScene(sceneId: string, docJson: unknown, serialId?: string) {
 		this.rawEvents = await getWikiEvents(sceneId);
 		this.parseDocBlocks(docJson);
 		this.readBlockIds.clear();
+		if (serialId) {
+			await this.loadBaseEntities(serialId);
+		}
 	}
 
 	// Parse Tiptap JSON to construct the physical block ordering
@@ -179,3 +200,4 @@ class ContextEngineStore {
 }
 
 export const contextEngine = new ContextEngineStore();
+

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getWikiEntities, createWikiEvent, getWikiEvents, type WikiEntity } from '$lib/api/wiki';
+	import { createWikiEvent, getWikiEvents, type WikiEntity } from '$lib/api/wiki';
 	import { Sparkles, Pin, User, MapPin, Flag, Timer, Plus } from '@lucide/svelte';
 	import { notifications } from '$lib/stores/notifications';
 	import { fade, slide } from 'svelte/transition';
@@ -18,14 +18,14 @@
 		visibleBlockIds?: string[];
 	}>();
 
-	let entities = $state<WikiEntity[]>([]);
 	let isLoading = $state(true);
 	let searchQuery = $state('');
 
 	onMount(async () => {
 		try {
-			const eData = await getWikiEntities(serialId);
-			entities = eData;
+			if (contextEngine.baseEntities.length === 0) {
+				await contextEngine.loadBaseEntities(serialId);
+			}
 			// Initialize events in contextEngine if not loaded
 			if (contextEngine.rawEvents.length === 0) {
 				contextEngine.rawEvents = await getWikiEvents(sceneId);
@@ -42,7 +42,7 @@
 	// OR if we are in editor/author mode (where visibleBlockIds length is 0)
 	const revealedEntityIds = $derived.by(() => {
 		if (!visibleBlockIds || visibleBlockIds.length === 0) {
-			return new Set(entities.map((e) => e.id));
+			return new Set(contextEngine.baseEntities.map((e) => e.id));
 		}
 		return new Set(contextEngine.reducedEntities.keys());
 	});
@@ -71,7 +71,7 @@
 	}
 
 	const filteredEntities = $derived(
-		entities.filter((e) => {
+		contextEngine.baseEntities.filter((e) => {
 			const state = getEntityState(e);
 			return state.name.toLowerCase().includes(searchQuery.toLowerCase());
 		})

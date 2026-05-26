@@ -43,12 +43,20 @@ export const TrackBlock = Node.create({
 				'shadow-inner'
 			);
 
+			const entityId = node.attrs.entityId;
+			const blockId = node.attrs.id;
+			const name = node.attrs.name;
+			const max = node.attrs.max || 10;
+			const currentVal = node.attrs.current || 0;
+
 			const component = mount(ProgressTrackComponent, {
 				target: dom,
 				props: {
-					max: node.attrs.max,
-					current: node.attrs.current,
-					name: node.attrs.name
+					entityId,
+					blockId,
+					max,
+					current: currentVal,
+					name
 				}
 			});
 
