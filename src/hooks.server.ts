@@ -38,8 +38,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const routeId = event.route.id || '';
 	const isAuthorRoute = routeId.startsWith('/(author)');
 	const isAccountRoute = routeId.startsWith('/account');
+	const isSettingsRoute = routeId.startsWith('/settings');
 
-	if (isAuthorRoute || isAccountRoute) {
+	if (isAuthorRoute || isAccountRoute || isSettingsRoute) {
 		if (!session) {
 			return new Response('Redirect', { status: 303, headers: { Location: '/login' } });
 		}
