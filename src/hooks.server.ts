@@ -15,24 +15,38 @@ export const handle: Handle = async ({ event, resolve }) => {
 	});
 
 	event.locals.getSession = async () => {
-		const {
-			data: { session }
-		} = await event.locals.supabase.auth.getSession();
-
-		if (session) {
+		try {
 			const {
-				data: { user },
-				error
-			} = await event.locals.supabase.auth.getUser();
-			if (error || !user) {
-				await event.locals.supabase.auth.signOut();
-				return null;
+				data: { session }
+			} = await event.locals.supabase.auth.getSession();
+
+			if (session) {
+				const {
+					data: { user },
+					error
+				} = await event.locals.supabase.auth.getUser();
+				if (error || !user) {
+					try {
+						await event.locals.supabase.auth.signOut();
+					} catch (signOutError) {
+						console.error('Error during signOut on invalid session:', signOutError);
+					}
+					return null;
+				}
 			}
+			return session;
+		} catch (e) {
+			console.error('Error in event.locals.getSession:', e);
+			return null;
 		}
-		return session;
 	};
 
-	const session = await event.locals.getSession();
+	let session = null;
+	try {
+		session = await event.locals.getSession();
+	} catch (e) {
+		console.error('Error getting session in hooks handle:', e);
+	}
 
 	// Basic route protection
 	const routeId = event.route.id || '';

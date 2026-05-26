@@ -66,9 +66,9 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 ## Phase 6: Authoring Experience Reboot
 
 ### Phase 6.1: Reactive State Architecture Refactor
-- [ ] **Shared Entity State**: Move fetching and storage of `entities` into the global `contextEngine.svelte.ts` store to act as the single source of truth.
-- [ ] **Reactive Sidebars**: Update sidebars to read directly from `contextEngine.entities` so they update instantaneously across the app without manual refresh.
-- [ ] **Dynamic Node Views**: Refactor NodeViews (like `ClockBlock.ts`) to derive their state reactively by scanning `contextEngine.rawEvents`, ensuring PERFECT sync between what the sidebars see and what the prose displays.
+- [x] **Shared Entity State**: Move fetching and storage of `entities` into the global `contextEngine.svelte.ts` store to act as the single source of truth.
+- [x] **Reactive Sidebars**: Update sidebars to read directly from `contextEngine.entities` so they update instantaneously across the app without manual refresh.
+- [x] **Dynamic Node Views**: Refactor NodeViews (like `ClockBlock.ts`) to derive their state reactively by scanning `contextEngine.rawEvents`, ensuring PERFECT sync between what the sidebars see and what the prose displays.
 
 ### Phase 6.2: Command Formula Engine
 - [ ] **Command Formula & UI Upgrades**: Build out a formula-like interface for commands (Google Sheets style) that shows parameter expectations and default values, allowing seamless transitions between dropdown selections and free text entry.

@@ -9,6 +9,14 @@ export const ClockBlock = Node.create({
 
 	addAttributes() {
 		return {
+			id: {
+				default: null,
+				parseHTML: (element) => element.getAttribute('data-id') || element.getAttribute('id'),
+				renderHTML: (attributes) => {
+					if (!attributes.id) return {};
+					return { 'data-id': attributes.id, id: attributes.id };
+				}
+			},
 			entityId: { default: null },
 			name: { default: '' },
 			segments: { default: 4 },

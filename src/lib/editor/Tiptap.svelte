@@ -64,6 +64,10 @@
 	let isSaving = $state(false);
 	let staticSaveStatus = $state<'synced' | 'saving' | 'error'>('synced');
 	let yjsSaveStatus = $state<'synced' | 'saving' | 'error'>('synced');
+	// Gate checkDeletedBlocks until editor content has fully loaded.
+	// Without this, the function fires during Yjs sync and permanently
+	// nullifies event block_ids that haven't appeared in the DOM yet.
+	let isEditorReady = $state(false);
 
 	$effect(() => {
 		if (staticSaveStatus === 'error' || yjsSaveStatus === 'error') {
@@ -117,7 +121,7 @@
 	}
 
 	async function checkDeletedBlocks(currentEditor: Editor) {
-		if (!sceneId || !editable) return;
+		if (!sceneId || !editable || !isEditorReady) return;
 
 		const currentBlockIds = new SvelteSet<string>();
 		currentEditor.state.doc.descendants((node) => {
@@ -151,6 +155,7 @@
 
 	let yjsLoaded = $state(false);
 	let hasYjsData = $state(true);
+	let editorReadyTimer: ReturnType<typeof setTimeout> | undefined;
 
 	onMount(async () => {
 		if (sceneId) {
@@ -260,6 +265,12 @@
 			window.addEventListener('pagehide', handleUnload);
 			window.addEventListener('beforeunload', handleUnload);
 		}
+
+		// For non-editable (read-only) views, there is no Yjs sync phase,
+		// so the editor is ready immediately after creation.
+		if (!editable) {
+			isEditorReady = true;
+		}
 	});
 
 	$effect(() => {
@@ -324,6 +335,21 @@
 		}
 	});
 
+	// Mark the editor as ready once Yjs has finished loading and the
+	// document has had time to fully sync into the editor state.
+	// This prevents checkDeletedBlocks from firing during initialization
+	// and permanently destroying event block_id anchors.
+	$effect(() => {
+		if (editable && yjsLoaded && editor) {
+			// Clear any previous timer (guards against effect re-firing)
+			if (editorReadyTimer) clearTimeout(editorReadyTimer);
+			editorReadyTimer = setTimeout(() => {
+				isEditorReady = true;
+				console.log('[Tiptap] Editor is now ready — checkDeletedBlocks enabled.');
+			}, 500);
+		}
+	});
+
 	export const getIsSaving = () => isSaving;
 
 	export async function save() {
@@ -341,6 +367,9 @@
 	}
 
 	onDestroy(() => {
+		if (editorReadyTimer) {
+			clearTimeout(editorReadyTimer);
+		}
 		if (saveTimeout) {
 			clearTimeout(saveTimeout);
 			saveCurrentContent();

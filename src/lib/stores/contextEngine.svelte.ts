@@ -24,7 +24,7 @@ export function reduceWikiEvents(
 			name: entity.name || '',
 			category: entity.category || 'other',
 			description: entity.description || '',
-			metadata: entity.metadata || {},
+			metadata: { ...(entity.metadata || {}) },
 			facts: []
 		});
 	}
