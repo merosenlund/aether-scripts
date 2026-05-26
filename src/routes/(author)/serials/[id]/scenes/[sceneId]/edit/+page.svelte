@@ -18,6 +18,7 @@
 	let editorComponent = $state<any>();
 	let isSavingSettings = $state(false);
 	let saveSuccess = $state(false);
+	let saveStatus = $state<'synced' | 'saving' | 'error'>('synced');
 
 	async function saveMetadata() {
 		isSavingSettings = true;
@@ -48,15 +49,37 @@
 		>
 			<div class="flex h-full min-h-0 w-full max-w-4xl flex-col">
 				<!-- Editor Header / Action Row -->
-				<div class="mb-6 flex shrink-0 justify-end gap-3">
-					<button
-						onclick={() => editorComponent?.save()}
-						disabled={editorComponent?.getIsSaving?.()}
-						class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-5 py-2 text-xs font-bold shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
-					>
-						<Save class="mr-2 h-3.5 w-3.5" />
-						{editorComponent?.getIsSaving?.() ? 'Saving...' : 'Create Snapshot'}
-					</button>
+				<div class="mb-6 flex shrink-0 items-center justify-between">
+					<!-- Left side: Autosave Status Indicator -->
+					<div class="flex items-center gap-2">
+						<div class="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-3 py-1.5 text-[10px] font-bold tracking-widest text-stone-400 uppercase select-none transition-all duration-300 shadow-sm">
+							{#if saveStatus === 'saving'}
+								<span class="relative flex h-1.5 w-1.5">
+									<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+									<span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+								</span>
+								<span class="text-amber-400/90 animate-pulse font-bold">Saving...</span>
+							{:else if saveStatus === 'error'}
+								<span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+								<span class="text-rose-400 font-extrabold">Save Error</span>
+							{:else}
+								<span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+								<span class="text-stone-400 text-opacity-80">Synced</span>
+							{/if}
+						</div>
+					</div>
+
+					<!-- Right side: Buttons -->
+					<div class="flex gap-3">
+						<button
+							onclick={() => editorComponent?.save()}
+							disabled={editorComponent?.getIsSaving?.()}
+							class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-5 py-2 text-xs font-bold shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
+						>
+							<Save class="mr-2 h-3.5 w-3.5" />
+							{editorComponent?.getIsSaving?.() ? 'Saving...' : 'Create Snapshot'}
+						</button>
+					</div>
 				</div>
 
 				<!-- Editor Canvas -->
@@ -64,6 +87,7 @@
 					<Tiptap
 						bind:this={editorComponent}
 						bind:content
+						bind:saveStatus
 						initialContent={data.scene.content_blocks || null}
 						bind:activeBlockId
 						sceneId={data.scene.id}

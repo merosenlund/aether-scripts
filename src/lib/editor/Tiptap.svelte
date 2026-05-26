@@ -37,7 +37,8 @@
 		placeholder = 'Write your story...',
 		activeBlockId = $bindable(''),
 		cursorState = $bindable({ clocks: {} }),
-		editable = true
+		editable = true,
+		saveStatus = $bindable('synced')
 	} = $props<{
 		content?: string | Record<string, unknown> | null;
 		initialContent?: string | Record<string, unknown> | null;
@@ -51,6 +52,7 @@
 			clocks?: Record<string, { entityId: string; name: string; segments: number; filled: number }>;
 		};
 		editable?: boolean;
+		saveStatus?: 'synced' | 'saving' | 'error';
 	}>();
 
 	let element: HTMLElement;
@@ -63,10 +65,14 @@
 	let staticSaveStatus = $state<'synced' | 'saving' | 'error'>('synced');
 	let yjsSaveStatus = $state<'synced' | 'saving' | 'error'>('synced');
 
-	let saveStatus = $derived.by(() => {
-		if (staticSaveStatus === 'error' || yjsSaveStatus === 'error') return 'error';
-		if (staticSaveStatus === 'saving' || yjsSaveStatus === 'saving') return 'saving';
-		return 'synced';
+	$effect(() => {
+		if (staticSaveStatus === 'error' || yjsSaveStatus === 'error') {
+			saveStatus = 'error';
+		} else if (staticSaveStatus === 'saving' || yjsSaveStatus === 'saving') {
+			saveStatus = 'saving';
+		} else {
+			saveStatus = 'synced';
+		}
 	});
 
 	import { supabase } from '$lib/supabaseClient';
@@ -367,22 +373,7 @@
 <div
 	class="relative flex h-full flex-col rounded-2xl border border-white/10 bg-stone-900/50 shadow-xl backdrop-blur-md"
 >
-	<!-- Beautiful, floating premium Autosave status indicator -->
-	<div class="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-white/5 bg-stone-950/80 px-3 py-1.5 text-[10px] font-bold tracking-widest text-stone-400 uppercase shadow-lg backdrop-blur-md transition-all duration-300 select-none">
-		{#if saveStatus === 'saving'}
-			<span class="relative flex h-1.5 w-1.5">
-				<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-				<span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-			</span>
-			<span class="text-amber-400/90 animate-pulse">Saving...</span>
-		{:else if saveStatus === 'error'}
-			<span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
-			<span class="text-rose-400">Save Error</span>
-		{:else}
-			<span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
-			<span class="text-stone-400 text-opacity-80">Synced</span>
-		{/if}
-	</div>
+
 
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->

@@ -16,6 +16,7 @@
 	let isPreview = $state(false);
 	let editorComponent = $state<any>();
 	let cursorState = $state<any>({ clocks: {} });
+	let saveStatus = $state<'synced' | 'saving' | 'error'>('synced');
 </script>
 
 <div class="absolute inset-0 flex flex-col overflow-hidden bg-stone-950 font-sans text-stone-100">
@@ -26,26 +27,50 @@
 		>
 			<div class="flex h-full min-h-0 w-full max-w-4xl flex-col">
 				<!-- Controls -->
-				<div class="mb-6 flex shrink-0 justify-end gap-3">
-					<button
-						onclick={() => (isPreview = !isPreview)}
-						class="rounded-xl border p-2.5 shadow-sm transition-all {isPreview
-							? 'bg-primary/20 border-primary text-primary'
-							: 'border-white/10 bg-white/5 text-stone-400 hover:border-white/20 hover:text-white'}"
-						title={isPreview ? 'Back to Editor' : 'Reader Preview'}
-					>
-						<Eye class="h-4 w-4" />
-					</button>
-					{#if !isPreview}
+				<div class="mb-6 flex shrink-0 items-center justify-between">
+					<!-- Left side: Autosave Status Indicator -->
+					<div class="flex items-center gap-2">
+						{#if !isPreview}
+							<div class="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-3 py-1.5 text-[10px] font-bold tracking-widest text-stone-400 uppercase select-none transition-all duration-300 shadow-sm">
+								{#if saveStatus === 'saving'}
+									<span class="relative flex h-1.5 w-1.5">
+										<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+										<span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+									</span>
+									<span class="text-amber-400/90 animate-pulse font-bold">Saving...</span>
+								{:else if saveStatus === 'error'}
+									<span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+									<span class="text-rose-400 font-extrabold">Save Error</span>
+								{:else}
+									<span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+									<span class="text-stone-400 text-opacity-80">Synced</span>
+								{/if}
+							</div>
+						{/if}
+					</div>
+
+					<!-- Right side: Buttons -->
+					<div class="flex gap-3">
 						<button
-							onclick={() => editorComponent?.save()}
-							disabled={editorComponent?.getIsSaving?.()}
-							class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-5 py-2 text-xs font-bold shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
+							onclick={() => (isPreview = !isPreview)}
+							class="rounded-xl border p-2.5 shadow-sm transition-all {isPreview
+								? 'bg-primary/20 border-primary text-primary'
+								: 'border-white/10 bg-white/5 text-stone-400 hover:border-white/20 hover:text-white'}"
+							title={isPreview ? 'Back to Editor' : 'Reader Preview'}
 						>
-							<Save class="mr-2 h-3.5 w-3.5" />
-							{editorComponent?.getIsSaving?.() ? 'Saving...' : 'Create Snapshot'}
+							<Eye class="h-4 w-4" />
 						</button>
-					{/if}
+						{#if !isPreview}
+							<button
+								onclick={() => editorComponent?.save()}
+								disabled={editorComponent?.getIsSaving?.()}
+								class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-5 py-2 text-xs font-bold shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
+							>
+								<Save class="mr-2 h-3.5 w-3.5" />
+								{editorComponent?.getIsSaving?.() ? 'Saving...' : 'Create Snapshot'}
+							</button>
+						{/if}
+					</div>
 				</div>
 
 				<!-- Editor Canvas -->
@@ -59,6 +84,7 @@
 						<Tiptap
 							bind:this={editorComponent}
 							bind:content
+							bind:saveStatus
 							initialContent={data.scene.content_blocks || null}
 							bind:activeBlockId
 							bind:cursorState
