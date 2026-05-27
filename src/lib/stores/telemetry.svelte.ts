@@ -1,5 +1,6 @@
 import { supabase } from '$lib/supabaseClient';
 import { notifications } from '$lib/stores/notifications';
+import { computeReadabilityMetrics } from '$lib/analytics/readability';
 
 interface SessionState {
 	isActive: boolean;
@@ -11,30 +12,35 @@ interface SessionState {
 	lastActive: number;
 	startingWordCount: number;
 	currentWordCount: number;
+	startingCharCount: number;
+	currentCharCount: number;
+	currentText: string;
 	keystrokes: number;
 	durationSeconds: number;
 }
 
+const EMPTY_STATE: SessionState = {
+	isActive: false,
+	isInitialized: false,
+	sceneId: '',
+	serialId: '',
+	sessionType: 'play',
+	startTime: 0,
+	lastActive: 0,
+	startingWordCount: 0,
+	currentWordCount: 0,
+	startingCharCount: 0,
+	currentCharCount: 0,
+	currentText: '',
+	keystrokes: 0,
+	durationSeconds: 0
+};
+
 function createTelemetryStore() {
-	let state = $state<SessionState>({
-		isActive: false,
-		isInitialized: false,
-		sceneId: '',
-		serialId: '',
-		sessionType: 'play',
-		startTime: 0,
-		lastActive: 0,
-		startingWordCount: 0,
-		currentWordCount: 0,
-		keystrokes: 0,
-		durationSeconds: 0
-	});
+	let state = $state<SessionState>({ ...EMPTY_STATE });
 
 	let timerInterval: any = null;
 
-	// Deriving WPM based on net words written or characters typed?
-	// Standard WPM = (Words Written / Time in Minutes)
-	// Let's make it rolling WPM: (Words written in this session / minutes elapsed)
 	let wpm = $derived.by(() => {
 		if (!state.isActive || state.durationSeconds <= 0) return 0;
 		const minutes = state.durationSeconds / 60;
@@ -46,24 +52,23 @@ function createTelemetryStore() {
 		sceneId: string,
 		serialId: string,
 		sessionType: 'play' | 'edit',
-		initialWordCount: number
+		initialWordCount: number,
+		initialCharCount = 0
 	) {
 		if (state.isActive) {
 			endSession();
 		}
 
 		state = {
-			isActive: false,
+			...EMPTY_STATE,
 			isInitialized: true,
 			sceneId,
 			serialId,
 			sessionType,
-			startTime: 0,
-			lastActive: 0,
 			startingWordCount: initialWordCount,
 			currentWordCount: initialWordCount,
-			keystrokes: 0,
-			durationSeconds: 0
+			startingCharCount: initialCharCount,
+			currentCharCount: initialCharCount
 		};
 
 		if (timerInterval) {
@@ -85,14 +90,19 @@ function createTelemetryStore() {
 		}, 1000);
 	}
 
-	function setInitialWordCount(count: number) {
+	// Called by TelemetryExtension before the session is active to set precise
+	// initial counts from the editor's actual document state.
+	function setInitialCounts(wordCount: number, charCount: number, text: string) {
 		if (!state.isActive) {
-			state.startingWordCount = count;
-			state.currentWordCount = count;
+			state.startingWordCount = wordCount;
+			state.currentWordCount = wordCount;
+			state.startingCharCount = charCount;
+			state.currentCharCount = charCount;
+			state.currentText = text;
 		}
 	}
 
-	function recordActivity(wordCount: number) {
+	function recordActivity(wordCount: number, charCount: number, text: string) {
 		if (!state.isInitialized) return;
 
 		if (!state.isActive) {
@@ -100,6 +110,8 @@ function createTelemetryStore() {
 		}
 
 		state.currentWordCount = wordCount;
+		state.currentCharCount = charCount;
+		state.currentText = text;
 		state.keystrokes += 1;
 		state.lastActive = Date.now();
 	}
@@ -107,12 +119,11 @@ function createTelemetryStore() {
 	function tick() {
 		if (!state.isActive) return;
 		const now = Date.now();
-		const idleLimit = 15 * 60 * 1000; // 15 minutes in ms
+		const idleLimit = 15 * 60 * 1000;
 
 		if (now - state.lastActive < idleLimit) {
 			state.durationSeconds += 1;
 		} else {
-			// 15 minutes of inactivity reached! Auto-flush session using backdated values.
 			endSession(true);
 		}
 	}
@@ -120,7 +131,6 @@ function createTelemetryStore() {
 	async function endSession(isIdleTimeout = false) {
 		if (!state.isActive) return;
 
-		// Clear interval immediately to prevent duplicate runs
 		if (timerInterval) {
 			clearInterval(timerInterval);
 			timerInterval = null;
@@ -128,29 +138,20 @@ function createTelemetryStore() {
 
 		const sessionToSave = { ...state };
 
-		// Reset state first to avoid UI lag
-		state = {
-			isActive: false,
-			isInitialized: false,
-			sceneId: '',
-			serialId: '',
-			sessionType: 'play',
-			startTime: 0,
-			lastActive: 0,
-			startingWordCount: 0,
-			currentWordCount: 0,
-			keystrokes: 0,
-			durationSeconds: 0
-		};
+		state = { ...EMPTY_STATE };
 
-		// Calculate times
 		const endTime = isIdleTimeout ? sessionToSave.lastActive : Date.now();
 		const duration = sessionToSave.durationSeconds;
 
-		// Don't save if there was absolutely zero activity or duration is 0
 		if (duration <= 0 && sessionToSave.keystrokes === 0) {
 			return;
 		}
+
+		const prose = sessionToSave.currentText
+			? computeReadabilityMetrics(sessionToSave.currentText)
+			: null;
+
+		const netChars = sessionToSave.currentCharCount - sessionToSave.startingCharCount;
 
 		try {
 			const {
@@ -168,7 +169,13 @@ function createTelemetryStore() {
 				active_duration_seconds: duration,
 				starting_word_count: sessionToSave.startingWordCount,
 				ending_word_count: sessionToSave.currentWordCount,
-				keystrokes: sessionToSave.keystrokes
+				keystrokes: sessionToSave.keystrokes,
+				starting_char_count: sessionToSave.startingCharCount,
+				net_characters: netChars,
+				avg_sentence_length: prose?.avgSentenceLength ?? null,
+				avg_word_length: prose?.avgWordLength ?? null,
+				flesch_reading_ease: prose?.fleschReadingEase ?? null,
+				type_token_ratio: prose?.typeTokenRatio ?? null
 			});
 
 			if (error) {
@@ -208,7 +215,7 @@ function createTelemetryStore() {
 		},
 		startSession,
 		activateSession,
-		setInitialWordCount,
+		setInitialCounts,
 		recordActivity,
 		endSession
 	};

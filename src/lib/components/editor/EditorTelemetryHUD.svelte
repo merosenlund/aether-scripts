@@ -98,7 +98,8 @@
 				: 0;
 		}
 
-		telemetryStore.startSession(sceneId, serialId, sessionType, initialWordCount);
+		const initialCharCount = text.length;
+		telemetryStore.startSession(sceneId, serialId, sessionType, initialWordCount, initialCharCount);
 
 		// 4. Handle window closing/reloading to save session
 		window.addEventListener('beforeunload', handleUnload);
