@@ -1,5 +1,26 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+
+/**
+ * Verify the active session's user owns the given serial.
+ * Throws 403 if the serial doesn't exist or belongs to a different author.
+ * This runs after the hook has already confirmed the caller is a signed-in author,
+ * so it's purely an ownership check, not an authentication check.
+ */
+async function assertSerialOwner(
+	supabase: App.Locals['supabase'],
+	serialId: string,
+	userId: string
+) {
+	const { data } = await supabase
+		.from('serials')
+		.select('id')
+		.eq('id', serialId)
+		.eq('author_id', userId)
+		.maybeSingle();
+
+	if (!data) throw error(403, 'Forbidden');
+}
 
 export const load: PageServerLoad = async ({ params, locals: { supabase, getSession } }) => {
 	const session = await getSession();
@@ -65,7 +86,11 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, getSess
 };
 
 export const actions: Actions = {
-	updateSceneOrder: async ({ request, locals: { supabase } }) => {
+	updateSceneOrder: async ({ request, params, locals: { supabase, getSession } }) => {
+		const session = await getSession();
+		if (!session) return fail(401, { message: 'Unauthorized' });
+		await assertSerialOwner(supabase, params.id, session.user.id);
+
 		const formData = await request.formData();
 		const updatesStr = formData.get('updates');
 		if (!updatesStr) return { success: false };
@@ -93,7 +118,11 @@ export const actions: Actions = {
 		}
 	},
 
-	createArc: async ({ request, params, locals: { supabase } }) => {
+	createArc: async ({ request, params, locals: { supabase, getSession } }) => {
+		const session = await getSession();
+		if (!session) return fail(401, { message: 'Unauthorized' });
+		await assertSerialOwner(supabase, params.id, session.user.id);
+
 		const formData = await request.formData();
 		const title = formData.get('title')?.toString();
 		if (!title) return { success: false };
@@ -120,7 +149,11 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	createScene: async ({ params, locals: { supabase } }) => {
+	createScene: async ({ params, locals: { supabase, getSession } }) => {
+		const session = await getSession();
+		if (!session) return fail(401, { message: 'Unauthorized' });
+		await assertSerialOwner(supabase, params.id, session.user.id);
+
 		const { id: serialId } = params;
 
 		// Get max order index for scene
@@ -153,7 +186,11 @@ export const actions: Actions = {
 		throw redirect(303, `/serials/${serialId}/scenes/${newScene.id}/play`);
 	},
 
-	updateSerialSettings: async ({ request, params, locals: { supabase } }) => {
+	updateSerialSettings: async ({ request, params, locals: { supabase, getSession } }) => {
+		const session = await getSession();
+		if (!session) return fail(401, { message: 'Unauthorized' });
+		await assertSerialOwner(supabase, params.id, session.user.id);
+
 		const { id: serialId } = params;
 		const formData = await request.formData();
 		const title = formData.get('title')?.toString();

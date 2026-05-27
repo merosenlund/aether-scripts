@@ -92,6 +92,7 @@
 						bind:activeBlockId
 						sceneId={data.scene.id}
 						serialId={data.scene.serial_id}
+						wikiFilterMode="author"
 						onUpdate={(html) => (content = html)}
 					/>
 				</div>

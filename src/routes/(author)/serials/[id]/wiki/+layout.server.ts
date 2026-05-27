@@ -1,8 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { supabase } from '$lib/supabaseClient';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ params }) => {
+export const load: LayoutServerLoad = async ({ params, locals: { supabase } }) => {
 	const { id: serialId } = params;
 
 	// 1. Fetch Serial Details

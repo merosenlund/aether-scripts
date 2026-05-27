@@ -135,9 +135,14 @@ class ContextEngineStore {
 	// Set of block IDs that have been read/scrolled into view
 	readBlockIds = $state<SvelteSet<string>>(new SvelteSet());
 
+	// When true, all wiki events are visible regardless of readBlockIds (author/edit mode).
+	// When false, only events anchored to read blocks are visible (play mode).
+	// This must be set explicitly — an empty readBlockIds no longer implies "show all".
+	showAll = $state(false);
+
 	// Derive the reduced entities state reactively
 	reducedEntities = $derived.by(() => {
-		const filterSet = this.readBlockIds.size > 0 ? this.readBlockIds : null;
+		const filterSet = this.showAll ? null : this.readBlockIds;
 		return reduceWikiEvents(this.rawEvents, filterSet, this.baseEntities);
 	});
 
@@ -146,11 +151,25 @@ class ContextEngineStore {
 		this.baseEntities = await getWikiEntities(serialId);
 	}
 
-	// Helper to load events for a scene
-	async initScene(sceneId: string, docJson: unknown, serialId?: string) {
+	// Full scene initialization — resets all reader state and sets the filter mode.
+	// Call this on scene navigation.
+	// Pass showAll=true for author/edit mode (wiki shows everything).
+	// Pass showAll=false (default) for play mode (progressive disclosure).
+	async initScene(sceneId: string, docJson: unknown, serialId?: string, showAll = false) {
 		this.rawEvents = await getWikiEvents(sceneId);
 		this.parseDocBlocks(docJson);
 		this.readBlockIds.clear();
+		this.showAll = showAll;
+		if (serialId) {
+			await this.loadBaseEntities(serialId);
+		}
+	}
+
+	// Lightweight event refresh after wiki mutations (clock increments, track advances, etc.).
+	// Preserves readBlockIds and showAll so in-progress reader state is not disrupted.
+	async refreshEvents(sceneId: string, docJson: unknown, serialId?: string) {
+		this.rawEvents = await getWikiEvents(sceneId);
+		this.parseDocBlocks(docJson);
 		if (serialId) {
 			await this.loadBaseEntities(serialId);
 		}
@@ -193,8 +212,10 @@ class ContextEngineStore {
 		this.readBlockIds = newRead;
 	}
 
-	// Clear reading state (reveals all events)
+	// Reveal all events regardless of reading position (e.g. author toggling full view).
+	// Sets showAll=true and clears readBlockIds so the state is fully reset.
 	revealAll() {
+		this.showAll = true;
 		this.readBlockIds.clear();
 	}
 }

@@ -96,6 +96,7 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
   - _Nested Threads & Reactions_: Supports Reddit-style nested replies and comment-level emoji reactions for deep discussion.
 - [ ] **Reader Reactions**: Inline sentiment emoji reactions for readers.
 - [ ] **Wiki Deep-Links**: One-click navigation from reader prose to wiki lore.
+- [ ] **Reader-Facing Wiki** (`/(reader)/serials/[id]/wiki`): A public, read-only wiki route for readers. Entity state is filtered by two axes: (1) the reader's access tier — published scenes are visible to all, beta scenes to beta readers, all other statuses are author-only; (2) the reader's furthest read block position within each scene — entities and facts are revealed progressively as they read, matching the spoiler-free mechanic in the author's play view. No authentication required for published content.
 - [ ] **Author Notes**: Exclusive commentary layers for premium readers.
 - [ ] **Comment Promotion**: UI to elevate a reader's comment directly into a narrative "Thread" or turn it into a community Poll, visually showing the community that their input is driving the story.
 
@@ -138,3 +139,4 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 ## Future Technical Enhancements
 
 - [ ] **Yjs Database Compaction**: Add a background process (e.g., Supabase Edge Function cron job) to periodically squash granular `scene_updates` CRDT rows into single snapshots. This will prevent editor load times from degrading on massive scenes containing tens of thousands of keystrokes while preserving edit history for any future "Time Travel" UI.
+- [ ] **Serial-Scoped Author Roles**: Extend the current global `user_roles` model to per-serial role assignments, enabling curated multi-author collaboration on a single serial without granting platform-wide author access. Intended roles: `owner`, `co-author`, `editor`, `guest-writer`. Groundwork for the collaborative writing model where select contracted authors can work together on shared serials.

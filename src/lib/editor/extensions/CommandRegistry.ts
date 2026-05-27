@@ -150,7 +150,7 @@ async function persistClockEvent(
 			event_type: eventType,
 			payload
 		});
-		await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
+		await contextEngine.refreshEvents(sceneId, editor.getJSON(), serialId);
 	}
 }
 
@@ -179,7 +179,7 @@ async function persistTrackAdvance(
 		event_type: 'set_track',
 		payload
 	});
-	await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
+	await contextEngine.refreshEvents(sceneId, editor.getJSON(), serialId);
 }
 
 // ─── Command Definitions ────────────────────────────────────────────
@@ -369,7 +369,7 @@ export const commandRegistry: CommandDef[] = [
 					event_type: 'create',
 					payload: { name, category: 'Clock', metadata: { segments, filled: 0 } }
 				});
-				await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
+				await contextEngine.refreshEvents(sceneId, editor.getJSON(), serialId);
 			}
 		}
 	},
@@ -431,7 +431,7 @@ export const commandRegistry: CommandDef[] = [
 					event_type: 'create',
 					payload: { name, category: 'Track', metadata: { max, current: 0 } }
 				});
-				await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
+				await contextEngine.refreshEvents(sceneId, editor.getJSON(), serialId);
 			}
 		}
 	},

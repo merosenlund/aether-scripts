@@ -38,6 +38,9 @@
 		activeBlockId = $bindable(''),
 		cursorState = $bindable({ clocks: {} }),
 		editable = true,
+		// 'author' — wiki sidebar shows all entities immediately (edit mode).
+		// 'play'   — wiki sidebar uses progressive disclosure keyed to cursor position (play mode).
+		wikiFilterMode = 'play' as 'author' | 'play',
 		saveStatus = $bindable('synced')
 	} = $props<{
 		content?: string | Record<string, unknown> | null;
@@ -52,6 +55,7 @@
 			clocks?: Record<string, { entityId: string; name: string; segments: number; filled: number }>;
 		};
 		editable?: boolean;
+		wikiFilterMode?: 'author' | 'play';
 		saveStatus?: 'synced' | 'saving' | 'error';
 	}>();
 
@@ -416,7 +420,7 @@
 
 	onMount(async () => {
 		if (sceneId) {
-			await contextEngine.initScene(sceneId, initialContent || content, serialId);
+			await contextEngine.initScene(sceneId, initialContent || content, serialId, wikiFilterMode === 'author');
 		}
 
 		ydoc = new Y.Doc();

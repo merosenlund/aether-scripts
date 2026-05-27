@@ -1,7 +1,6 @@
-import { supabase } from '$lib/supabaseClient';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, parent }) => {
+export const load: PageServerLoad = async ({ params, parent, locals: { supabase } }) => {
 	const { entityId } = params;
 	const parentData = await parent();
 
