@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { computeStreaks } from '$lib/analytics/streaks';
 
 export const load: PageServerLoad = async ({ locals: { supabase, getSession } }) => {
 	const session = await getSession();
@@ -7,29 +8,30 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
 		throw error(401, 'Unauthorized');
 	}
 
-	// Fetch Goals
 	const { data: goals } = await supabase
 		.from('author_goals')
 		.select('*')
 		.eq('user_id', session.user.id)
 		.maybeSingle();
 
-	// Fetch Sessions
 	const { data: sessions } = await supabase
 		.from('writing_sessions')
 		.select(
 			`
       *,
-      serials (title),
+      serials (id, title),
       scenes (author_title, display_title)
     `
 		)
 		.eq('author_id', session.user.id)
 		.order('start_time', { ascending: false });
 
+	const streakData = computeStreaks(sessions || []);
+
 	return {
 		goals: goals || { daily_word_goal: 0, weekly_word_goal: 0, monthly_word_goal: 0 },
-		sessions: sessions || []
+		sessions: sessions || [],
+		streakData
 	};
 };
 
