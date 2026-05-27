@@ -5,6 +5,9 @@ export class SupabaseYjsProvider {
 	private doc: Y.Doc;
 	private sceneId: string;
 	private saving: boolean = false;
+	// Updates that arrive while a save is in-flight are merged here and
+	// flushed as a single insert once the current save completes.
+	private pendingUpdate: Uint8Array | null = null;
 
 	private onSaveStatus?: (status: 'saving' | 'synced' | 'error') => void;
 
@@ -18,26 +21,21 @@ export class SupabaseYjsProvider {
 		this.sceneId = sceneId;
 		this.onSaveStatus = onSaveStatus;
 
-		// Load initial state
+		// Register the update listener only after initial state has loaded so
+		// the load transaction itself never triggers a save.
 		this.loadState().then((hasData) => {
 			if (onLoaded) onLoaded(hasData);
 
-			console.log('[SupabaseYjsProvider] loadState completed. Registering update listener...');
-			// Listen for updates and save them only after initial load completes
-			this.doc.on('update', (update, origin) => {
-				console.log('[SupabaseYjsProvider] document update event fired! Origin:', origin, 'Length:', update.length);
+			this.doc.on('update', (update: Uint8Array, origin: unknown) => {
 				if (origin !== 'load') {
-					console.log('[SupabaseYjsProvider] Origin is not load. Saving update to Supabase...');
 					this.saveUpdate(update);
-				} else {
-					console.log('[SupabaseYjsProvider] Origin is load. Ignoring update.');
 				}
 			});
 		});
 	}
 
 	private async loadState(): Promise<boolean> {
-		let allData: any[] = [];
+		const allData: { update_data: unknown }[] = [];
 		let page = 0;
 		const pageSize = 1000;
 		let hasMore = true;
@@ -56,7 +54,7 @@ export class SupabaseYjsProvider {
 			}
 
 			if (data && data.length > 0) {
-				allData = [...allData, ...data];
+				allData.push(...data);
 				hasMore = data.length === pageSize;
 				page++;
 			} else {
@@ -89,8 +87,7 @@ export class SupabaseYjsProvider {
 									}
 								}
 							} else {
-								// Should be Uint8Array or Array of numbers
-								update = new Uint8Array(row.update_data);
+								update = new Uint8Array(row.update_data as ArrayLike<number>);
 							}
 
 							if (update.length > 0) {
@@ -110,25 +107,41 @@ export class SupabaseYjsProvider {
 	}
 
 	private async saveUpdate(update: Uint8Array) {
-		if (this.saving) return;
+		if (this.saving) {
+			// Merge into the pending slot so no delta is lost. When the
+			// current save finishes it will flush the merged update.
+			this.pendingUpdate = this.pendingUpdate
+				? Y.mergeUpdates([this.pendingUpdate, update])
+				: update;
+			return;
+		}
 
+		this.saving = true;
 		if (this.onSaveStatus) this.onSaveStatus('saving');
 
-		// Convert Uint8Array to hex string for reliable storage in BYTEA
 		const hexString = Array.from(update)
 			.map((b) => b.toString(16).padStart(2, '0'))
 			.join('');
 
-		const { error } = await supabase.from('scene_updates').insert({
-			scene_id: this.sceneId,
-			update_data: `\\x${hexString}`
-		});
+		try {
+			const { error } = await supabase.from('scene_updates').insert({
+				scene_id: this.sceneId,
+				update_data: `\\x${hexString}`
+			});
 
-		if (error) {
-			console.error('Error saving Yjs update:', error);
-			if (this.onSaveStatus) this.onSaveStatus('error');
-		} else {
-			if (this.onSaveStatus) this.onSaveStatus('synced');
+			if (error) {
+				console.error('Error saving Yjs update:', error);
+				if (this.onSaveStatus) this.onSaveStatus('error');
+			} else {
+				if (this.onSaveStatus) this.onSaveStatus('synced');
+			}
+		} finally {
+			this.saving = false;
+			if (this.pendingUpdate) {
+				const pending = this.pendingUpdate;
+				this.pendingUpdate = null;
+				this.saveUpdate(pending);
+			}
 		}
 	}
 }

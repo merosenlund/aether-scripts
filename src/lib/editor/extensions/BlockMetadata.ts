@@ -83,17 +83,21 @@ export const BlockMetadata = Extension.create<BlockMetadataOptions>({
 					if (!docChanges) return;
 
 					const { tr } = newState;
+					const combined = combineTransactionSteps(oldState.doc, [...transactions]);
+					const changedRanges = getChangedRanges(combined);
 
-					newState.doc.descendants((node, pos) => {
-						if (node.isBlock && this.options.types.includes(node.type.name)) {
-							if (!node.attrs.id) {
-								tr.setNodeMarkup(pos, undefined, {
-									...node.attrs,
-									id: crypto.randomUUID()
-								});
+					for (const { newRange } of changedRanges) {
+						newState.doc.nodesBetween(newRange.from, newRange.to, (node, pos) => {
+							if (node.isBlock && this.options.types.includes(node.type.name)) {
+								if (!node.attrs.id) {
+									tr.setNodeMarkup(pos, undefined, {
+										...node.attrs,
+										id: crypto.randomUUID()
+									});
+								}
 							}
-						}
-					});
+						});
+					}
 
 					if (!tr.steps.length) return;
 

@@ -2,39 +2,53 @@ import { supabase } from '$lib/supabaseClient';
 
 export type SceneStage = 'Draft' | 'Edit' | 'Published';
 
-export async function createSnapshot(sceneId: string, stage: SceneStage, content: any) {
-	// Get current max version number
-	const { data: currentVersions } = await supabase
-		.from('scene_versions')
-		.select('version_number')
-		.eq('scene_id', sceneId)
-		.order('version_number', { ascending: false })
-		.limit(1);
+// Serializes concurrent createSnapshot calls within this session so the
+// read-modify-write on version_number is never interleaved. A DB-level
+// UNIQUE(scene_id, version_number) constraint is the companion server-side
+// guard for cross-tab / cross-device races.
+let snapshotLock: Promise<void> = Promise.resolve();
 
-	const nextVersion =
-		currentVersions && currentVersions.length > 0 ? currentVersions[0].version_number + 1 : 1;
+export async function createSnapshot(sceneId: string, stage: SceneStage, content: unknown) {
+	let release!: () => void;
+	const acquired = snapshotLock;
+	snapshotLock = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	await acquired;
 
-	// Deactivate existing versions if this one is intended to be the active one
-	// (Usually snapshots are active when created)
-	await supabase.from('scene_versions').update({ is_active: false }).eq('scene_id', sceneId);
+	try {
+		const { data: currentVersions } = await supabase
+			.from('scene_versions')
+			.select('version_number')
+			.eq('scene_id', sceneId)
+			.order('version_number', { ascending: false })
+			.limit(1);
 
-	const { data, error } = await supabase
-		.from('scene_versions')
-		.insert({
-			scene_id: sceneId,
-			version_number: nextVersion,
-			content,
-			stage,
-			is_active: true
-		})
-		.select()
-		.single();
+		const nextVersion =
+			currentVersions && currentVersions.length > 0 ? currentVersions[0].version_number + 1 : 1;
 
-	if (error) {
-		console.error('Supabase Snapshot Error:', error);
-		throw error;
+		await supabase.from('scene_versions').update({ is_active: false }).eq('scene_id', sceneId);
+
+		const { data, error } = await supabase
+			.from('scene_versions')
+			.insert({
+				scene_id: sceneId,
+				version_number: nextVersion,
+				content,
+				stage,
+				is_active: true
+			})
+			.select()
+			.single();
+
+		if (error) {
+			console.error('Supabase Snapshot Error:', error);
+			throw error;
+		}
+		return data;
+	} finally {
+		release();
 	}
-	return data;
 }
 
 export async function getActiveVersion(sceneId: string) {

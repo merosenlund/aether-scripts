@@ -84,8 +84,11 @@
 	});
 
 	import { supabase } from '$lib/supabaseClient';
+	import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
 	let saveTimeout: ReturnType<typeof setTimeout> | undefined;
+	let cachedAccessToken: string | null = null;
+	let authSubscription: { unsubscribe(): void } | null = null;
 
 	async function saveCurrentContent() {
 		if (!editor || !sceneId) return;
@@ -117,11 +120,29 @@
 		}, 1500);
 	}
 
+	function flushPendingSaveSync() {
+		// Only flush if there's a pending debounced save and we have what we need.
+		if (!saveTimeout || !editor || !sceneId || !cachedAccessToken) return;
+		clearTimeout(saveTimeout);
+		saveTimeout = undefined;
+
+		const json = editor.getJSON();
+		// keepalive guarantees delivery even when the page is being torn down.
+		fetch(`${PUBLIC_SUPABASE_URL}/rest/v1/scenes?id=eq.${sceneId}`, {
+			method: 'PATCH',
+			keepalive: true,
+			headers: {
+				'Content-Type': 'application/json',
+				apikey: PUBLIC_SUPABASE_ANON_KEY,
+				Authorization: `Bearer ${cachedAccessToken}`,
+				Prefer: 'return=minimal'
+			},
+			body: JSON.stringify({ content_blocks: json })
+		});
+	}
+
 	function handleUnload() {
-		if (saveTimeout) {
-			clearTimeout(saveTimeout);
-			saveCurrentContent();
-		}
+		flushPendingSaveSync();
 	}
 
 	async function checkDeletedBlocks(currentEditor: Editor) {
@@ -134,24 +155,32 @@
 			}
 		});
 
-		const anchoredEvents = contextEngine.rawEvents.filter((event) => event.block_id !== null);
-		let changed = false;
-		for (const event of anchoredEvents) {
-			if (event.block_id && !currentBlockIds.has(event.block_id)) {
-				console.log(
-					`[Tiptap] Anchored block ${event.block_id} for event ${event.id} was deleted. Resetting anchor to null.`
-				);
-				try {
-					await updateWikiEventBlock(event.id, null);
-					event.block_id = null;
-					changed = true;
-				} catch (err) {
-					console.error(`Failed to reset deleted block anchor for event ${event.id}:`, err);
-				}
-			}
-		}
-		if (changed) {
-			contextEngine.rawEvents = [...contextEngine.rawEvents];
+		// Collect stale events without mutating yet.
+		const staleEventIds = new Set(
+			contextEngine.rawEvents
+				.filter((ev) => ev.block_id && !currentBlockIds.has(ev.block_id))
+				.map((ev) => ev.id)
+		);
+
+		if (staleEventIds.size === 0) return;
+
+		// Run all DB updates concurrently, then apply results atomically.
+		const results = await Promise.allSettled(
+			[...staleEventIds].map((id) => updateWikiEventBlock(id, null))
+		);
+
+		const succeededIds = new Set(
+			[...staleEventIds].filter((_, i) => results[i].status === 'fulfilled')
+		);
+
+		results
+			.filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+			.forEach((r) => console.error('Failed to reset deleted block anchor:', r.reason));
+
+		if (succeededIds.size > 0) {
+			contextEngine.rawEvents = contextEngine.rawEvents.map((ev) =>
+				succeededIds.has(ev.id) ? { ...ev, block_id: null } : ev
+			);
 		}
 	}
 
@@ -159,7 +188,6 @@
 
 	let yjsLoaded = $state(false);
 	let hasYjsData = $state(true);
-	let editorReadyTimer: ReturnType<typeof setTimeout> | undefined;
 
 
 	// Synchronous mini-reducer for clipboard serialization (avoids async import)
@@ -431,6 +459,12 @@
 				(hasData) => {
 					hasYjsData = hasData;
 					yjsLoaded = true;
+					// Y.transact('load') completes synchronously before onLoaded fires,
+					// so a microtask boundary is sufficient to let ProseMirror flush any
+					// pending transactions before checkDeletedBlocks can run.
+					queueMicrotask(() => {
+						isEditorReady = true;
+					});
 				},
 				(status) => {
 					yjsSaveStatus = status;
@@ -563,6 +597,17 @@
 			window.addEventListener('beforeunload', handleUnload);
 		}
 
+		// Cache the access token so handleUnload can use it synchronously via keepalive fetch.
+		if (editable && sceneId) {
+			const { data: { session } } = await supabase.auth.getSession();
+			cachedAccessToken = session?.access_token ?? null;
+
+			const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+				cachedAccessToken = newSession?.access_token ?? null;
+			});
+			authSubscription = subscription;
+		}
+
 		// For non-editable (read-only) views, there is no Yjs sync phase,
 		// so the editor is ready immediately after creation.
 		if (!editable) {
@@ -632,20 +677,6 @@
 		}
 	});
 
-	// Mark the editor as ready once Yjs has finished loading and the
-	// document has had time to fully sync into the editor state.
-	// This prevents checkDeletedBlocks from firing during initialization
-	// and permanently destroying event block_id anchors.
-	$effect(() => {
-		if (editable && yjsLoaded && editor) {
-			// Clear any previous timer (guards against effect re-firing)
-			if (editorReadyTimer) clearTimeout(editorReadyTimer);
-			editorReadyTimer = setTimeout(() => {
-				isEditorReady = true;
-				console.log('[Tiptap] Editor is now ready — checkDeletedBlocks enabled.');
-			}, 500);
-		}
-	});
 
 	export const getIsSaving = () => isSaving;
 
@@ -705,13 +736,8 @@
 	}
 
 	onDestroy(() => {
-		if (editorReadyTimer) {
-			clearTimeout(editorReadyTimer);
-		}
-		if (saveTimeout) {
-			clearTimeout(saveTimeout);
-			saveCurrentContent();
-		}
+		flushPendingSaveSync();
+		authSubscription?.unsubscribe();
 		if (typeof window !== 'undefined') {
 			window.removeEventListener('pagehide', handleUnload);
 			window.removeEventListener('beforeunload', handleUnload);
