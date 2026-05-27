@@ -135,17 +135,20 @@ async function persistClockEvent(
 	editor: CustomEditor,
 	entityId: string,
 	blockId: string,
-	eventType: 'increment_clock' | 'decrement_clock'
+	eventType: 'increment_clock' | 'decrement_clock',
+	reason?: string
 ) {
 	const serialId = editor.serialId;
 	const sceneId = editor.sceneId;
 	if (serialId && sceneId && entityId) {
+		const payload: Record<string, unknown> = { amount: 1 };
+		if (reason) payload.reason = reason;
 		await supabase.from('wiki_events').insert({
 			entity_id: entityId,
 			scene_id: sceneId,
 			block_id: blockId,
 			event_type: eventType,
-			payload: { amount: 1 }
+			payload
 		});
 		await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
 	}
@@ -155,7 +158,8 @@ async function persistTrackAdvance(
 	editor: CustomEditor,
 	entityId: string,
 	blockId: string,
-	amount: number
+	amount: number,
+	reason?: string
 ) {
 	const serialId = editor.serialId;
 	const sceneId = editor.sceneId;
@@ -166,12 +170,14 @@ async function persistTrackAdvance(
 	const maxVal = (entity.metadata?.max as number) || 10;
 	const newVal = Math.min(maxVal, currentVal + amount);
 
+	const payload: Record<string, unknown> = { max: maxVal, current: newVal };
+	if (reason) payload.reason = reason;
 	await supabase.from('wiki_events').insert({
 		entity_id: entityId,
 		scene_id: sceneId,
 		block_id: blockId,
 		event_type: 'set_track',
-		payload: { max: maxVal, current: newVal }
+		payload
 	});
 	await contextEngine.initScene(sceneId, editor.getJSON(), serialId);
 }
@@ -445,10 +451,19 @@ export const commandRegistry: CommandDef[] = [
 				required: true,
 				options: getActiveClocks,
 				placeholder: 'Select a clock...'
+			},
+			{
+				name: 'reason',
+				label: 'reason',
+				type: 'text',
+				required: false,
+				default: '',
+				placeholder: 'Why? (optional)'
 			}
 		],
 		execute: async (editor, range, params) => {
 			const entityId = String(params.clock);
+			const reason = String(params.reason || '').trim() || undefined;
 			const entity = contextEngine.reducedEntities.get(entityId);
 			if (!entity) return;
 
@@ -463,7 +478,7 @@ export const commandRegistry: CommandDef[] = [
 				})
 				.run();
 
-			await persistClockEvent(editor, entityId, blockId, 'increment_clock');
+			await persistClockEvent(editor, entityId, blockId, 'increment_clock', reason);
 		}
 	},
 
@@ -482,10 +497,19 @@ export const commandRegistry: CommandDef[] = [
 				required: true,
 				options: getActiveClocks,
 				placeholder: 'Select a clock...'
+			},
+			{
+				name: 'reason',
+				label: 'reason',
+				type: 'text',
+				required: false,
+				default: '',
+				placeholder: 'Why? (optional)'
 			}
 		],
 		execute: async (editor, range, params) => {
 			const entityId = String(params.clock);
+			const reason = String(params.reason || '').trim() || undefined;
 			const entity = contextEngine.reducedEntities.get(entityId);
 			if (!entity) return;
 
@@ -500,7 +524,7 @@ export const commandRegistry: CommandDef[] = [
 				})
 				.run();
 
-			await persistClockEvent(editor, entityId, blockId, 'decrement_clock');
+			await persistClockEvent(editor, entityId, blockId, 'decrement_clock', reason);
 		}
 	},
 
@@ -527,11 +551,20 @@ export const commandRegistry: CommandDef[] = [
 				required: false,
 				default: 1,
 				placeholder: '1'
+			},
+			{
+				name: 'reason',
+				label: 'reason',
+				type: 'text',
+				required: false,
+				default: '',
+				placeholder: 'Why? (optional)'
 			}
 		],
 		execute: async (editor, range, params) => {
 			const entityId = String(params.track);
 			const amount = parseInt(String(params.amount)) || 1;
+			const reason = String(params.reason || '').trim() || undefined;
 			const entity = contextEngine.reducedEntities.get(entityId);
 			if (!entity) return;
 
@@ -557,7 +590,7 @@ export const commandRegistry: CommandDef[] = [
 				})
 				.run();
 
-			await persistTrackAdvance(editor, entityId, blockId, amount);
+			await persistTrackAdvance(editor, entityId, blockId, amount, reason);
 		}
 	},
 

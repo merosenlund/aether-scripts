@@ -109,31 +109,35 @@
 		}
 	}
 
-	async function updateProgress(entity: WikiEntity, delta: number) {
+	async function updateProgress(entity: WikiEntity, delta: number, reason?: string) {
 		const reduced = contextEngine.reducedEntities.get(entity.id);
 		const currentMetadata = reduced ? reduced.metadata : entity.metadata;
 		const isClock = entity.category?.toLowerCase() === 'clock';
 
 		try {
 			if (isClock) {
+				const payload: Record<string, unknown> = { amount: Math.abs(delta) };
+				if (reason) payload.reason = reason;
 				await supabase.from('wiki_events').insert({
 					entity_id: entity.id,
 					scene_id: sceneId,
 					block_id: null,
 					event_type: delta > 0 ? 'increment_clock' : 'decrement_clock',
-					payload: { amount: Math.abs(delta) }
+					payload
 				});
 			} else {
 				const currentVal = (currentMetadata.current as number) ?? 0;
 				const maxVal = (currentMetadata.max as number) ?? 10;
 				const newVal = Math.max(0, Math.min(maxVal, currentVal + delta));
 
+				const payload: Record<string, unknown> = { max: maxVal, current: newVal };
+				if (reason) payload.reason = reason;
 				await supabase.from('wiki_events').insert({
 					entity_id: entity.id,
 					scene_id: sceneId,
 					block_id: null,
 					event_type: 'set_track',
-					payload: { max: maxVal, current: newVal }
+					payload
 				});
 			}
 
@@ -143,6 +147,19 @@
 		} catch (e) {
 			console.error(e);
 			notifications.error('Failed to update progress');
+		}
+	}
+
+	async function handleProgressClick(entity: WikiEntity, delta: number, event: MouseEvent) {
+		if (event.shiftKey) {
+			const reason = await openPrompt(
+				'Reason',
+				`Why is this ${entity.category?.toLowerCase() === 'clock' ? 'clock' : 'track'} changing?`,
+				''
+			);
+			await updateProgress(entity, delta, reason || undefined);
+		} else {
+			await updateProgress(entity, delta);
 		}
 	}
 
@@ -304,7 +321,8 @@
 						<button
 							data-component="decrement-btn"
 							class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 font-bold text-stone-400 hover:bg-white/10 hover:text-white"
-							onclick={() => updateProgress(entity, -1)}
+							onclick={(e) => handleProgressClick(entity, -1, e)}
+							title="Hold Shift to add a reason"
 						>
 							-
 						</button>
@@ -327,7 +345,8 @@
 						<button
 							data-component="increment-btn"
 							class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 font-bold text-stone-400 hover:bg-white/10 hover:text-white"
-							onclick={() => updateProgress(entity, 1)}
+							onclick={(e) => handleProgressClick(entity, 1, e)}
+							title="Hold Shift to add a reason"
 						>
 							+
 						</button>
@@ -366,6 +385,11 @@
 												{new Date(event.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
 											</span>
 										</div>
+										{#if event.payload?.reason}
+											<p class="mt-0.5 pl-[18px] text-[10px] italic text-stone-500">
+												"{event.payload.reason}"
+											</p>
+										{/if}
 										<button
 											class="text-stone-700 opacity-0 transition-all hover:text-rose-400 group-hover/event:opacity-100"
 											onclick={() => handleDeleteEvent(event)}

@@ -94,10 +94,17 @@ export async function updateWikiEventPayload(eventId: string, payload: Record<st
 	return data as WikiEvent;
 }
 
-export async function updateWikiEventBlock(eventId: string, blockId: string | null) {
+export async function updateWikiEventBlock(
+	eventId: string,
+	blockId: string | null,
+	sceneId?: string
+) {
+	const updates: Record<string, unknown> = { block_id: blockId };
+	if (sceneId !== undefined) updates.scene_id = sceneId;
+
 	const { data, error } = await supabase
 		.from('wiki_events')
-		.update({ block_id: blockId })
+		.update(updates)
 		.eq('id', eventId)
 		.select()
 		.single();

@@ -401,6 +401,7 @@
 	<div data-component="sidebar-actions" class="border-t border-white/5 bg-white/[0.02] p-4">
 		<button
 			data-component="new-entry-btn"
+			onclick={() => window.open(`/serials/${serialId}/wiki`, '_blank')}
 			class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 py-3 text-[10px] font-bold tracking-widest text-stone-500 uppercase transition-all hover:border-white/20 hover:text-white"
 		>
 			<Plus size={14} />
