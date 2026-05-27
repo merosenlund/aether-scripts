@@ -251,6 +251,9 @@
 					const node = selection.$from.parent;
 					activeBlockId = node.attrs.id || '';
 
+					// Sync activeBlockId onto the editor instance so CommandRegistry can read it
+					(editor as unknown as Record<string, unknown>).activeBlockId = activeBlockId;
+
 					if (activeBlockId) {
 						contextEngine.markAsRead(activeBlockId);
 					}
@@ -260,6 +263,7 @@
 
 		(editor as unknown as Record<string, unknown>).serialId = serialId;
 		(editor as unknown as Record<string, unknown>).sceneId = sceneId;
+		(editor as unknown as Record<string, unknown>).activeBlockId = '';
 
 		if (typeof window !== 'undefined') {
 			window.addEventListener('pagehide', handleUnload);
@@ -364,6 +368,47 @@
 		} finally {
 			isSaving = false;
 		}
+	}
+
+	// ─── Sidebar-Initiated Anchor Highlighting ──────────────────────
+
+	let highlightedBlockId = $state<string | null>(null);
+
+	/**
+	 * Apply or remove a transient highlight on a block in the editor.
+	 * Called by the sidebar on hover enter (blockId) and hover leave (null).
+	 */
+	export function highlightBlock(blockId: string | null) {
+		// Remove previous highlight
+		if (highlightedBlockId) {
+			const prev = element?.querySelector(`[data-id="${highlightedBlockId}"]`);
+			if (prev) prev.removeAttribute('data-highlighted');
+		}
+
+		highlightedBlockId = blockId;
+
+		// Apply new highlight
+		if (blockId) {
+			const target = element?.querySelector(`[data-id="${blockId}"]`);
+			if (target) target.setAttribute('data-highlighted', 'true');
+		}
+	}
+
+	/**
+	 * Scroll the editor to a specific block and flash-highlight it.
+	 * Called by the sidebar on click.
+	 */
+	export function scrollToBlock(blockId: string) {
+		const target = element?.querySelector(`[data-id="${blockId}"]`) as HTMLElement | null;
+		if (!target) return;
+
+		target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+		// Flash highlight animation
+		target.setAttribute('data-flash-highlight', 'true');
+		setTimeout(() => {
+			target.removeAttribute('data-flash-highlight');
+		}, 1500);
 	}
 
 	onDestroy(() => {
@@ -517,5 +562,28 @@
 			opacity: 1;
 			transform: translateY(0);
 		}
+	}
+
+	/* Sidebar-initiated anchor block highlighting */
+	:global([data-highlighted='true']) {
+		border-left: 2px solid var(--color-primary, #f59e0b);
+		background: rgba(245, 158, 11, 0.03);
+		transition: all 0.2s ease;
+	}
+
+	@keyframes flashHighlight {
+		0% {
+			background: rgba(245, 158, 11, 0.08);
+			border-left-color: var(--color-primary, #f59e0b);
+		}
+		100% {
+			background: transparent;
+			border-left-color: transparent;
+		}
+	}
+
+	:global([data-flash-highlight]) {
+		animation: flashHighlight 1.2s ease-out forwards;
+		border-left: 2px solid var(--color-primary, #f59e0b);
 	}
 </style>

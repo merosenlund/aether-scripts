@@ -1,26 +1,31 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getWikiEvents, type WikiEntity } from '$lib/api/wiki';
-	import { Plus, Timer, Activity } from '@lucide/svelte';
+	import { getWikiEvents, deleteWikiEvent, type WikiEntity, type WikiEvent } from '$lib/api/wiki';
+	import { Plus, Timer, Activity, ChevronRight, Link2, Trash2 } from '@lucide/svelte';
 	import { notifications } from '$lib/stores/notifications';
 	import { slide } from 'svelte/transition';
 	import { supabase } from '$lib/supabaseClient';
-	import { openPrompt } from '$lib/stores/prompt.svelte';
+	import { openPrompt, openConfirm } from '$lib/stores/prompt.svelte';
 	import { contextEngine } from '$lib/stores/contextEngine.svelte';
 
 	let {
 		serialId,
 		sceneId,
-		cursorState = { clocks: {} }
+		cursorState = { clocks: {} },
+		onHighlightBlock = (_blockId: string | null) => {},
+		onFocusBlock = (_blockId: string) => {}
 	} = $props<{
 		serialId: string;
 		sceneId: string;
 		cursorState?: {
 			clocks?: Record<string, { entityId: string; name: string; segments: number; filled: number }>;
 		};
+		onHighlightBlock?: (blockId: string | null) => void;
+		onFocusBlock?: (blockId: string) => void;
 	}>();
 
 	let isLoading = $state(true);
+	let expandedEntityIds = $state<Set<string>>(new Set());
 
 	const entities = $derived(
 		contextEngine.baseEntities.filter(
@@ -145,6 +150,57 @@
 		const reduced = contextEngine.reducedEntities.get(entity.id);
 		return reduced ? reduced.metadata : entity.metadata;
 	}
+
+	/** Get all events for a specific entity */
+	function getEntityEvents(entityId: string): WikiEvent[] {
+		return contextEngine.rawEvents.filter((e) => e.entity_id === entityId);
+	}
+
+	/** Check if an event is anchored to a block in the current document */
+	function isEventInActiveScene(event: WikiEvent): boolean {
+		if (!event.block_id) return false;
+		return contextEngine.orderedBlockIds.includes(event.block_id);
+	}
+
+	/** Format event type for display */
+	function formatEventType(eventType: string): string {
+		switch (eventType) {
+			case 'create': return 'Created';
+			case 'set_clock': return 'Clock Set';
+			case 'increment_clock': return 'Clock +1';
+			case 'decrement_clock': return 'Clock -1';
+			case 'set_track': return 'Track Updated';
+			case 'anchor': return 'Anchored';
+			default: return eventType;
+		}
+	}
+
+	function toggleExpanded(entityId: string) {
+		const next = new Set(expandedEntityIds);
+		if (next.has(entityId)) {
+			next.delete(entityId);
+		} else {
+			next.add(entityId);
+		}
+		expandedEntityIds = next;
+	}
+
+	async function handleDeleteEvent(event: WikiEvent) {
+		const confirmed = await openConfirm(
+			'Delete Event',
+			`Delete this "${formatEventType(event.event_type)}" event? This cannot be undone.`
+		);
+		if (!confirmed) return;
+
+		try {
+			await deleteWikiEvent(event.id);
+			contextEngine.rawEvents = await getWikiEvents(sceneId);
+			notifications.success('Event deleted.');
+		} catch (e) {
+			console.error(e);
+			notifications.error('Failed to delete event.');
+		}
+	}
 </script>
 
 <div data-component="mechanics-root" class="flex h-full flex-col">
@@ -175,6 +231,8 @@
 				{@const cursorClock = isClock
 					? cursorState?.clocks?.[entity.id] || cursorState?.clocks?.[entity.name]
 					: null}
+				{@const isExpanded = expandedEntityIds.has(entity.id)}
+				{@const events = getEntityEvents(entity.id)}
 
 				<div
 					data-component="mechanic-card"
@@ -188,45 +246,57 @@
 						></div>
 					{/if}
 
+					<!-- Header: Icon + Name + Expand Toggle -->
 					<div data-component="mechanic-header" class="mb-3 flex items-center gap-3">
-						<div
-							data-component="mechanic-icon-box"
-							class="bg-primary/10 text-primary rounded-lg p-2 transition-all group-hover:scale-105"
+						<button
+							data-component="mechanic-expand-toggle"
+							class="flex flex-1 items-center gap-3 text-left"
+							onclick={() => toggleExpanded(entity.id)}
 						>
-							{#if isClock}
-								<Timer size={16} />
-							{:else}
-								<Activity size={16} />
-							{/if}
-						</div>
-						<div data-component="mechanic-titles">
-							<h4
-								data-component="mechanic-name"
-								class="group-hover:text-primary text-sm leading-tight font-bold text-white transition-colors"
+							<div
+								data-component="mechanic-icon-box"
+								class="bg-primary/10 text-primary rounded-lg p-2 transition-all group-hover:scale-105"
 							>
-								{entity.name}
-							</h4>
-							<div data-component="mechanic-subtitle" class="mt-0.5 flex items-center gap-1.5">
-								<span
-									data-component="mechanic-category"
-									class="text-[10px] font-bold tracking-widest text-stone-500 uppercase"
-									>{entity.category}</span
-								>
-								{#if cursorClock}
-									<span
-										data-component="live-dot"
-										class="bg-primary h-1.5 w-1.5 animate-pulse rounded-full"
-										title="Cursor Contextual Value"
-									></span>
-									<span
-										data-component="live-label"
-										class="text-primary text-[8px] font-bold tracking-wider uppercase">Live</span
-									>
+								{#if isClock}
+									<Timer size={16} />
+								{:else}
+									<Activity size={16} />
 								{/if}
 							</div>
-						</div>
+							<div data-component="mechanic-titles" class="flex-1 min-w-0">
+								<h4
+									data-component="mechanic-name"
+									class="group-hover:text-primary text-sm leading-tight font-bold text-white transition-colors"
+								>
+									{entity.name}
+								</h4>
+								<div data-component="mechanic-subtitle" class="mt-0.5 flex items-center gap-1.5">
+									<span
+										data-component="mechanic-category"
+										class="text-[10px] font-bold tracking-widest text-stone-500 uppercase"
+										>{entity.category}</span
+									>
+									{#if cursorClock}
+										<span
+											data-component="live-dot"
+											class="bg-primary h-1.5 w-1.5 animate-pulse rounded-full"
+											title="Cursor Contextual Value"
+										></span>
+										<span
+											data-component="live-label"
+											class="text-primary text-[8px] font-bold tracking-wider uppercase">Live</span
+										>
+									{/if}
+								</div>
+							</div>
+							<ChevronRight
+								size={14}
+								class="text-stone-600 transition-transform duration-200 {isExpanded ? 'rotate-90' : ''}"
+							/>
+						</button>
 					</div>
 
+					<!-- Progress Controls (always visible) -->
 					<div
 						data-component="progress-control-row"
 						class="mt-2 flex items-center justify-between gap-4"
@@ -262,6 +332,52 @@
 							+
 						</button>
 					</div>
+
+					<!-- Expandable Event History -->
+					{#if isExpanded}
+						<div data-component="mechanic-events" class="mt-3 space-y-1 border-t border-white/5 pt-3" transition:slide>
+							<span class="text-[9px] font-bold tracking-widest text-stone-600 uppercase">Event History</span>
+							{#if events.length === 0}
+								<p class="text-[11px] text-stone-600 italic px-2">No events recorded.</p>
+							{:else}
+								{#each events as event (event.id)}
+									{@const isInScene = isEventInActiveScene(event)}
+									<div
+										data-component="mechanic-event-item"
+										class="group/event flex items-center justify-between rounded-lg px-2 py-1.5 text-[11px] transition-colors hover:bg-white/5 {isInScene ? 'text-stone-300' : 'text-stone-600'}"
+										onmouseenter={() => event.block_id && isInScene ? onHighlightBlock(event.block_id) : null}
+										onmouseleave={() => onHighlightBlock(null)}
+									>
+										<!-- svelte-ignore a11y_click_events_have_key_events -->
+										<!-- svelte-ignore a11y_no_static_element_interactions -->
+										<div
+											class="flex items-center gap-2 {event.block_id && isInScene ? 'cursor-pointer' : ''}"
+											onclick={() => event.block_id && isInScene ? onFocusBlock(event.block_id) : null}
+										>
+											{#if event.block_id && isInScene}
+												<Link2 size={10} class="text-primary/70 shrink-0" />
+											{:else if event.block_id}
+												<Link2 size={10} class="text-stone-700 shrink-0" />
+											{:else}
+												<div class="w-[10px] shrink-0"></div>
+											{/if}
+											<span class="font-medium">{formatEventType(event.event_type)}</span>
+											<span class="text-[9px] text-stone-600">
+												{new Date(event.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+											</span>
+										</div>
+										<button
+											class="text-stone-700 opacity-0 transition-all hover:text-rose-400 group-hover/event:opacity-100"
+											onclick={() => handleDeleteEvent(event)}
+											title="Delete event"
+										>
+											<Trash2 size={10} />
+										</button>
+									</div>
+								{/each}
+							{/if}
+						</div>
+					{/if}
 				</div>
 			{/each}
 		{/if}

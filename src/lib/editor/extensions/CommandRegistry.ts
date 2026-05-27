@@ -16,6 +16,7 @@ import type { Editor, Range } from '@tiptap/core';
 import { supabase } from '$lib/supabaseClient';
 import { contextEngine } from '$lib/stores/contextEngine.svelte';
 import { gameSession } from '$lib/stores/gameSession.svelte';
+import { isEntityAvailableAtBlock } from '$lib/stores/entityHeadIndex.svelte';
 import { rollDice, validateDiceFormula, type ValidationResult } from './diceParser';
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ import { rollDice, validateDiceFormula, type ValidationResult } from './dicePars
 export interface CustomEditor extends Editor {
 	serialId?: string;
 	sceneId?: string;
+	activeBlockId?: string;
 }
 
 export interface ParamOption {
@@ -37,7 +39,7 @@ export interface ParamDef {
 	required: boolean;
 	default?: string | number;
 	placeholder?: string;
-	options?: () => ParamOption[];
+	options?: (context?: { cursorBlockId?: string }) => ParamOption[];
 }
 
 export interface CommandDef {
@@ -79,10 +81,19 @@ export interface SuggestionItem {
 
 // ─── Context Engine Helpers ─────────────────────────────────────────
 
-const getActiveClocks = (): ParamOption[] => {
+/**
+ * Get active clocks, optionally filtered by cursor position.
+ * When cursorBlockId is provided, only clocks whose chronological head
+ * is at or before the cursor position are included.
+ */
+const getActiveClocks = (context?: { cursorBlockId?: string }): ParamOption[] => {
 	const clocks: ParamOption[] = [];
 	for (const [id, entity] of contextEngine.reducedEntities.entries()) {
 		if (entity.category?.toLowerCase() === 'clock') {
+			// Filter by entity head position if cursor context is provided
+			if (context?.cursorBlockId && !isEntityAvailableAtBlock(id, context.cursorBlockId)) {
+				continue;
+			}
 			const filled = (entity.metadata?.filled as number) || 0;
 			const segments = (entity.metadata?.segments as number) || 4;
 			clocks.push({
@@ -94,10 +105,19 @@ const getActiveClocks = (): ParamOption[] => {
 	return clocks;
 };
 
-const getActiveTracks = (): ParamOption[] => {
+/**
+ * Get active tracks, optionally filtered by cursor position.
+ * When cursorBlockId is provided, only tracks whose chronological head
+ * is at or before the cursor position are included.
+ */
+const getActiveTracks = (context?: { cursorBlockId?: string }): ParamOption[] => {
 	const tracks: ParamOption[] = [];
 	for (const [id, entity] of contextEngine.reducedEntities.entries()) {
 		if (entity.category?.toLowerCase() === 'track') {
+			// Filter by entity head position if cursor context is provided
+			if (context?.cursorBlockId && !isEntityAvailableAtBlock(id, context.cursorBlockId)) {
+				continue;
+			}
 			const current = (entity.metadata?.current as number) || 0;
 			const max = (entity.metadata?.max as number) || 10;
 			tracks.push({
@@ -674,8 +694,9 @@ export function resolveCommandSuggestions(
 		if (!text) continue;
 
 		if (param.type === 'select' && param.options) {
-			// Fuzzy match typed text to the closest option
-			const options = param.options();
+			// Fuzzy match typed text to the closest option, with cursor context
+			const cursorBlockId = _editor.activeBlockId;
+			const options = param.options({ cursorBlockId });
 			const exact = options.find((o) => o.label.toLowerCase() === text.toLowerCase());
 			const partial = options.find((o) => o.label.toLowerCase().startsWith(text.toLowerCase()));
 			const fuzzy = options.find((o) => o.label.toLowerCase().includes(text.toLowerCase()));
@@ -705,7 +726,8 @@ export function resolveCommandSuggestions(
 	let selectOptions: ParamOption[] = [];
 	const activeParam = matched.params[activeParamIndex];
 	if (activeParam?.type === 'select' && activeParam.options) {
-		const allOptions = activeParam.options();
+		const cursorBlockId = _editor.activeBlockId;
+		const allOptions = activeParam.options({ cursorBlockId });
 		const filterText = segments[activeParamIndex]?.trim() || '';
 		selectOptions = filterText
 			? allOptions.filter((o) => o.label.toLowerCase().includes(filterText.toLowerCase()))

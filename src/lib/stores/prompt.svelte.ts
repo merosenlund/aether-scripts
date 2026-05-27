@@ -1,5 +1,6 @@
 export const promptState = $state({
 	isOpen: false,
+	isConfirm: false,
 	title: '',
 	description: '',
 	defaultValue: '',
@@ -15,7 +16,26 @@ export function openPrompt(
 		promptState.title = title;
 		promptState.description = description;
 		promptState.defaultValue = defaultValue;
+		promptState.isConfirm = false;
 		promptState.resolve = resolve;
+		promptState.isOpen = true;
+	});
+}
+
+/**
+ * Open a simple confirm dialog with Cancel/Confirm buttons (no text input).
+ * Returns true if confirmed, false if cancelled.
+ */
+export function openConfirm(
+	title: string,
+	description: string = ''
+): Promise<boolean> {
+	return new Promise((resolve) => {
+		promptState.title = title;
+		promptState.description = description;
+		promptState.defaultValue = '';
+		promptState.isConfirm = true;
+		promptState.resolve = (value) => resolve(value !== null);
 		promptState.isOpen = true;
 	});
 }

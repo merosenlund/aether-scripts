@@ -17,6 +17,19 @@
 	let editorComponent = $state<any>();
 	let cursorState = $state<any>({ clocks: {} });
 	let saveStatus = $state<'synced' | 'saving' | 'error'>('synced');
+
+	// Sidebar-initiated editor highlighting
+	function handleHighlightBlock(blockId: string | null) {
+		if (!isPreview) {
+			editorComponent?.highlightBlock(blockId);
+		}
+	}
+
+	function handleFocusBlock(blockId: string) {
+		if (!isPreview) {
+			editorComponent?.scrollToBlock(blockId);
+		}
+	}
 </script>
 
 <div class="absolute inset-0 flex flex-col overflow-hidden bg-stone-950 font-sans text-stone-100">
@@ -201,7 +214,13 @@
 					</div>
 				{:else if activeTab === 'mechanics'}
 					<div class="h-full" in:fade>
-						<MechanicsTab serialId={data.scene.serial_id} sceneId={data.scene.id} {cursorState} />
+						<MechanicsTab
+							serialId={data.scene.serial_id}
+							sceneId={data.scene.id}
+							{cursorState}
+							onHighlightBlock={handleHighlightBlock}
+							onFocusBlock={handleFocusBlock}
+						/>
 					</div>
 				{:else}
 					<div class="h-full" in:fade>
@@ -210,6 +229,8 @@
 							sceneId={data.scene.id}
 							{activeBlockId}
 							{visibleBlockIds}
+							onHighlightBlock={handleHighlightBlock}
+							onFocusBlock={handleFocusBlock}
 						/>
 					</div>
 				{/if}

@@ -77,9 +77,9 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Intelligent Clock Commands**: `/increment` and `/decrement` populate a dropdown of active clocks from contextEngine. Arrow keys navigate, Enter selects.
 - [x] **New `/advance` Track Command**: Advances progress tracks with optional amount param, using active tracks from contextEngine.
 
-### Phase 6.3: Editor Synchronization & Rewind Logic
-- [ ] **Mechanics Feedback & Rewind Mode**: When active at the end of the document, incrementing/decrementing a clock should auto-inject visual feedback into the prose. Disable this automatic feedback when the cursor is in "rewind" mode (editing past blocks) to prevent logical timeline conflicts. Force manual re-attachment of events when editing past prose instead.
-- [ ] **Editor Anchor Indicators**: Explore options for visual feedback on anchored entities. Consider having the wiki entity itself display this connection, and "selecting" an entity highlights the block it's attached to, avoiding editor clutter.
+### Phase 6.3: Editor Synchronization & Rewind Logic ✅
+- [x] **Entity-Head-Aware Command Filtering**: Replaced binary "rewind mode" with intelligent per-entity filtering. Slash command dropdowns (`/increment`, `/decrement`, `/advance`) only show entities whose chronological head is at or before the cursor's block position, naturally preventing timeline pollution. Creation commands (`/clock`, `/track`) remain unrestricted.
+- [x] **Sidebar-Initiated Anchor Indicators**: Both WikiSidebar and MechanicsTab entities are now expandable, revealing events/facts with delete controls. Hovering an event highlights its anchored block in the editor; clicking scrolls to it with a flash animation. Added `openConfirm()` dialog for clean delete confirmations.
 
 ### Phase 6.4: World Manager UX Overhaul
 - [ ] **Optimizing the Layout**: Acknowledge the two distinct purposes of the World Manager: (1) overview of entities and (2) adjusting event attachments. The middle section needs an overhaul—consider a tabbed view or a separate route specifically designed for managing event attachment points painlessly. 

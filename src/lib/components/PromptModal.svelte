@@ -4,14 +4,17 @@
 	import { onMount } from 'svelte';
 
 	let inputRef: HTMLInputElement | undefined = $state(undefined);
+	let confirmRef: HTMLButtonElement | undefined = $state(undefined);
 	let inputValue = $state('');
 
 	$effect(() => {
 		if (promptState.isOpen) {
 			inputValue = promptState.defaultValue;
-			// Focus input when modal opens
 			setTimeout(() => {
-				if (inputRef) {
+				if (promptState.isConfirm) {
+					// In confirm mode, focus the Confirm button for quick Enter
+					confirmRef?.focus();
+				} else if (inputRef) {
 					inputRef.focus();
 					inputRef.select();
 				}
@@ -65,15 +68,17 @@
 			{/if}
 
 			<form onsubmit={handleSubmit} class="relative z-10 space-y-6">
-				<div>
-					<input
-						bind:this={inputRef}
-						bind:value={inputValue}
-						type="text"
-						class="focus:border-primary/50 focus:ring-primary/50 w-full rounded-xl border border-white/10 bg-stone-950/50 px-4 py-3 text-stone-100 shadow-inner transition-all placeholder:text-stone-600 focus:ring-1 focus:outline-none"
-						placeholder="Type here..."
-					/>
-				</div>
+				{#if !promptState.isConfirm}
+					<div>
+						<input
+							bind:this={inputRef}
+							bind:value={inputValue}
+							type="text"
+							class="focus:border-primary/50 focus:ring-primary/50 w-full rounded-xl border border-white/10 bg-stone-950/50 px-4 py-3 text-stone-100 shadow-inner transition-all placeholder:text-stone-600 focus:ring-1 focus:outline-none"
+							placeholder="Type here..."
+						/>
+					</div>
+				{/if}
 
 				<div class="flex justify-end gap-3">
 					<button
@@ -84,6 +89,7 @@
 						Cancel
 					</button>
 					<button
+						bind:this={confirmRef}
 						type="submit"
 						class="bg-primary text-primary-foreground shadow-primary/20 rounded-xl px-6 py-2 text-sm font-bold shadow-lg transition-opacity hover:opacity-90"
 					>
