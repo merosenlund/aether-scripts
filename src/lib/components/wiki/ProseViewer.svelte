@@ -45,6 +45,30 @@
 	}>();
 
 	let scrollContainer: HTMLElement | undefined = $state();
+	let topSentinel: HTMLElement | undefined = $state();
+	let bottomSentinel: HTMLElement | undefined = $state();
+
+	// IntersectionObserver for lazy loading scenes on scroll
+	$effect(() => {
+		if (!scrollContainer) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (!entry.isIntersecting) continue;
+					const dir = (entry.target as HTMLElement).dataset.sentinel;
+					if (dir === 'top') onRequestPreviousScene();
+					else if (dir === 'bottom') onRequestNextScene();
+				}
+			},
+			{ root: scrollContainer, rootMargin: '200px', threshold: 0 }
+		);
+
+		if (topSentinel) observer.observe(topSentinel);
+		if (bottomSentinel) observer.observe(bottomSentinel);
+
+		return () => observer.disconnect();
+	});
 
 	// Render inline content (text with marks)
 	function renderInline(nodes: TiptapNode[] | undefined): string {
@@ -121,22 +145,16 @@
 
 <div
 	data-component="prose-viewer"
-	class="prose-viewer scroll-container flex-1 overflow-y-auto"
+	class="prose-viewer scroll-container h-full overflow-y-auto"
 	bind:this={scrollContainer}
 >
 	<!-- Scroll-up sentinel for lazy loading previous scenes -->
 	<div
 		data-component="sentinel-top"
-		class="flex items-center justify-center py-4"
-	>
-		<button
-			data-component="load-prev-btn"
-			onclick={onRequestPreviousScene}
-			class="text-[10px] font-bold tracking-widest text-stone-600 uppercase transition-colors hover:text-stone-400"
-		>
-			↑ Load earlier scenes
-		</button>
-	</div>
+		data-sentinel="top"
+		class="h-1"
+		bind:this={topSentinel}
+	></div>
 
 	{#each scenes as scene, sceneIdx (scene.id)}
 		<!-- Scene Divider -->
@@ -144,14 +162,14 @@
 			<div data-component="scene-divider" class="my-8 flex items-center gap-4 px-8">
 				<div class="h-px flex-1 bg-white/5"></div>
 				<span class="text-[9px] font-bold tracking-widest text-stone-600 uppercase">
-					Scene {scene.order_index + 1}: {scene.title}
+					Scene {scene.order_index}: {scene.title}
 				</span>
 				<div class="h-px flex-1 bg-white/5"></div>
 			</div>
 		{:else}
 			<div data-component="scene-header" class="px-8 pt-2 pb-4">
 				<span class="text-[9px] font-bold tracking-widest text-stone-600 uppercase">
-					Scene {scene.order_index + 1}: {scene.title}
+					Scene {scene.order_index}: {scene.title}
 				</span>
 			</div>
 		{/if}
@@ -163,7 +181,7 @@
 				No content in this scene
 			</div>
 		{:else}
-			{#each blocks as block (block.id)}
+			{#each blocks as block, blockIdx (block.id + '-' + blockIdx)}
 				{@const isAnchored = anchoredBlockIds.has(block.id)}
 				{@const isHighlighted = highlightedBlockId === block.id}
 				{@const blockText = getBlockText(block.node)}
@@ -233,16 +251,10 @@
 	<!-- Scroll-down sentinel for lazy loading next scenes -->
 	<div
 		data-component="sentinel-bottom"
-		class="flex items-center justify-center py-4"
-	>
-		<button
-			data-component="load-next-btn"
-			onclick={onRequestNextScene}
-			class="text-[10px] font-bold tracking-widest text-stone-600 uppercase transition-colors hover:text-stone-400"
-		>
-			↓ Load later scenes
-		</button>
-	</div>
+		data-sentinel="bottom"
+		class="h-1"
+		bind:this={bottomSentinel}
+	></div>
 </div>
 
 <style>

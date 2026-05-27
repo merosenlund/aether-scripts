@@ -1,6 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { mount, unmount } from 'svelte';
 import ProgressTrackComponent from '../../components/mechanics/ProgressTrack.svelte';
+import { contextEngine } from '$lib/stores/contextEngine.svelte';
 
 export const TrackBlock = Node.create({
 	name: 'trackBlock',
@@ -35,6 +36,23 @@ export const TrackBlock = Node.create({
 
 	renderHTML({ HTMLAttributes }) {
 		return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'trackBlock' })];
+	},
+
+	renderText({ node }) {
+		const name = node.attrs.name || 'Unnamed Track';
+		const current = node.attrs.current ?? 0;
+		const max = node.attrs.max ?? 10;
+		const action = node.attrs.action || 'create';
+		const actionLabel = action === 'create' ? 'Start' : 'Progress';
+
+		// Fetch anchored event reason/description if available in contextEngine
+		const blockEvent = node.attrs.id
+			? contextEngine.rawEvents.find((e) => e.block_id === node.attrs.id)
+			: null;
+		const reason = blockEvent?.payload?.reason || blockEvent?.payload?.description || blockEvent?.payload?.content;
+		const reasonText = reason ? ` | "${reason}"` : '';
+
+		return `[TRACK: ${name} - ${actionLabel} (${current}/${max})${reasonText}]`;
 	},
 
 	addNodeView() {

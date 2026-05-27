@@ -49,5 +49,23 @@ export const OddsCheck = Node.create({
 			}),
 			text
 		];
+	},
+
+	renderText({ node }) {
+		const target = node.attrs.target || 50;
+		const roll = node.attrs.roll !== null && node.attrs.roll !== undefined ? node.attrs.roll : '?';
+		const isSuccess = roll !== '?' && Number(roll) <= Number(target);
+		const resultText = isSuccess ? 'YES' : 'NO';
+
+		const exceptionalThreshold = Math.floor(target / 5);
+		const failureThreshold = 100 - Math.floor((100 - target) / 5);
+
+		let label = resultText;
+		if (roll !== '?') {
+			if (Number(roll) <= exceptionalThreshold) label = 'EXCEPTIONAL YES';
+			else if (Number(roll) >= failureThreshold) label = 'EXCEPTIONAL NO';
+		}
+
+		return `🎲 ${roll} vs ${target} [${label}]`;
 	}
 });

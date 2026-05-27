@@ -157,6 +157,263 @@
 	let hasYjsData = $state(true);
 	let editorReadyTimer: ReturnType<typeof setTimeout> | undefined;
 
+
+	// Synchronous mini-reducer for clipboard serialization (avoids async import)
+	function reduceClockStateAtBlock(entityId: string, blockId: string | null): { filled: number; segments: number } {
+		const fallback = { filled: 0, segments: 4 };
+		if (!entityId) return fallback;
+
+		let slicedEvents = contextEngine.rawEvents;
+		if (blockId) {
+			const index = contextEngine.rawEvents.findIndex((e) => e.block_id === blockId);
+			if (index !== -1) {
+				slicedEvents = contextEngine.rawEvents.slice(0, index + 1);
+			} else {
+				const blockIndex = contextEngine.orderedBlockIds.indexOf(blockId);
+				if (blockIndex !== -1) {
+					const visibleBlocks = new Set(contextEngine.orderedBlockIds.slice(0, blockIndex + 1));
+					slicedEvents = contextEngine.rawEvents.filter(
+						(e) => !e.block_id || visibleBlocks.has(e.block_id)
+					);
+				}
+			}
+		}
+
+		let segments = 4;
+		let filled = 0;
+		for (const ev of slicedEvents) {
+			if (ev.entity_id !== entityId) continue;
+			switch (ev.event_type) {
+				case 'set_clock':
+					segments = (ev.payload.segments as number) ?? segments;
+					filled = (ev.payload.filled as number) ?? filled;
+					break;
+				case 'increment_clock':
+					filled = Math.min(segments, filled + ((ev.payload.amount as number) ?? 1));
+					break;
+				case 'decrement_clock':
+					filled = Math.max(0, filled - ((ev.payload.amount as number) ?? 1));
+					break;
+			}
+		}
+		return { filled, segments };
+	}
+
+	function reduceTrackStateAtBlock(entityId: string, blockId: string | null): { current: number; max: number } {
+		const fallback = { current: 0, max: 10 };
+		if (!entityId) return fallback;
+
+		let slicedEvents = contextEngine.rawEvents;
+		if (blockId) {
+			const index = contextEngine.rawEvents.findIndex((e) => e.block_id === blockId);
+			if (index !== -1) {
+				slicedEvents = contextEngine.rawEvents.slice(0, index + 1);
+			} else {
+				const blockIndex = contextEngine.orderedBlockIds.indexOf(blockId);
+				if (blockIndex !== -1) {
+					const visibleBlocks = new Set(contextEngine.orderedBlockIds.slice(0, blockIndex + 1));
+					slicedEvents = contextEngine.rawEvents.filter(
+						(e) => !e.block_id || visibleBlocks.has(e.block_id)
+					);
+				}
+			}
+		}
+
+		let max = 10;
+		let current = 0;
+		for (const ev of slicedEvents) {
+			if (ev.entity_id !== entityId) continue;
+			if (ev.event_type === 'set_track') {
+				max = (ev.payload.max as number) ?? max;
+				current = (ev.payload.current as number) ?? current;
+			}
+		}
+		return { current, max };
+	}
+
+	// Serialize a ProseMirror Slice to plain text, including atom nodes
+	function serializeSliceToPlainText(slice: import('@tiptap/pm/model').Slice): string {
+		const serializeNode = (node: import('@tiptap/pm/model').Node): string => {
+			// Atom nodes: serialize from their attributes
+			if (node.type.spec.atom) {
+				switch (node.type.name) {
+					case 'clockBlock': {
+						const name = node.attrs.name || 'Unnamed Clock';
+						const action = node.attrs.action || 'create';
+						const actionLabel = action === 'create' ? 'Start' : action === 'increment' ? 'Incremented' : action === 'decrement' ? 'Decremented' : action;
+						const { filled, segments } = reduceClockStateAtBlock(node.attrs.entityId, node.attrs.id);
+						const blockEvent = node.attrs.id ? contextEngine.rawEvents.find((e) => e.block_id === node.attrs.id) : null;
+						const reason = blockEvent?.payload?.reason || blockEvent?.payload?.description || blockEvent?.payload?.content;
+						const reasonText = reason ? ` | "${reason}"` : '';
+						return `[CLOCK: ${name} - ${actionLabel} (${filled}/${segments})${reasonText}]`;
+					}
+					case 'trackBlock': {
+						const tName = node.attrs.name || 'Unnamed Track';
+						const tAction = node.attrs.action || 'create';
+						const tLabel = tAction === 'create' ? 'Start' : 'Progress';
+						const { current, max } = reduceTrackStateAtBlock(node.attrs.entityId, node.attrs.id);
+						const tBlockEvent = node.attrs.id ? contextEngine.rawEvents.find((e) => e.block_id === node.attrs.id) : null;
+						const tReason = tBlockEvent?.payload?.reason || tBlockEvent?.payload?.description || tBlockEvent?.payload?.content;
+						const tReasonText = tReason ? ` | "${tReason}"` : '';
+						return `[TRACK: ${tName} - ${tLabel} (${current}/${max})${tReasonText}]`;
+					}
+					case 'oracleBlock': {
+						const type = node.attrs.type || 'fate';
+						const question = node.attrs.question || '';
+						const result = node.attrs.result || '?';
+						return `🔮 [Oracle: ${type.toUpperCase()}] Q: ${question} -> A: ${result}`;
+					}
+					case 'diceRoller': {
+						const formula = node.attrs.formula || '1d20';
+						const result = node.attrs.result != null ? node.attrs.result : '?';
+						return `🎲 ${formula} = ${result}`;
+					}
+					case 'oddsCheck': {
+						const target = node.attrs.target || 50;
+						const roll = node.attrs.roll != null ? node.attrs.roll : '?';
+						const isSuccess = roll !== '?' && Number(roll) <= Number(target);
+						let label = isSuccess ? 'YES' : 'NO';
+						if (roll !== '?') {
+							if (Number(roll) <= Math.floor(target / 5)) label = 'EXCEPTIONAL YES';
+							else if (Number(roll) >= 100 - Math.floor((100 - target) / 5)) label = 'EXCEPTIONAL NO';
+						}
+						return `🎲 ${roll} vs ${target} [${label}]`;
+					}
+					default:
+						return '';
+				}
+			}
+
+			// Text leaf nodes
+			if (node.isText) return node.text || '';
+
+			// Container nodes: recurse into children
+			let text = '';
+			node.forEach((child) => {
+				text += serializeNode(child);
+			});
+
+			// Add newline after block-level nodes
+			if (node.isBlock && text.length > 0) {
+				text += '\n';
+			}
+			return text;
+		};
+
+		let result = '';
+		slice.content.forEach((node) => {
+			result += serializeNode(node);
+		});
+		return result.replace(/\n{3,}/g, '\n\n').trim();
+	}
+
+	// Serialize a ProseMirror Slice to HTML, including atom nodes as visible text
+	function serializeSliceToHtml(slice: import('@tiptap/pm/model').Slice): string {
+		const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+		const serializeNode = (node: import('@tiptap/pm/model').Node): string => {
+			// Atom nodes: render as a styled paragraph with visible text
+			if (node.type.spec.atom) {
+				let text = '';
+				switch (node.type.name) {
+					case 'clockBlock': {
+						const name = node.attrs.name || 'Unnamed Clock';
+						const action = node.attrs.action || 'create';
+						const actionLabel = action === 'create' ? 'Start' : action === 'increment' ? 'Incremented' : action === 'decrement' ? 'Decremented' : action;
+						const { filled, segments } = reduceClockStateAtBlock(node.attrs.entityId, node.attrs.id);
+						const blockEvent = node.attrs.id ? contextEngine.rawEvents.find((e) => e.block_id === node.attrs.id) : null;
+						const reason = blockEvent?.payload?.reason || blockEvent?.payload?.description || blockEvent?.payload?.content;
+						const reasonText = reason ? ` | "${reason}"` : '';
+						text = `[CLOCK: ${name} - ${actionLabel} (${filled}/${segments})${reasonText}]`;
+						break;
+					}
+					case 'trackBlock': {
+						const tName = node.attrs.name || 'Unnamed Track';
+						const tAction = node.attrs.action || 'create';
+						const tLabel = tAction === 'create' ? 'Start' : 'Progress';
+						const { current, max } = reduceTrackStateAtBlock(node.attrs.entityId, node.attrs.id);
+						const tBlockEvent = node.attrs.id ? contextEngine.rawEvents.find((e) => e.block_id === node.attrs.id) : null;
+						const tReason = tBlockEvent?.payload?.reason || tBlockEvent?.payload?.description || tBlockEvent?.payload?.content;
+						const tReasonText = tReason ? ` | "${tReason}"` : '';
+						text = `[TRACK: ${tName} - ${tLabel} (${current}/${max})${tReasonText}]`;
+						break;
+					}
+					case 'oracleBlock': {
+						const type = node.attrs.type || 'fate';
+						const question = node.attrs.question || '';
+						const result = node.attrs.result || '?';
+						text = `🔮 [Oracle: ${type.toUpperCase()}] Q: ${question} -> A: ${result}`;
+						break;
+					}
+					case 'diceRoller': {
+						const formula = node.attrs.formula || '1d20';
+						const result = node.attrs.result != null ? node.attrs.result : '?';
+						return `<span style="font-family:monospace;background:#1c1917;color:#a8a29e;padding:2px 6px;border-radius:4px;">🎲 ${escHtml(formula)} = ${escHtml(String(result))}</span>`;
+					}
+					case 'oddsCheck': {
+						const target = node.attrs.target || 50;
+						const roll = node.attrs.roll != null ? node.attrs.roll : '?';
+						const isSuccess = roll !== '?' && Number(roll) <= Number(target);
+						let label = isSuccess ? 'YES' : 'NO';
+						if (roll !== '?') {
+							if (Number(roll) <= Math.floor(target / 5)) label = 'EXCEPTIONAL YES';
+							else if (Number(roll) >= 100 - Math.floor((100 - target) / 5)) label = 'EXCEPTIONAL NO';
+						}
+						return `<span style="font-family:monospace;background:#1c1917;color:#a8a29e;padding:2px 6px;border-radius:4px;">🎲 ${escHtml(String(roll))} vs ${escHtml(String(target))} [${escHtml(label)}]</span>`;
+					}
+					default:
+						return '';
+				}
+				return `<p style="font-family:monospace;background:#1c1917;color:#a8a29e;padding:6px 12px;border-radius:6px;border-left:3px solid #d97706;margin:8px 0;">${escHtml(text)}</p>`;
+			}
+
+			// Text leaf nodes with marks
+			if (node.isText) {
+				let html = escHtml(node.text || '');
+				if (node.marks) {
+					for (const mark of node.marks) {
+						switch (mark.type.name) {
+							case 'bold': html = `<strong>${html}</strong>`; break;
+							case 'italic': html = `<em>${html}</em>`; break;
+							case 'code': html = `<code>${html}</code>`; break;
+							case 'strike': html = `<s>${html}</s>`; break;
+						}
+					}
+				}
+				return html;
+			}
+
+			// Hard break
+			if (node.type.name === 'hardBreak') return '<br>';
+
+			// Container nodes: recurse into children
+			let inner = '';
+			node.forEach((child) => {
+				inner += serializeNode(child);
+			});
+
+			// Wrap in appropriate HTML tags
+			switch (node.type.name) {
+				case 'paragraph': return `<p>${inner || '<br>'}</p>`;
+				case 'heading': {
+					const level = node.attrs.level || 2;
+					return `<h${level}>${inner}</h${level}>`;
+				}
+				case 'blockquote': return `<blockquote>${inner}</blockquote>`;
+				case 'gmNote': return `<blockquote style="border-left:3px solid #eab308;background:#422006;padding:8px 12px;font-style:italic;color:#fef08a;">${inner}</blockquote>`;
+				case 'statBlock': return `<div style="border:1px solid #57534e;padding:12px;border-radius:6px;font-family:serif;">${inner}</div>`;
+				default:
+					return inner;
+			}
+		};
+
+		let html = '';
+		slice.content.forEach((node) => {
+			html += serializeNode(node);
+		});
+		return html;
+	}
+
 	onMount(async () => {
 		if (sceneId) {
 			await contextEngine.initScene(sceneId, initialContent || content, serialId);
@@ -232,6 +489,38 @@
 					},
 					keydown: () => {
 						telemetryStore.activateSession();
+					},
+					copy: (view, event) => {
+						const { state } = view;
+						const { selection } = state;
+						if (selection.empty) return false;
+
+						const slice = selection.content();
+						const plainText = serializeSliceToPlainText(slice);
+						const html = serializeSliceToHtml(slice);
+
+						event.preventDefault();
+						event.clipboardData?.setData('text/plain', plainText);
+						event.clipboardData?.setData('text/html', html);
+						return true;
+					},
+					cut: (view, event) => {
+						const { state } = view;
+						const { selection } = state;
+						if (selection.empty) return false;
+
+						const slice = selection.content();
+						const plainText = serializeSliceToPlainText(slice);
+						const html = serializeSliceToHtml(slice);
+
+						event.preventDefault();
+						event.clipboardData?.setData('text/plain', plainText);
+						event.clipboardData?.setData('text/html', html);
+
+						// Delete the selected content for cut
+						const tr = state.tr.deleteSelection();
+						view.dispatch(tr);
+						return true;
 					}
 				}
 			},

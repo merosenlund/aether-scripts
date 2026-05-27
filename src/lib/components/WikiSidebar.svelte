@@ -12,12 +12,14 @@
 	import { fade, slide } from 'svelte/transition';
 	import { contextEngine } from '$lib/stores/contextEngine.svelte';
 	import { openConfirm } from '$lib/stores/prompt.svelte';
+	import CreateWikiEntryModal from '$lib/components/wiki/CreateWikiEntryModal.svelte';
 
 	let {
 		serialId,
 		sceneId,
 		activeBlockId,
 		visibleBlockIds = [],
+		scenes = [],
 		onHighlightBlock = (_blockId: string | null) => {},
 		onFocusBlock = (_blockId: string) => {}
 	} = $props<{
@@ -25,6 +27,7 @@
 		sceneId: string;
 		activeBlockId: string;
 		visibleBlockIds?: string[];
+		scenes?: { id: string; author_title: string; display_title: string; order_index: number }[];
 		onHighlightBlock?: (blockId: string | null) => void;
 		onFocusBlock?: (blockId: string) => void;
 	}>();
@@ -32,6 +35,7 @@
 	let isLoading = $state(true);
 	let searchQuery = $state('');
 	let expandedEntityIds = $state<Set<string>>(new Set());
+	let showCreateModal = $state(false);
 
 	onMount(async () => {
 		try {
@@ -194,6 +198,12 @@
 				return Sparkles;
 		}
 	}
+
+	async function handleEntryCreated() {
+		// Refresh the context engine after a new entity is created
+		await contextEngine.loadBaseEntities(serialId);
+		contextEngine.rawEvents = await getWikiEvents(sceneId);
+	}
 </script>
 
 <div data-component="wiki-sidebar-root" class="flex h-full flex-col">
@@ -211,9 +221,8 @@
 			<a
 				data-component="manage-wiki-link"
 				href="/serials/{serialId}/wiki"
-				target="_blank"
 				class="flex h-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-bold text-stone-300 transition-all hover:bg-white/10"
-				title="Open World Manager in new tab"
+				title="Open World Manager"
 			>
 				<span data-component="manage-wiki-text" class="mr-1">Manage</span>
 				<span data-component="manage-wiki-arrow" class="text-[10px]">↗</span>
@@ -401,11 +410,19 @@
 	<div data-component="sidebar-actions" class="border-t border-white/5 bg-white/[0.02] p-4">
 		<button
 			data-component="new-entry-btn"
-			onclick={() => window.open(`/serials/${serialId}/wiki`, '_blank')}
+			onclick={() => (showCreateModal = true)}
 			class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 py-3 text-[10px] font-bold tracking-widest text-stone-500 uppercase transition-all hover:border-white/20 hover:text-white"
 		>
 			<Plus size={14} />
 			New Wiki Entry
 		</button>
 	</div>
+
+	<CreateWikiEntryModal
+		{serialId}
+		{scenes}
+		open={showCreateModal}
+		onClose={() => (showCreateModal = false)}
+		onCreated={handleEntryCreated}
+	/>
 </div>

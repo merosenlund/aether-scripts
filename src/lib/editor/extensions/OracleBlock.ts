@@ -28,6 +28,13 @@ export const OracleBlock = Node.create({
 		return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'oracleBlock' })];
 	},
 
+	renderText({ node }) {
+		const type = node.attrs.type || 'fate';
+		const question = node.attrs.question || '';
+		const result = node.attrs.result || '?';
+		return `🔮 [Oracle: ${type.toUpperCase()}] Q: ${question} -> A: ${result}`;
+	},
+
 	addNodeView() {
 		return ({ node }) => {
 			const dom = document.createElement('div');

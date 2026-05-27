@@ -82,10 +82,10 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Sidebar-Initiated Anchor Indicators**: Both WikiSidebar and MechanicsTab entities are now expandable, revealing events/facts with delete controls. Hovering an event highlights its anchored block in the editor; clicking scrolls to it with a flash animation. Added `openConfirm()` dialog for clean delete confirmations.
 
 ### Phase 6.4: World Manager UX Overhaul
-- [ ] **Optimizing the Layout**: Acknowledge the two distinct purposes of the World Manager: (1) overview of entities and (2) adjusting event attachments. The middle section needs an overhaul—consider a tabbed view or a separate route specifically designed for managing event attachment points painlessly. 
-- [ ] **Context-Rich Events**: Allow clocks/tracks to have content attached to trigger events so the reason for the tick is recorded in the timeline. Fix broken buttons like "New Wiki Entry".
-- [ ] **Readable Block Connections**: Replace raw UUID `block_id` text fields with intelligent select dropdowns that parse the scene and present readable text snippets for linking prose.
-- [ ] **Intuitive Entity Editing & Drawer Fixes**: Fix state leak in the "Trigger Event" drawer (e.g., clock drawer incorrectly showing character fields). Replace database-centric forms (`event_type: add_fact`) with intuitive UI elements natively on the entity view (e.g., an inline "Add new fact..." input).
+- [x] **Optimizing the Layout**: Acknowledge the two distinct purposes of the World Manager: (1) overview of entities and (2) adjusting event attachments. The middle section needs an overhaul—consider a tabbed view or a separate route specifically designed for managing event attachment points painlessly. 
+- [x] **Context-Rich Events**: Allow clocks/tracks to have content attached to trigger events so the reason for the tick is recorded in the timeline. Fix broken buttons like "New Wiki Entry".
+- [x] **Readable Block Connections**: Replace raw UUID `block_id` text fields with intelligent select dropdowns that parse the scene and present readable text snippets for linking prose.
+- [x] **Intuitive Entity Editing & Drawer Fixes**: Fix state leak in the "Trigger Event" drawer (e.g., clock drawer incorrectly showing character fields). Replace database-centric forms (`event_type: add_fact`) with intuitive UI elements natively on the entity view (e.g., an inline "Add new fact..." input).
 
 ## Phase 7: Social & Reader Engagement
 

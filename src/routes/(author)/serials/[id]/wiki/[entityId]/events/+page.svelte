@@ -3,8 +3,9 @@
 	import { ArrowLeft, Trash2, Plus } from '@lucide/svelte';
 	import ProseViewer from '$lib/components/wiki/ProseViewer.svelte';
 	import { fetchSceneContent } from '$lib/api/wikiScenes';
-	import { updateWikiEventBlock } from '$lib/api/wiki';
+	import { updateWikiEventBlock, deleteWikiEvent } from '$lib/api/wiki';
 	import { notifications } from '$lib/stores/notifications';
+	import { openConfirm } from '$lib/stores/prompt.svelte';
 	import type { WikiEntity, WikiEvent } from '$lib/api/wiki';
 
 	let { data } = $props<{ data: any }>();
@@ -178,33 +179,29 @@
 	function formatEventType(type: string) {
 		return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 	}
+
+	async function handleDeleteEvent(event: WikiEvent) {
+		const confirmed = await openConfirm(
+			'Delete Event',
+			`Delete this "${formatEventType(event.event_type)}" event? This cannot be undone.`
+		);
+		if (!confirmed) return;
+
+		try {
+			await deleteWikiEvent(event.id);
+			entityEvents = entityEvents.filter((ev) => ev.id !== event.id);
+			notifications.success('Event deleted.');
+		} catch (e) {
+			console.error(e);
+			notifications.error('Failed to delete event.');
+		}
+	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 {#if entity}
 	<div data-component="events-page" class="flex min-h-0 flex-1 flex-col overflow-hidden">
-		<!-- Re-anchor Banner -->
-		{#if reanchorMode}
-			<div
-				data-component="reanchor-banner"
-				class="bg-primary/10 border-primary/30 flex shrink-0 items-center justify-between border-b px-6 py-2.5"
-			>
-				<p class="text-primary text-xs font-bold">
-					Click any paragraph to re-anchor this event. Press <kbd
-						class="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px]">Esc</kbd
-					> to cancel.
-				</p>
-				<button
-					data-component="cancel-reanchor"
-					onclick={cancelReanchor}
-					class="text-primary text-[10px] font-bold uppercase tracking-wider hover:underline"
-				>
-					Cancel
-				</button>
-			</div>
-		{/if}
-
 		<!-- Header -->
 		<div
 			data-component="events-header"
@@ -230,7 +227,7 @@
 		<!-- Main Content Area -->
 		<div data-component="events-workspace" class="flex min-h-0 flex-1 overflow-hidden">
 			<!-- Left: Prose Viewer -->
-			<div data-component="prose-panel" class="min-h-0 flex-1 overflow-hidden">
+			<div data-component="prose-panel" class="flex min-h-0 flex-1 flex-col overflow-hidden">
 				{#if loadedScenes.length > 0}
 					<ProseViewer
 						bind:this={proseViewer}
@@ -290,22 +287,35 @@
 								data-component="event-type-row"
 								class="flex items-center justify-between"
 							>
-								<span
-									data-component="event-type-badge"
-									class="rounded-lg px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase
-										{isActive
-											? 'bg-primary/20 text-primary'
-											: 'bg-white/5 text-stone-400'}"
+								<div
+									data-component="event-badge-group"
+									class="flex items-center gap-2"
 								>
-									{formatEventType(event.event_type)}
-								</span>
-								{#if event.block_id}
+									{#if event.block_id}
+										<span
+											data-component="anchored-dot"
+											class="bg-primary/50 h-1.5 w-1.5 rounded-full shrink-0"
+											title="Anchored to a block"
+										></span>
+									{/if}
 									<span
-										data-component="anchored-dot"
-										class="bg-primary/50 h-1.5 w-1.5 rounded-full"
-										title="Anchored to a block"
-									></span>
-								{/if}
+										data-component="event-type-badge"
+										class="rounded-lg px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase
+											{isActive
+												? 'bg-primary/20 text-primary'
+												: 'bg-white/5 text-stone-400'}"
+									>
+										{formatEventType(event.event_type)}
+									</span>
+								</div>
+								<button
+									data-component="delete-event-btn"
+									class="text-stone-700 opacity-0 transition-all hover:text-rose-400 group-hover:opacity-100"
+									onclick={(e) => { e.stopPropagation(); handleDeleteEvent(event); }}
+									title="Delete event"
+								>
+									<Trash2 size={12} />
+								</button>
 							</div>
 
 							<div

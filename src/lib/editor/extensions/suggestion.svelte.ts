@@ -68,19 +68,66 @@ export default {
 					return true;
 				}
 
-				// Tab: insert a tab character into the editor to advance
-				// to the next parameter. Only when we're in hint mode
-				// (a command has been matched and has params).
+				// Tab: autocomplete the active select param in hint mode
+				// (replaces partial text like 'ya' with 'Yap Time'), then
+				// advance to the next parameter. In browsing mode, Tab
+				// autocompletes the command name.
 				if (props.event.key === 'Tab' && editorRef) {
 					const inHintMode =
 						state.items.length === 1 &&
 						state.items[0].hintState != null;
 
-					if (inHintMode) {
+					if (inHintMode && currentRange) {
 						props.event.preventDefault();
+						const hs = state.items[0].hintState;
+						const activeParam = hs.command.params[hs.activeParamIndex];
+						const partialText = hs.paramSegments[hs.activeParamIndex]?.trim() || '';
+
+						// If active param is select and we have a fuzzy match,
+						// replace the partial with the full label
+						if (activeParam?.type === 'select' && partialText && hs.selectOptions.length > 0) {
+							// Pick the first (best) matching option
+							const bestMatch = hs.selectOptions[0];
+							if (bestMatch && bestMatch.label.toLowerCase() !== partialText.toLowerCase()) {
+								// Reconstruct the full query text with the completed label
+								const segments = [...hs.paramSegments];
+								segments[hs.activeParamIndex] = bestMatch.label;
+								const newQuery = hs.command.name + ' ' + segments.join('\t');
+								const tr = editorRef.state.tr.insertText(
+									newQuery + '\t',
+									currentRange.from + 1,
+									currentRange.to
+								);
+								editorRef.view.dispatch(tr);
+								return true;
+							}
+						}
+
+						// Default: just insert tab to advance to next param
 						const { state: edState, dispatch } = editorRef.view;
 						dispatch(edState.tr.insertText('\t'));
 						return true;
+					}
+
+					// Browsing mode: autocomplete selected suggestion
+					const inBrowsingMode =
+						state.items.length > 0 &&
+						!state.items[0]?.hintState;
+
+					if (inBrowsingMode && currentRange) {
+						const selected = component.getSelectedItem?.();
+
+						if (selected?.commandDef) {
+							props.event.preventDefault();
+							const cmdName = selected.commandDef.name;
+							const tr = editorRef.state.tr.insertText(
+								cmdName + ' ',
+								currentRange.from + 1,
+								currentRange.to
+							);
+							editorRef.view.dispatch(tr);
+							return true;
+						}
 					}
 				}
 

@@ -1,6 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { mount, unmount } from 'svelte';
 import ClockComponent from '../../components/mechanics/Clock.svelte';
+import { contextEngine } from '$lib/stores/contextEngine.svelte';
 
 export const ClockBlock = Node.create({
 	name: 'clockBlock',
@@ -35,6 +36,23 @@ export const ClockBlock = Node.create({
 
 	renderHTML({ HTMLAttributes }) {
 		return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'clockBlock' })];
+	},
+
+	renderText({ node }) {
+		const name = node.attrs.name || 'Unnamed Clock';
+		const filled = node.attrs.filled ?? 0;
+		const segments = node.attrs.segments ?? 4;
+		const action = node.attrs.action || 'create';
+		const actionLabel = action === 'create' ? 'Start' : action === 'increment' ? 'Incremented' : action === 'decrement' ? 'Decremented' : action;
+
+		// Fetch anchored event reason/description if available in contextEngine
+		const blockEvent = node.attrs.id
+			? contextEngine.rawEvents.find((e) => e.block_id === node.attrs.id)
+			: null;
+		const reason = blockEvent?.payload?.reason || blockEvent?.payload?.description || blockEvent?.payload?.content;
+		const reasonText = reason ? ` | "${reason}"` : '';
+
+		return `[CLOCK: ${name} - ${actionLabel} (${filled}/${segments})${reasonText}]`;
 	},
 
 	addNodeView() {

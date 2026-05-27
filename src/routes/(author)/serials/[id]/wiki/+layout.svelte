@@ -1,6 +1,5 @@
 <script lang="ts">
 	/* eslint-disable svelte/no-navigation-without-resolve */
-	import { slide } from 'svelte/transition';
 	import {
 		Sparkles,
 		User,
@@ -9,19 +8,16 @@
 		Timer,
 		Activity,
 		Plus,
-		ArrowLeft,
-		X
+		ArrowLeft
 	} from '@lucide/svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { notifications } from '$lib/stores/notifications';
 	import {
-		createWikiEntity,
-		createWikiEvent,
 		type WikiEntity,
 		type WikiEvent
 	} from '$lib/api/wiki';
 	import type { Snippet } from 'svelte';
+	import CreateWikiEntryModal from '$lib/components/wiki/CreateWikiEntryModal.svelte';
 
 	let { data, children }: { data: any; children: Snippet } = $props();
 
@@ -47,16 +43,15 @@
 	// Derive active entity from URL
 	const activeEntityId = $derived(($page as any).params.entityId || null);
 
-	// New Entity Form State
+	// Derive current sub-route so sidebar links preserve it (e.g. /events stays on /events)
+	const currentSubRoute = $derived(() => {
+		const path = $page.url.pathname;
+		if (path.endsWith('/events')) return 'events';
+		return 'overview';
+	});
+
+	// Create entry modal state
 	let showCreateModal = $state(false);
-	let newEntityName = $state('');
-	let newEntityCategory = $state<'character' | 'location' | 'clock' | 'track' | 'thread'>(
-		'character'
-	);
-	let newEntityDesc = $state('');
-	let clockSegments = $state(4);
-	let trackMax = $state(10);
-	let isCreatingEntity = $state(false);
 
 	// Filtered lists
 	const filteredEntities = $derived(
@@ -165,73 +160,13 @@
 		}
 	}
 
-	// Handle entity creation
-	async function handleCreateEntity() {
-		if (!newEntityName.trim()) {
-			notifications.error('Please enter a name');
-			return;
+	// Handle entity created from shared modal
+	function handleEntityCreated(entity: WikiEntity, event?: WikiEvent & { wiki_entities?: WikiEntity; scenes?: any }) {
+		if (event) {
+			events = [event, ...events];
 		}
-
-		isCreatingEntity = true;
-		try {
-			let initialMeta = {};
-			if (newEntityCategory === 'clock') {
-				initialMeta = { segments: clockSegments, filled: 0 };
-			} else if (newEntityCategory === 'track') {
-				initialMeta = { max: trackMax, current: 0 };
-			}
-
-			// 1. Insert Entity
-			const entity = await createWikiEntity(
-				serial.id,
-				newEntityName,
-				newEntityCategory,
-				newEntityDesc,
-				initialMeta
-			);
-
-			// 2. Write matching 'create' event to log (first scene if exists)
-			const sceneId = scenes[0]?.id;
-			if (sceneId) {
-				const createEvent = await createWikiEvent({
-					entity_id: entity.id,
-					scene_id: sceneId,
-					block_id: null,
-					event_type: 'create',
-					payload: {
-						name: newEntityName,
-						category: newEntityCategory,
-						description: newEntityDesc,
-						metadata: initialMeta
-					}
-				});
-
-				// Refresh local events list
-				const fullEvent = {
-					...createEvent,
-					wiki_entities: entity,
-					scenes: scenes[0]
-				};
-				events = [fullEvent, ...events];
-			}
-
-			entities = [...entities, entity];
-			showCreateModal = false;
-			notifications.success(`${entity.name} created!`);
-
-			// Navigate to new entity
-			goto(`/serials/${serial.id}/wiki/${entity.id}/overview`);
-
-			// Reset form
-			newEntityName = '';
-			newEntityDesc = '';
-			newEntityCategory = 'character';
-		} catch (e) {
-			console.error(e);
-			notifications.error('Failed to create entity');
-		} finally {
-			isCreatingEntity = false;
-		}
+		entities = [...entities, entity];
+		goto(`/serials/${serial.id}/wiki/${entity.id}/overview`);
 	}
 </script>
 
@@ -274,12 +209,12 @@
 		</div>
 
 		<button
-			data-component="create-entity-btn"
+			data-component="new-wiki-entry-btn"
 			onclick={() => (showCreateModal = true)}
 			class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-5 py-2.5 font-sans text-xs font-bold shadow-lg transition-all hover:opacity-90"
 		>
 			<Plus class="mr-2 h-4 w-4" />
-			Create Entity
+			New Wiki Entry
 		</button>
 	</header>
 
@@ -345,7 +280,7 @@
 
 						<a
 							data-component="entity-card-select"
-							href="/serials/{serial.id}/wiki/{entity.id}/overview"
+							href="/serials/{serial.id}/wiki/{entity.id}/{currentSubRoute()}"
 							class="group flex w-full items-start justify-between rounded-xl border p-4 text-left transition-all {isSelected
 								? 'bg-primary/10 border-primary/30 text-white'
 								: 'border-white/5 bg-white/[0.01] hover:border-white/10 hover:bg-white/5'}"
@@ -392,136 +327,11 @@
 		</main>
 	</div>
 
-	<!-- Create Entity Modal -->
-	{#if showCreateModal}
-		<div
-			data-component="create-modal-overlay"
-			class="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-950/80 backdrop-blur-md"
-		>
-			<div
-				data-component="create-modal-container"
-				class="relative w-full max-w-md space-y-4 rounded-2xl border border-white/10 bg-stone-900/90 p-6 shadow-2xl backdrop-blur-3xl"
-			>
-				<div data-component="modal-header" class="flex items-center justify-between">
-					<h3
-						data-component="modal-title"
-						class="text-sm font-bold tracking-tight text-white uppercase"
-					>
-						Create Wiki Entity
-					</h3>
-					<button
-						data-component="modal-close-btn"
-						onclick={() => (showCreateModal = false)}
-						class="p-1 text-stone-400 hover:text-white"
-					>
-						<X size={16} />
-					</button>
-				</div>
-
-				<div data-component="modal-body" class="space-y-4">
-					<div data-component="form-name" class="space-y-1">
-						<label
-							for="new_name"
-							class="text-[10px] font-bold tracking-wider text-stone-400 uppercase"
-							>Entity Name</label
-						>
-						<input
-							id="new_name"
-							type="text"
-							bind:value={newEntityName}
-							placeholder="e.g. Elena the Mystic"
-							class="focus:border-primary/50 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white transition-colors focus:outline-none"
-						/>
-					</div>
-
-					<div data-component="form-cat" class="space-y-1">
-						<label
-							for="new_cat"
-							class="text-[10px] font-bold tracking-wider text-stone-400 uppercase">Category</label
-						>
-						<select
-							id="new_cat"
-							bind:value={newEntityCategory}
-							class="w-full rounded-xl border border-white/10 bg-stone-900 px-4 py-2.5 text-xs text-white focus:outline-none"
-						>
-							<option value="character">Character</option>
-							<option value="location">Location</option>
-							<option value="clock">Progress Clock</option>
-							<option value="track">Progress Track</option>
-							<option value="thread">Lore Thread</option>
-						</select>
-					</div>
-
-					<div data-component="form-desc" class="space-y-1">
-						<label
-							for="new_desc_field"
-							class="text-[10px] font-bold tracking-wider text-stone-400 uppercase"
-							>Brief Description</label
-						>
-						<textarea
-							id="new_desc_field"
-							bind:value={newEntityDesc}
-							placeholder="Short introductory description..."
-							rows="3"
-							class="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:outline-none"
-						></textarea>
-					</div>
-
-					<!-- Category specific details -->
-					{#if newEntityCategory === 'clock'}
-						<div data-component="form-clock-seg" class="space-y-1" transition:slide>
-							<label
-								for="clock_seg_field"
-								class="text-[10px] font-bold tracking-wider text-stone-400 uppercase"
-								>Clock Segments</label
-							>
-							<select
-								id="clock_seg_field"
-								bind:value={clockSegments}
-								class="w-full rounded-xl border border-white/10 bg-stone-900 px-4 py-2.5 text-xs text-white"
-							>
-								<option value={4}>4 Segments</option>
-								<option value={6}>6 Segments</option>
-								<option value={8}>8 Segments</option>
-								<option value={10}>10 Segments</option>
-								<option value={12}>12 Segments</option>
-							</select>
-						</div>
-					{:else if newEntityCategory === 'track'}
-						<div data-component="form-track-max" class="space-y-1" transition:slide>
-							<label
-								for="track_max_field"
-								class="text-[10px] font-bold tracking-wider text-stone-400 uppercase"
-								>Track Length (Steps)</label
-							>
-							<input
-								id="track_max_field"
-								type="number"
-								bind:value={trackMax}
-								class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:outline-none"
-							/>
-						</div>
-					{/if}
-				</div>
-
-				<div data-component="modal-footer" class="flex gap-3 pt-2">
-					<button
-						data-component="modal-submit"
-						onclick={handleCreateEntity}
-						disabled={isCreatingEntity}
-						class="bg-primary text-primary-foreground flex-1 rounded-xl py-2.5 text-xs font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
-					>
-						{isCreatingEntity ? 'Creating...' : 'Create Entity'}
-					</button>
-					<button
-						data-component="modal-cancel"
-						onclick={() => (showCreateModal = false)}
-						class="rounded-xl border border-white/10 px-5 py-2.5 text-xs font-bold hover:bg-white/5"
-					>
-						Cancel
-					</button>
-				</div>
-			</div>
-		</div>
-	{/if}
+	<CreateWikiEntryModal
+		serialId={serial.id}
+		{scenes}
+		open={showCreateModal}
+		onClose={() => (showCreateModal = false)}
+		onCreated={handleEntityCreated}
+	/>
 </div>

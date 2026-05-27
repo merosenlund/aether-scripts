@@ -31,5 +31,11 @@ export const DiceRoller = Node.create({
 			}),
 			text
 		];
+	},
+
+	renderText({ node }) {
+		const formula = node.attrs.formula || '1d20';
+		const result = node.attrs.result !== null && node.attrs.result !== undefined ? node.attrs.result : '?';
+		return `🎲 ${formula} = ${result}`;
 	}
 });
