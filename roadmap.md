@@ -106,7 +106,17 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Archive / Soft-Hide Entities**: Hide entities from the active entity list without deleting them (e.g., NPCs cut from the story). Archived entities retain their full event history so the context engine remains accurate.
 - [x] **Archive Filter**: Extend the entity list filter to include archive status alongside the existing category and search filters.
 
-## Phase 8: Social & Reader Engagement
+## Phase 8: Deployment Readiness & Security
+
+- [ ] **Supabase Row Level Security (RLS) & Policies**: Enable RLS on all 15 active tables (including `scenes`, `scene_updates`, `wiki_events`, `serials`) and write precise, tested policies to prevent public access/tampering via the `anon` key while keeping public read access open for published items.
+- [ ] **SvelteKit Production Build Verification**: Ensure the SvelteKit production build (`deno task build` or equivalent) compiles successfully with zero TypeScript or bundler errors.
+- [ ] **Environment Variable & Secret Management Audit**: Securely configure and verify all production secrets (Supabase Service Keys, OAuth Client Credentials, JWT Secrets, App URLs) within the hosting provider's environment variables.
+- [ ] **CORS & Domain Configurations**: Configure CORS settings in the Supabase instance and SvelteKit endpoints to strictly allow only the final production domain.
+- [ ] **SSL, Custom Domains & DNS Routing**: Connect the custom domain, configure DNS records, and verify that SSL is properly issued and enforced.
+- [ ] **Supabase Database Backups & Point-in-Time Recovery**: Confirm database backups are enabled and point-in-time recovery is verified for production peace of mind.
+- [ ] **Basic Error Tracking & Logging**: Integrate simple runtime error monitoring (e.g., Sentry, Supabase Logs, or structured logging) to catch any silent production crashes.
+
+## Phase 9: Social & Reader Engagement
 
 - [ ] **Immersion-First Commenting**: Comments default to hidden to preserve reading immersion. Includes three viewing modes:
   - _Proximity Reveal_: Making an inline comment temporarily reveals other comments in that paragraph to foster contextual discussion.
@@ -119,24 +129,14 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Author Notes**: Exclusive commentary layers for premium readers.
 - [ ] **Comment Promotion**: UI to elevate a reader's comment directly into a narrative "Thread" or turn it into a community Poll, visually showing the community that their input is driving the story.
 
-## Phase 8.5: Deployment Readiness & Security
-
-- [ ] **Supabase Row Level Security (RLS) & Policies**: Enable RLS on all 15 active tables (including `scenes`, `scene_updates`, `wiki_events`, `serials`) and write precise, tested policies to prevent public access/tampering via the `anon` key while keeping public read access open for published items.
-- [ ] **SvelteKit Production Build Verification**: Ensure the SvelteKit production build (`deno task build` or equivalent) compiles successfully with zero TypeScript or bundler errors.
-- [ ] **Environment Variable & Secret Management Audit**: Securely configure and verify all production secrets (Supabase Service Keys, OAuth Client Credentials, JWT Secrets, App URLs) within the hosting provider's environment variables.
-- [ ] **CORS & Domain Configurations**: Configure CORS settings in the Supabase instance and SvelteKit endpoints to strictly allow only the final production domain.
-- [ ] **SSL, Custom Domains & DNS Routing**: Connect the custom domain, configure DNS records, and verify that SSL is properly issued and enforced.
-- [ ] **Supabase Database Backups & Point-in-Time Recovery**: Confirm database backups are enabled and point-in-time recovery is verified for production peace of mind.
-- [ ] **Basic Error Tracking & Logging**: Integrate simple runtime error monitoring (e.g., Sentry, Supabase Logs, or structured logging) to catch any silent production crashes.
-
-## Phase 9: PWA & Live Notifications
+## Phase 10: PWA & Live Notifications
 
 - [ ] **PWA Transformation**: Manifest and Service Worker setup for "Install to Home Screen" support.
 - [ ] **Push Notifications & Personalized Delivery**: Browser-level push alerts for live-writing events and scene releases. Instead of global release times, scenes go live immediately but readers configure their own notification schedules (e.g., Morning Coffee, Bedtime Reading, or Saturday Batches).
 - [ ] **Offline Reading**: Cached scene content for reading your library without a connection.
 - [ ] **Kindle-Sync Logic**: Finalize cross-device scroll and block-level progress synchronization.
 
-## Phase 10: Community, Polling & Ethical Monetization
+## Phase 11: Community, Polling & Ethical Monetization
 
 - [ ] **Merchant of Record (MoR) Integration**: Secure payment processing (e.g., Lemon Squeezy or Paddle) to handle global tax liability automatically. Focus on flat support with a budget-friendly yearly option (e.g., $3/month minimum or $10/year) to bypass micro-transaction fees.
 - [ ] **Self-Serve Subscription Management**: Tools for users to turn off auto-renew or adjust future support amounts seamlessly.
@@ -149,7 +149,7 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Opt-In Transparent Analytics**: Analytics and inclusion in the Admin CRM are strictly opt-in (configurable during sign-up or in settings). Tracks meaningful engagement (milestones, comments) rather than speed metrics, and provides users a personal "Reading Stats" dashboard so data collection is a shared, transparent feature.
 - [ ] **Unified Community Experience**: Ensuring premium support enhances the reading experience without fragmenting the community (no paywalled comments, no FOMO mechanics).
 
-## Phase 11: Live Stream Writing (Stretch Goal)
+## Phase 12: Live Stream Writing (Stretch Goal)
 
 - [ ] **Twitch/YouTube Companion UI**: The `/stream` route acts as a high-fidelity, interactive companion to a video stream (e.g., embedding a Twitch player). It solves the "blurry text on a 1080p stream" problem by letting readers read the raw, crisp text updates locally while listening to your audio/video commentary.
 - [ ] **Audience Oracle (Crowdsourced GM)**: A `/chat_poll` feature where the author can prompt the audience with a story decision. The vote is cast natively in the app and the winning result is injected directly into the editor.
