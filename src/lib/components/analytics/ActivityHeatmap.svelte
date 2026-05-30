@@ -27,7 +27,6 @@
 
 	let grid = $derived.by((): Cell[] => {
 		if (!days.length) return [];
-		// ISO day-of-week (0=Mon, 6=Sun) of the first day
 		const firstDow = (new Date(days[0].date + 'T12:00:00').getDay() + 6) % 7;
 		return days.map((day, i) => {
 			const abs = i + firstDow;
@@ -59,16 +58,49 @@
 	let svgW = $derived(LEFT + numCols * STEP);
 	const svgH = TOP + 7 * STEP;
 
-	function tooltip(day: HeatmapDay): string {
-		const d = new Date(day.date + 'T12:00:00').toLocaleDateString(undefined, {
+	// Tooltip state
+	let hovered = $state<HeatmapDay | null>(null);
+	let tipX = $state(0);
+	let tipY = $state(0);
+
+	function onEnter(e: MouseEvent, day: HeatmapDay) {
+		hovered = day;
+		tipX = e.clientX;
+		tipY = e.clientY;
+	}
+	function onMove(e: MouseEvent) {
+		tipX = e.clientX;
+		tipY = e.clientY;
+	}
+	function onLeave() {
+		hovered = null;
+	}
+
+	let tipLabel = $derived.by(() => {
+		if (!hovered) return '';
+		const d = new Date(hovered.date + 'T12:00:00').toLocaleDateString(undefined, {
+			weekday: 'short',
 			month: 'short',
 			day: 'numeric',
 			year: 'numeric'
 		});
-		if (day.wordCount === 0) return `${d}: no writing`;
-		return `${d}: ${day.wordCount.toLocaleString()} words in ${day.sessionCount} session${day.sessionCount !== 1 ? 's' : ''}`;
-	}
+		if (hovered.wordCount === 0) return `${d}\nNo writing`;
+		return `${d}\n${hovered.wordCount.toLocaleString()} words · ${hovered.sessionCount} session${hovered.sessionCount !== 1 ? 's' : ''}`;
+	});
+
+	let [tipDate, tipStats] = $derived(tipLabel.split('\n'));
 </script>
+
+<!-- Tooltip rendered at fixed viewport position so it's never clipped by overflow-x-auto -->
+{#if hovered}
+	<div
+		class="pointer-events-none fixed z-50 rounded-lg border border-white/10 bg-stone-900 px-3 py-2 shadow-xl"
+		style="left: {tipX + 14}px; top: {tipY - 36}px"
+	>
+		<p class="text-[10px] font-bold text-stone-400">{tipDate}</p>
+		<p class="mt-0.5 font-mono text-xs font-bold text-white">{tipStats}</p>
+	</div>
+{/if}
 
 <div class="overflow-x-auto pb-1">
 	<svg
@@ -101,9 +133,11 @@
 				height={CELL}
 				rx="2"
 				fill={heatColor(cell.day.wordCount)}
-			>
-				<title>{tooltip(cell.day)}</title>
-			</rect>
+				style="cursor: default"
+				onmouseenter={(e) => onEnter(e, cell.day)}
+				onmousemove={onMove}
+				onmouseleave={onLeave}
+			/>
 		{/each}
 	</svg>
 </div>
