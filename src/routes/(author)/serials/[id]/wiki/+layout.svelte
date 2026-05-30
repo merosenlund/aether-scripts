@@ -12,12 +12,22 @@
 	} from '@lucide/svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import {
-		type WikiEntity,
-		type WikiEvent
-	} from '$lib/api/wiki';
+	import { setContext } from 'svelte';
+	import { type WikiEntity, type WikiEvent } from '$lib/api/wiki';
+	import { reduceEntityEvents } from '$lib/stores/contextEngine.svelte';
 	import type { Snippet } from 'svelte';
 	import CreateWikiEntryModal from '$lib/components/wiki/CreateWikiEntryModal.svelte';
+
+	export type WikiLayoutEvent = WikiEvent & { wiki_entities?: WikiEntity; scenes?: any };
+	export type WikiLayoutContext = {
+		readonly entities: WikiEntity[];
+		readonly events: WikiLayoutEvent[];
+		addEvent: (event: WikiLayoutEvent) => void;
+		removeEvent: (eventId: string) => void;
+		updateEntity: (entityId: string, updates: Partial<Pick<WikiEntity, 'name' | 'category'>>) => void;
+		updateEvent: (eventId: string, payload: Record<string, unknown>) => void;
+		removeEntity: (entityId: string) => void;
+	};
 
 	let { data, children }: { data: any; children: Snippet } = $props();
 
@@ -34,11 +44,32 @@
 	>([...data.scenes]);
 	let serial = $state(data.serial);
 
+	// Shared reactive context so child pages always see optimistically-updated state
+	// (the layout server load won't re-run on same-serial navigation, so data.entities
+	// would be stale in child pages without this).
+	setContext<WikiLayoutContext>('wiki', {
+		get entities() { return entities; },
+		get events() { return events; },
+		addEvent(event: WikiLayoutEvent) { events = [event, ...events]; },
+		removeEvent(eventId: string) { events = events.filter((e) => e.id !== eventId); },
+		updateEntity(entityId: string, updates: Partial<Pick<WikiEntity, 'name' | 'category'>>) {
+			entities = entities.map((e) => (e.id === entityId ? { ...e, ...updates } : e));
+		},
+		updateEvent(eventId: string, payload: Record<string, unknown>) {
+			events = events.map((ev) => (ev.id === eventId ? { ...ev, payload } : ev));
+		},
+		removeEntity(entityId: string) {
+			entities = entities.filter((e) => e.id !== entityId);
+			events = events.filter((ev) => ev.entity_id !== entityId);
+		}
+	});
+
 	// UI state
 	let searchQuery = $state('');
 	let selectedCategory = $state<'all' | 'character' | 'location' | 'clock' | 'track' | 'thread'>(
 		'all'
 	);
+	let showInactive = $state(false);
 
 	// Derive active entity from URL
 	const activeEntityId = $derived(($page as any).params.entityId || null);
@@ -53,94 +84,30 @@
 	// Create entry modal state
 	let showCreateModal = $state(false);
 
-	// Filtered lists
-	const filteredEntities = $derived(
-		entities.filter((e) => {
-			const matchSearch =
-				e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				(e.description || '').toLowerCase().includes(searchQuery.toLowerCase());
-			const matchCat = selectedCategory === 'all' || e.category?.toLowerCase() === selectedCategory;
-			return matchSearch && matchCat;
-		})
-	);
-
-	// Derive dynamic state for an entity by reducing all its events chronologically
+	// Reduce an entity's events (server loads DESC; sort ASC before reducing)
 	function reduceEntityState(entityId: string) {
 		const entity = entities.find((e) => e.id === entityId);
 		if (!entity) return null;
 
-		// Filter events for this entity and sort ascending for chronological reduction
-		const entityEvs = events
+		const chronological = events
 			.filter((ev) => ev.entity_id === entityId)
-			.slice()
-			.reverse();
+			.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-		const state = {
-			name: entity.name,
-			category: entity.category,
-			description: entity.description || '',
-			metadata: { ...entity.metadata } as Record<string, unknown>,
-			facts: [] as Array<{ id: string; content: string }>
-		};
-
-		for (const ev of entityEvs) {
-			switch (ev.event_type) {
-				case 'create':
-					if (ev.payload.name) state.name = ev.payload.name as string;
-					if (ev.payload.category) state.category = ev.payload.category as WikiEntity['category'];
-					if (ev.payload.description) state.description = ev.payload.description as string;
-					state.metadata = {
-						...state.metadata,
-						...((ev.payload.metadata as Record<string, unknown>) || {})
-					};
-					break;
-				case 'update_description':
-					state.description = (ev.payload.description as string) || '';
-					break;
-				case 'add_fact':
-					if (!state.facts.some((f) => f.id === ev.payload.id)) {
-						state.facts.push({
-							id: (ev.payload.id as string) || ev.id,
-							content: (ev.payload.content as string) || ''
-						});
-					}
-					break;
-				case 'remove_fact':
-					state.facts = state.facts.filter((f) => f.id !== ev.payload.id);
-					break;
-				case 'set_clock':
-					state.metadata = {
-						...state.metadata,
-						segments: (ev.payload.segments as number) ?? (state.metadata.segments as number) ?? 4,
-						filled: (ev.payload.filled as number) ?? (state.metadata.filled as number) ?? 0
-					};
-					break;
-				case 'increment_clock': {
-					const incAmount = (ev.payload.amount as number) ?? 1;
-					const maxSegments = (state.metadata.segments as number) ?? 4;
-					state.metadata.filled = Math.min(
-						maxSegments,
-						((state.metadata.filled as number) ?? 0) + incAmount
-					);
-					break;
-				}
-				case 'decrement_clock': {
-					const decAmount = (ev.payload.amount as number) ?? 1;
-					state.metadata.filled = Math.max(0, ((state.metadata.filled as number) ?? 0) - decAmount);
-					break;
-				}
-				case 'set_track':
-					state.metadata = {
-						...state.metadata,
-						max: (ev.payload.max as number) ?? (state.metadata.max as number) ?? 10,
-						current: (ev.payload.current as number) ?? (state.metadata.current as number) ?? 0
-					};
-					break;
-			}
-		}
-
-		return state;
+		return reduceEntityEvents(chronological, entity);
 	}
+
+	// Search reduced name + description so the description column removal is transparent
+	const filteredEntities = $derived(
+		entities.filter((e) => {
+			const reduced = reduceEntityState(e.id);
+			if (!showInactive && reduced && reduced.isActive === false) return false;
+			const matchSearch =
+				(reduced?.name ?? e.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
+				(reduced?.description ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+			const matchCat = selectedCategory === 'all' || e.category?.toLowerCase() === selectedCategory;
+			return matchSearch && matchCat;
+		})
+	);
 
 	// Get icons for categories
 	function getIcon(category: string) {
@@ -161,11 +128,9 @@
 	}
 
 	// Handle entity created from shared modal
-	function handleEntityCreated(entity: WikiEntity, event?: WikiEvent & { wiki_entities?: WikiEntity; scenes?: any }) {
-		if (event) {
-			events = [event, ...events];
-		}
+	function handleEntityCreated(entity: WikiEntity, event?: WikiLayoutEvent) {
 		entities = [...entities, entity];
+		if (event) events = [event, ...events];
 		goto(`/serials/${serial.id}/wiki/${entity.id}/overview`);
 	}
 </script>
@@ -255,6 +220,16 @@
 							{cat}
 						</button>
 					{/each}
+					<div class="w-full h-px bg-white/5 my-1"></div>
+					<button
+						data-component="inactive-filter-btn"
+						onclick={() => (showInactive = !showInactive)}
+						class="rounded-lg px-2.5 py-1.5 text-[9px] font-bold tracking-wider uppercase transition-all {showInactive
+							? 'border border-white/20 bg-white/10 text-white'
+							: 'border border-transparent bg-transparent text-stone-500 hover:text-white'}"
+					>
+						Show Inactive
+					</button>
 				</div>
 			</div>
 

@@ -12,12 +12,14 @@
 	let {
 		serialId,
 		scenes = [],
+		blockId = null,
 		open = false,
 		onClose = () => {},
 		onCreated = (_entity: WikiEntity, _event?: WikiEvent & { wiki_entities?: WikiEntity; scenes?: any }) => {}
 	} = $props<{
 		serialId: string;
 		scenes: { id: string; author_title: string; display_title: string; order_index: number }[];
+		blockId?: string | null;
 		open: boolean;
 		onClose: () => void;
 		onCreated: (entity: WikiEntity, event?: WikiEvent & { wiki_entities?: WikiEntity; scenes?: any }) => void;
@@ -56,38 +58,35 @@
 				initialMeta = { max: trackMax, current: 0 };
 			}
 
-			// 1. Insert Entity
-			const entity = await createWikiEntity(
-				serialId,
-				newEntityName,
-				newEntityCategory,
-				newEntityDesc,
-				initialMeta
-			);
-
-			// 2. Write matching 'create' event to log (first scene if exists)
-			let fullEvent: (WikiEvent & { wiki_entities?: WikiEntity; scenes?: any }) | undefined;
 			const sceneId = scenes[0]?.id;
-			if (sceneId) {
-				const createEvent = await createWikiEvent({
-					entity_id: entity.id,
-					scene_id: sceneId,
-					block_id: null,
-					event_type: 'create',
-					payload: {
-						name: newEntityName,
-						category: newEntityCategory,
-						description: newEntityDesc,
-						metadata: initialMeta
-					}
-				});
-
-				fullEvent = {
-					...createEvent,
-					wiki_entities: entity,
-					scenes: scenes[0]
-				};
+			if (!sceneId) {
+				notifications.error('A scene is required before creating wiki entries');
+				return;
 			}
+
+			// 1. Insert Entity (description lives in the create event, not the table)
+			const entity = await createWikiEntity(serialId, newEntityName, newEntityCategory, initialMeta);
+
+			// 2. Always write a matching 'create' event — this is the canonical description source
+			//    and controls when the reader first encounters this entity in the timeline.
+			const createEvent = await createWikiEvent({
+				entity_id: entity.id,
+				scene_id: sceneId,
+				block_id: blockId ?? null,
+				event_type: 'create',
+				payload: {
+					name: newEntityName,
+					category: newEntityCategory,
+					description: newEntityDesc,
+					metadata: initialMeta
+				}
+			});
+
+			const fullEvent: WikiEvent & { wiki_entities?: WikiEntity; scenes?: any } = {
+				...createEvent,
+				wiki_entities: entity,
+				scenes: scenes[0]
+			};
 
 			notifications.success(`${entity.name} created!`);
 			resetForm();

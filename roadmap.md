@@ -63,7 +63,7 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Context Engine Refactor**: Rebuild the Reader Context Engine to derive entity state by chronologically reducing database events up to the reader's current block ID.
 - [x] **Extensive Codebase Cleanup**: Perform a deep purge of deprecated code, old Tiptap extensions (e.g., hidden metadata blocks), obsolete API endpoints, and unused database tables to ensure the new foundation isn't poisoned by technical debt from previous iterations.
 
-## Phase 6: Authoring Experience Reboot
+## Phase 6: Authoring Experience Reboot (COMPLETED)
 
 ### Phase 6.1: Reactive State Architecture Refactor
 - [x] **Shared Entity State**: Move fetching and storage of `entities` into the global `contextEngine.svelte.ts` store to act as the single source of truth.
@@ -87,24 +87,24 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Readable Block Connections**: Replace raw UUID `block_id` text fields with intelligent select dropdowns that parse the scene and present readable text snippets for linking prose.
 - [x] **Intuitive Entity Editing & Drawer Fixes**: Fix state leak in the "Trigger Event" drawer (e.g., clock drawer incorrectly showing character fields). Replace database-centric forms (`event_type: add_fact`) with intuitive UI elements natively on the entity view (e.g., an inline "Add new fact..." input).
 
-## Phase 7: Wiki Editing & Lifecycle Management
+## Phase 7: Wiki Editing & Lifecycle Management (COMPLETED)
 
-### Phase 7.1: Description Lifecycle Fix
-- [ ] **Description-as-Event**: Remove `description` from the `wiki_entities` table. The initial description is captured in the `create` event payload, and all subsequent changes flow through `update_description` events. The context engine derives current description by reducing events, consistent with how all other entity state is handled.
-- [ ] **Guaranteed Creation Event**: Ensure the entity creation flow always produces a `create` event anchored to a prose block. This is the author's mechanism for controlling when a reader first encounters the entity in the timeline — no entity should exist outside the event log.
+### Phase 7.1: Description Lifecycle Fix ✅
+- [x] **Description-as-Event**: Remove `description` from the `wiki_entities` table. The initial description is captured in the `create` event payload, and all subsequent changes flow through `update_description` events. The context engine derives current description by reducing events, consistent with how all other entity state is handled.
+- [x] **Guaranteed Creation Event**: Ensure the entity creation flow always produces a `create` event anchored to a prose block. This is the author's mechanism for controlling when a reader first encounters the entity in the timeline — no entity should exist outside the event log.
 
-### Phase 7.2: Direct Entity Editing (Editorial Mode)
-- [ ] **Inline Name & Category Editing**: Click-to-edit entity name and category directly on the overview page. These are pure editorial mutations — no event is created. Intended for cleanup (typos, renaming placeholders, reorganization) not narrative reveals.
-- [ ] **Inline Fact Editing**: Edit the content of existing facts in place on the entity overview. Mutates the `add_fact` event payload directly — no new event. Narrative fact reveals (new information discovered during play) continue to use the existing `add_fact` event workflow.
-- [ ] **Entity Deletion**: Delete an entity with a confirmation dialog showing the count of associated events and anchored prose blocks. Cascade-deletes all events and clears prose anchors.
+### Phase 7.2: Direct Entity Editing (Editorial Mode) ✅
+- [x] **Inline Name & Category Editing**: Click-to-edit entity name and category directly on the overview page. These are pure editorial mutations — no event is created. Intended for cleanup (typos, renaming placeholders, reorganization) not narrative reveals.
+- [x] **Inline Fact Editing**: Edit the content of existing facts in place on the entity overview. Mutates the `add_fact` event payload directly — no new event. Narrative fact reveals (new information discovered during play) continue to use the existing `add_fact` event workflow.
+- [x] **Entity Deletion**: Delete an entity with a confirmation dialog showing the count of associated events and anchored prose blocks. Cascade-deletes all events and clears prose anchors.
 
-### Phase 7.3: Direct Event Editing (Editorial Mode)
-- [ ] **Inline Event Payload Editing**: Edit the content and reason fields of existing events directly from the event timeline — for correcting typos or rewording without altering the narrative structure or creating new events.
-- [ ] **Bulk Event Cleanup**: Multi-select events in the timeline with a bulk-delete action for rapidly pruning stale or incorrectly created events.
+### Phase 7.3: Direct Event Editing (Editorial Mode) ✅
+- [x] **Inline Event Payload Editing**: Edit the content and reason fields of existing events directly from the event timeline — for correcting typos or rewording without altering the narrative structure or creating new events.
+- [x] **Bulk Event Cleanup**: Multi-select events in the timeline with a bulk-delete action for rapidly pruning stale or incorrectly created events.
 
-### Phase 7.4: Entity Organization
-- [ ] **Archive / Soft-Hide Entities**: Hide entities from the active entity list without deleting them (e.g., NPCs cut from the story). Archived entities retain their full event history so the context engine remains accurate.
-- [ ] **Archive Filter**: Extend the entity list filter to include archive status alongside the existing category and search filters.
+### Phase 7.4: Entity Organization ✅
+- [x] **Archive / Soft-Hide Entities**: Hide entities from the active entity list without deleting them (e.g., NPCs cut from the story). Archived entities retain their full event history so the context engine remains accurate.
+- [x] **Archive Filter**: Extend the entity list filter to include archive status alongside the existing category and search filters.
 
 ## Phase 8: Social & Reader Engagement
 

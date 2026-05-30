@@ -73,8 +73,8 @@
 		// 3. Initialize/Start the telemetry session
 		// We calculate the starting word count directly from the initial content HTML passed in
 		let initialWordCount = 0;
+		let text = '';
 		if (initialContent) {
-			let text = '';
 			if (typeof initialContent === 'string') {
 				text = initialContent.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ');
 			} else if (typeof initialContent === 'object') {

@@ -3,7 +3,6 @@ export interface WikiEntity {
 	serial_id: string;
 	name: string;
 	category: 'character' | 'thread' | 'clock' | 'location' | 'track' | 'other';
-	description?: string;
 	metadata: Record<string, unknown>;
 	created_at: string;
 }

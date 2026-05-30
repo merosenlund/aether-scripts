@@ -1,6 +1,6 @@
 /// <reference lib="deno.ns" />
 import { assertEquals } from 'jsr:@std/assert';
-import type { WikiEvent } from '$lib/api/wiki';
+import type { WikiEvent, WikiEntity } from '$lib/api/wiki';
 
 // 1. Define Svelte 5 compiler runes on global scope before importing the store
 (globalThis as any).$state = (val: any) => val;
@@ -15,8 +15,45 @@ derivedMock.by = (fn: any) => {
 };
 (globalThis as any).$derived = derivedMock;
 
-// 2. Dynamically import the contextEngine store and reduceWikiEvents
-const { reduceWikiEvents, contextEngine } = await import('$lib/stores/contextEngine.svelte.ts');
+// 2. Dynamically import the contextEngine store and reducers
+const { reduceWikiEvents, reduceEntityEvents, contextEngine } = await import(
+	'$lib/stores/contextEngine.svelte.ts'
+);
+
+const BASE_ENTITY: WikiEntity = {
+	id: 'entity-1',
+	serial_id: 'serial-1',
+	name: 'Eldrin',
+	category: 'character',
+	metadata: {},
+	created_at: '2026-05-19T00:00:00Z'
+};
+
+Deno.test('reduceEntityEvents: description derives from create event, not base entity', () => {
+	// Base entity has no description field — description must come from events
+	const events: WikiEvent[] = [
+		{
+			id: 'ev1',
+			entity_id: 'entity-1',
+			scene_id: 'scene-1',
+			block_id: null,
+			event_type: 'create',
+			payload: { name: 'Eldrin', category: 'character', description: 'An old wizard.' },
+			created_at: '2026-05-19T00:00:00Z'
+		}
+	];
+
+	const result = reduceEntityEvents(events, BASE_ENTITY);
+	assertEquals(result.description, 'An old wizard.');
+	assertEquals(result.name, 'Eldrin');
+});
+
+Deno.test('reduceEntityEvents: base entity with no events has empty description', () => {
+	const result = reduceEntityEvents([], BASE_ENTITY);
+	assertEquals(result.description, '');
+	assertEquals(result.name, 'Eldrin');
+	assertEquals(result.facts.length, 0);
+});
 
 Deno.test('reduceWikiEvents: reduces standard fields, descriptions, and facts correctly', () => {
 	const events: WikiEvent[] = [
@@ -33,7 +70,6 @@ Deno.test('reduceWikiEvents: reduces standard fields, descriptions, and facts co
 				serial_id: 'serial-1',
 				name: 'Eldrin',
 				category: 'character',
-				description: 'An old wizard.',
 				metadata: {},
 				created_at: '2026-05-19T00:00:00Z'
 			}
@@ -225,14 +261,14 @@ Deno.test('ContextEngineStore: markAsRead updates readBlockIds state chronologic
 	assertEquals(contextEngine.readBlockIds.size, 0);
 });
 
-Deno.test('reduceWikiEvents: seeds state from baseEntities even without events', () => {
-	const baseEntities: any[] = [
+Deno.test('reduceWikiEvents: seeds name/category/metadata from baseEntities; description starts empty', () => {
+	// Description is never seeded from the base entity row — it comes exclusively from events.
+	const baseEntities: WikiEntity[] = [
 		{
 			id: 'entity-base-1',
 			serial_id: 'serial-1',
 			name: 'Gondor',
 			category: 'location',
-			description: 'A grand kingdom.',
 			metadata: { population: 'many' },
 			created_at: '2026-05-19T00:00:00Z'
 		}
@@ -242,7 +278,7 @@ Deno.test('reduceWikiEvents: seeds state from baseEntities even without events',
 	const entity = result.get('entity-base-1');
 	assertEquals(entity?.name, 'Gondor');
 	assertEquals(entity?.category, 'location');
-	assertEquals(entity?.description, 'A grand kingdom.');
+	assertEquals(entity?.description, ''); // always '' without a create event
 	assertEquals(entity?.metadata.population, 'many');
 	assertEquals(entity?.facts.length, 0);
 });

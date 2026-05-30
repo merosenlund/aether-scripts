@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getWikiEvents, deleteWikiEvent, type WikiEntity, type WikiEvent } from '$lib/api/wiki';
-	import { Plus, Timer, Activity, ChevronRight, Link2, Trash2 } from '@lucide/svelte';
+	import { updateWikiEventPayload, getWikiEvents, deleteWikiEvent, type WikiEntity, type WikiEvent } from '$lib/api/wiki';
+	import { Plus, Timer, Activity, ChevronRight, Link2, Trash2, Pencil } from '@lucide/svelte';
 	import { notifications } from '$lib/stores/notifications';
 	import { slide } from 'svelte/transition';
 	import { supabase } from '$lib/supabaseClient';
 	import { openPrompt, openConfirm } from '$lib/stores/prompt.svelte';
 	import { contextEngine } from '$lib/stores/contextEngine.svelte';
+	import EventEditorModal from '$lib/components/wiki/EventEditorModal.svelte';
 
 	let {
 		serialId,
@@ -26,6 +27,9 @@
 
 	let isLoading = $state(true);
 	let expandedEntityIds = $state<Set<string>>(new Set());
+
+	let editingEvent = $state<WikiEvent | null>(null);
+	let showEventModal = $state(false);
 
 	const entities = $derived(
 		contextEngine.baseEntities.filter(
@@ -218,6 +222,24 @@
 			notifications.error('Failed to delete event.');
 		}
 	}
+
+	async function handleEventModalSubmit(result: { mode: 'correct' | 'evolve'; payload: any }) {
+		if (!editingEvent) return;
+
+		try {
+			// For mechanics, we currently only support 'correct' mode via the modal (primarily to edit reasons)
+			if (result.mode === 'correct') {
+				await updateWikiEventPayload(editingEvent.id, result.payload);
+				contextEngine.rawEvents = await getWikiEvents(sceneId);
+				notifications.success('Event updated');
+			}
+			showEventModal = false;
+			editingEvent = null;
+		} catch (e) {
+			console.error(e);
+			notifications.error('Failed to update event');
+		}
+	}
 </script>
 
 <div data-component="mechanics-root" class="flex h-full flex-col">
@@ -390,13 +412,22 @@
 												"{event.payload.reason}"
 											</p>
 										{/if}
-										<button
-											class="text-stone-700 opacity-0 transition-all hover:text-rose-400 group-hover/event:opacity-100"
-											onclick={() => handleDeleteEvent(event)}
-											title="Delete event"
-										>
-											<Trash2 size={10} />
-										</button>
+										<div class="flex items-center gap-1 opacity-0 transition-all group-hover/event:opacity-100">
+											<button
+												class="text-stone-700 hover:text-white"
+												onclick={() => { editingEvent = event; showEventModal = true; }}
+												title="Edit event"
+											>
+												<Pencil size={10} />
+											</button>
+											<button
+												class="text-stone-700 hover:text-rose-400"
+												onclick={() => handleDeleteEvent(event)}
+												title="Delete event"
+											>
+												<Trash2 size={10} />
+											</button>
+										</div>
 									</div>
 								{/each}
 							{/if}
@@ -428,4 +459,11 @@
 			New Track
 		</button>
 	</div>
+
+	<EventEditorModal
+		event={editingEvent}
+		isOpen={showEventModal}
+		onClose={() => { showEventModal = false; editingEvent = null; }}
+		onSubmit={handleEventModalSubmit}
+	/>
 </div>

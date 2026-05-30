@@ -47,6 +47,7 @@
     "npm:supabase@*": "2.98.2",
     "npm:supabase@^2.98.2": "2.98.2",
     "npm:svelte-adapter-deno@~0.9.1": "0.9.1_@sveltejs+kit@2.59.1__@sveltejs+vite-plugin-svelte@7.1.2___svelte@5.55.5___vite@8.0.11____@types+node@24.12.3___@types+node@24.12.3__svelte@5.55.5__typescript@6.0.3__vite@8.0.11___@types+node@24.12.3__@types+node@24.12.3",
+    "npm:svelte-check@*": "4.4.8_svelte@5.55.5_typescript@6.0.3",
     "npm:svelte-check@^4.4.6": "4.4.8_svelte@5.55.5_typescript@6.0.3",
     "npm:svelte-dnd-action@~0.9.69": "0.9.69_svelte@5.55.5",
     "npm:svelte@^5.55.2": "5.55.5",

@@ -3,10 +3,12 @@
 	import { ArrowLeft, Trash2, Plus } from '@lucide/svelte';
 	import ProseViewer from '$lib/components/wiki/ProseViewer.svelte';
 	import { fetchSceneContent } from '$lib/api/wikiScenes';
-	import { updateWikiEventBlock, deleteWikiEvent } from '$lib/api/wiki';
+	import { updateWikiEventBlock, deleteWikiEvent, updateWikiEventPayload, createWikiEvent } from '$lib/api/wiki';
 	import { notifications } from '$lib/stores/notifications';
 	import { openConfirm } from '$lib/stores/prompt.svelte';
 	import type { WikiEntity, WikiEvent } from '$lib/api/wiki';
+	import { Pencil, Trash2, ArrowLeft } from '@lucide/svelte';
+	import EventEditorModal from '$lib/components/wiki/EventEditorModal.svelte';
 
 	let { data } = $props<{ data: any }>();
 
@@ -63,6 +65,10 @@
 	let reanchorMode = $state(false);
 	let reanchorEventId = $state<string | null>(null);
 	let highlightedBlockId = $state<string | null>(null);
+
+	// Event Editing Modal
+	let editingEvent = $state<WikiEvent | null>(null);
+	let showEventModal = $state(false);
 
 	let proseViewer: ProseViewer | undefined = $state();
 
@@ -196,6 +202,64 @@
 			notifications.error('Failed to delete event.');
 		}
 	}
+
+	async function handleEventModalSubmit(result: { mode: 'correct' | 'evolve'; payload: any }) {
+		if (!editingEvent || !entity) return;
+		
+		try {
+			if (result.mode === 'correct') {
+				await updateWikiEventPayload(editingEvent.id, result.payload);
+				entityEvents = entityEvents.map(e => e.id === editingEvent?.id ? { ...e, payload: result.payload } : e);
+				notifications.success('Event updated');
+			} else if (result.mode === 'evolve') {
+				// Evolve creates new events. In the World Manager, they are unanchored.
+				const blockId = null; 
+				const sceneId = null;
+				
+				if (editingEvent.event_type === 'add_fact') {
+					const remEv = await createWikiEvent({
+						entity_id: entity.id,
+						scene_id: sceneId,
+						block_id: blockId,
+						event_type: 'remove_fact',
+						payload: { id: editingEvent.payload?.id }
+					});
+					const addEv = await createWikiEvent({
+						entity_id: entity.id,
+						scene_id: sceneId,
+						block_id: blockId,
+						event_type: 'add_fact',
+						payload: { id: crypto.randomUUID(), content: result.payload.content }
+					});
+					entityEvents = [...entityEvents, remEv, addEv].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+				} else if (editingEvent.event_type === 'update_name' || editingEvent.event_type === 'create') {
+					const ev = await createWikiEvent({
+						entity_id: entity.id,
+						scene_id: sceneId,
+						block_id: blockId,
+						event_type: 'update_name',
+						payload: { name: result.payload.name }
+					});
+					entityEvents = [...entityEvents, ev].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+				} else if (editingEvent.event_type === 'update_description') {
+					const ev = await createWikiEvent({
+						entity_id: entity.id,
+						scene_id: sceneId,
+						block_id: blockId,
+						event_type: 'update_description',
+						payload: { description: result.payload.description }
+					});
+					entityEvents = [...entityEvents, ev].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+				}
+				notifications.success('Narrative evolved!');
+			}
+			showEventModal = false;
+			editingEvent = null;
+		} catch (e) {
+			console.error(e);
+			notifications.error('Failed to process event update');
+		}
+	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -308,14 +372,24 @@
 										{formatEventType(event.event_type)}
 									</span>
 								</div>
-								<button
-									data-component="delete-event-btn"
-									class="text-stone-700 opacity-0 transition-all hover:text-rose-400 group-hover:opacity-100"
-									onclick={(e) => { e.stopPropagation(); handleDeleteEvent(event); }}
-									title="Delete event"
-								>
-									<Trash2 size={12} />
-								</button>
+								<div class="flex items-center gap-1 opacity-0 transition-all group-hover:opacity-100">
+									<button
+										data-component="edit-event-btn"
+										class="text-stone-700 hover:text-white"
+										onclick={(e) => { e.stopPropagation(); editingEvent = event; showEventModal = true; }}
+										title="Edit event"
+									>
+										<Pencil size={12} />
+									</button>
+									<button
+										data-component="delete-event-btn"
+										class="text-stone-700 hover:text-rose-400"
+										onclick={(e) => { e.stopPropagation(); handleDeleteEvent(event); }}
+										title="Delete event"
+									>
+										<Trash2 size={12} />
+									</button>
+								</div>
 							</div>
 
 							<div
@@ -369,6 +443,13 @@
 			</aside>
 		</div>
 	</div>
+
+	<EventEditorModal
+		event={editingEvent}
+		isOpen={showEventModal}
+		onClose={() => { showEventModal = false; editingEvent = null; }}
+		onSubmit={handleEventModalSubmit}
+	/>
 {:else}
 	<div
 		data-component="entity-not-found"

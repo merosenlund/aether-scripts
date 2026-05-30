@@ -227,6 +227,7 @@
 						<WikiSidebar
 							serialId={data.scene.serial_id}
 							sceneId={data.scene.id}
+							scenes={[{ id: data.scene.id, author_title: data.scene.author_title, display_title: data.scene.display_title, order_index: data.scene.order_index }]}
 							{activeBlockId}
 							{visibleBlockIds}
 							onHighlightBlock={handleHighlightBlock}

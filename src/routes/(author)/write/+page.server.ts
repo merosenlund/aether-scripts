@@ -98,6 +98,19 @@ export const actions = {
 			return fail(500, { error: 'Failed to create serial' });
 		}
 
+		// Every serial must have at least one scene so wiki entities always have a valid
+		// scene_id for their guaranteed 'create' event.
+		const { error: sceneError } = await supabase.from('scenes').insert({
+			serial_id: newSerial.id,
+			order_index: 1,
+			author_title: 'Scene 1',
+			status: 'Playing'
+		});
+
+		if (sceneError) {
+			console.error('Error creating initial scene:', sceneError);
+		}
+
 		throw redirect(303, `/serials/${newSerial.id}`);
 	}
 };

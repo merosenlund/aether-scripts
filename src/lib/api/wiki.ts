@@ -5,7 +5,6 @@ export interface WikiEntity {
 	serial_id: string;
 	name: string;
 	category: 'character' | 'thread' | 'clock' | 'location' | 'track' | 'other';
-	description?: string;
 	metadata: Record<string, unknown>;
 	created_at: string;
 }
@@ -45,7 +44,6 @@ export async function createWikiEntity(
 	serialId: string,
 	name: string,
 	category: WikiEntity['category'],
-	description = '',
 	metadata: Record<string, unknown> = {}
 ) {
 	const { data, error } = await supabase
@@ -54,7 +52,6 @@ export async function createWikiEntity(
 			serial_id: serialId,
 			name,
 			category,
-			description,
 			metadata
 		})
 		.select()
@@ -115,6 +112,28 @@ export async function updateWikiEventBlock(
 
 export async function deleteWikiEvent(eventId: string) {
 	const { error } = await supabase.from('wiki_events').delete().eq('id', eventId);
+
+	if (error) throw error;
+	return true;
+}
+
+export async function updateWikiEntity(
+	entityId: string,
+	updates: Partial<Pick<WikiEntity, 'name' | 'category'>>
+) {
+	const { data, error } = await supabase
+		.from('wiki_entities')
+		.update(updates)
+		.eq('id', entityId)
+		.select()
+		.single();
+
+	if (error) throw error;
+	return data as WikiEntity;
+}
+
+export async function deleteWikiEntity(entityId: string) {
+	const { error } = await supabase.from('wiki_entities').delete().eq('id', entityId);
 
 	if (error) throw error;
 	return true;

@@ -8,6 +8,90 @@ export interface ReducedEntity {
 	description: string;
 	metadata: Record<string, unknown>;
 	facts: { id: string; content: string }[];
+	isActive: boolean;
+}
+
+/**
+ * Pure reducer for a single entity's event stream. Events must be in chronological
+ * (ascending) order. Description is always derived from events — never from the
+ * base entity's table column, which no longer exists.
+ */
+export function reduceEntityEvents(events: WikiEvent[], baseEntity: WikiEntity): ReducedEntity {
+	const state: ReducedEntity = {
+		id: baseEntity.id,
+		name: baseEntity.name || '',
+		category: baseEntity.category || 'other',
+		description: '',
+		metadata: { ...(baseEntity.metadata || {}) },
+		facts: [],
+		isActive: false // Will be set to true by the 'create' event
+	};
+
+	for (const event of events) {
+		switch (event.event_type) {
+			case 'create':
+				state.isActive = true;
+				if (event.payload.name) state.name = event.payload.name as string;
+				if (event.payload.category) state.category = event.payload.category as string;
+				if (event.payload.description) state.description = event.payload.description as string;
+				state.metadata = {
+					...state.metadata,
+					...((event.payload.metadata as Record<string, unknown>) || {})
+				};
+				break;
+			case 'deactivate_entity':
+				state.isActive = false;
+				break;
+			case 'update_name':
+				if (event.payload.name) state.name = event.payload.name as string;
+				break;
+			case 'update_description':
+				state.description = event.payload.description as string;
+				break;
+			case 'add_fact': {
+				const factId = (event.payload.id as string) || event.id;
+				if (!state.facts.some((f) => f.id === factId)) {
+					state.facts.push({ id: factId, content: event.payload.content as string });
+				}
+				break;
+			}
+			case 'remove_fact': {
+				const removeId = event.payload.id as string;
+				state.facts = state.facts.filter((f) => f.id !== removeId);
+				break;
+			}
+			case 'set_clock':
+				state.metadata = {
+					...state.metadata,
+					segments: (event.payload.segments as number) ?? (state.metadata.segments as number) ?? 4,
+					filled: (event.payload.filled as number) ?? (state.metadata.filled as number) ?? 0
+				};
+				break;
+			case 'increment_clock': {
+				const incAmount = (event.payload.amount as number) ?? 1;
+				const maxSegments = (state.metadata.segments as number) ?? 4;
+				state.metadata.filled = Math.min(
+					maxSegments,
+					((state.metadata.filled as number) ?? 0) + incAmount
+				);
+				break;
+			}
+			case 'decrement_clock': {
+				const decAmount = (event.payload.amount as number) ?? 1;
+				state.metadata.filled = Math.max(0, ((state.metadata.filled as number) ?? 0) - decAmount);
+				break;
+			}
+			case 'set_track':
+				state.metadata = {
+					...state.metadata,
+					max: (event.payload.max as number) ?? (state.metadata.max as number) ?? 10,
+					current: (event.payload.current as number) ?? (state.metadata.current as number) ?? 0
+				};
+				break;
+		}
+	}
+
+	return state;
 }
 
 export function reduceWikiEvents(
@@ -15,108 +99,45 @@ export function reduceWikiEvents(
 	activeBlockIdsSet: Set<string> | SvelteSet<string> | null,
 	baseEntities: WikiEntity[] = []
 ) {
-	const entitiesMap = new SvelteMap<string, ReducedEntity>();
-
-	// Initialize with baseEntities if provided, to ensure base properties exist
-	for (const entity of baseEntities) {
-		entitiesMap.set(entity.id, {
-			id: entity.id,
-			name: entity.name || '',
-			category: entity.category || 'other',
-			description: entity.description || '',
-			metadata: { ...(entity.metadata || {}) },
-			facts: []
-		});
-	}
-
 	// Filter events based on block-level chronological visibility
 	const filteredEvents = events.filter((event) => {
-		// If activeBlockIdsSet is null, we are in author/edit mode where everything is visible
 		if (!activeBlockIdsSet) return true;
-
-		// If event is unanchored (block_id is null), it is visible globally in the scene
 		if (!event.block_id) return true;
-
-		// Otherwise, check if the event's block has been read/scrolled to
 		return activeBlockIdsSet.has(event.block_id);
 	});
 
-	// Sequentially reduce the events
+	// Group filtered events by entity_id (chronological order preserved)
+	const eventsByEntity = new Map<string, WikiEvent[]>();
 	for (const event of filteredEvents) {
-		const entityId = event.entity_id;
+		const bucket = eventsByEntity.get(event.entity_id) || [];
+		bucket.push(event);
+		eventsByEntity.set(event.entity_id, bucket);
+	}
 
-		if (!entitiesMap.has(entityId)) {
-			// Lazy initialize basic entity fields
-			entitiesMap.set(entityId, {
+	// Build a lookup of base entities for lazy-init fallback
+	const baseEntityMap = new Map(baseEntities.map((e) => [e.id, e]));
+
+	// Union of entity IDs: preloaded bases + any that appear only in events
+	const allEntityIds = new Set([...baseEntityMap.keys(), ...eventsByEntity.keys()]);
+
+	const entitiesMap = new SvelteMap<string, ReducedEntity>();
+
+	for (const entityId of allEntityIds) {
+		const entityEvents = eventsByEntity.get(entityId) || [];
+
+		// Resolve base entity: prefer preloaded, fall back to join data on the first event
+		const base: WikiEntity =
+			baseEntityMap.get(entityId) ??
+			(entityEvents[0]?.wiki_entities as WikiEntity | undefined) ?? {
 				id: entityId,
-				name: event.wiki_entities?.name || '',
-				category: event.wiki_entities?.category || 'other',
-				description: event.wiki_entities?.description || '',
+				serial_id: '',
+				name: '',
+				category: 'other',
 				metadata: {},
-				facts: []
-			});
-		}
+				created_at: ''
+			};
 
-		const entity = entitiesMap.get(entityId)!;
-
-		switch (event.event_type) {
-			case 'create':
-				if (event.payload.name) entity.name = event.payload.name as string;
-				if (event.payload.category) entity.category = event.payload.category as string;
-				if (event.payload.description) entity.description = event.payload.description as string;
-				entity.metadata = {
-					...entity.metadata,
-					...(event.payload.metadata as Record<string, unknown>)
-				};
-				break;
-			case 'update_description':
-				entity.description = event.payload.description as string;
-				break;
-			case 'add_fact': {
-				const factId = (event.payload.id as string) || event.id;
-				// Ensure we don't add duplicate facts if reduced multiple times
-				if (!entity.facts.some((f) => f.id === factId)) {
-					entity.facts.push({
-						id: factId,
-						content: event.payload.content as string
-					});
-				}
-				break;
-			}
-			case 'remove_fact': {
-				const removeId = event.payload.id as string;
-				entity.facts = entity.facts.filter((f) => f.id !== removeId);
-				break;
-			}
-			case 'set_clock':
-				entity.metadata = {
-					...entity.metadata,
-					segments: (event.payload.segments as number) ?? (entity.metadata.segments as number) ?? 4,
-					filled: (event.payload.filled as number) ?? (entity.metadata.filled as number) ?? 0
-				};
-				break;
-			case 'increment_clock': {
-				const incAmount = (event.payload.amount as number) ?? 1;
-				const maxSegments = (entity.metadata.segments as number) ?? 4;
-				entity.metadata.filled = Math.min(
-					maxSegments,
-					((entity.metadata.filled as number) ?? 0) + incAmount
-				);
-				break;
-			}
-			case 'decrement_clock': {
-				const decAmount = (event.payload.amount as number) ?? 1;
-				entity.metadata.filled = Math.max(0, ((entity.metadata.filled as number) ?? 0) - decAmount);
-				break;
-			}
-			case 'set_track':
-				entity.metadata = {
-					...entity.metadata,
-					max: (event.payload.max as number) ?? (entity.metadata.max as number) ?? 10,
-					current: (event.payload.current as number) ?? (entity.metadata.current as number) ?? 0
-				};
-				break;
-		}
+		entitiesMap.set(entityId, reduceEntityEvents(entityEvents, base));
 	}
 
 	return entitiesMap;

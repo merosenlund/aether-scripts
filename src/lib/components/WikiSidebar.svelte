@@ -7,12 +7,14 @@
 		type WikiEntity,
 		type WikiEvent
 	} from '$lib/api/wiki';
-	import { Sparkles, Pin, User, MapPin, Flag, Timer, Plus, ChevronRight, Link2, Trash2, Activity } from '@lucide/svelte';
+	import { Sparkles, Pin, User, MapPin, Flag, Timer, Plus, ChevronRight, Link2, Trash2, Activity, Pencil } from '@lucide/svelte';
 	import { notifications } from '$lib/stores/notifications';
-	import { fade, slide } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 	import { contextEngine } from '$lib/stores/contextEngine.svelte';
 	import { openConfirm } from '$lib/stores/prompt.svelte';
 	import CreateWikiEntryModal from '$lib/components/wiki/CreateWikiEntryModal.svelte';
+	import EventEditorModal from '$lib/components/wiki/EventEditorModal.svelte';
+	import { updateWikiEventPayload } from '$lib/api/wiki';
 
 	let {
 		serialId,
@@ -36,6 +38,10 @@
 	let searchQuery = $state('');
 	let expandedEntityIds = $state<Set<string>>(new Set());
 	let showCreateModal = $state(false);
+
+	let editingEvent = $state<WikiEvent | null>(null);
+	let editingEntity = $state<WikiEntity | null>(null);
+	let showEventModal = $state(false);
 
 	onMount(async () => {
 		try {
@@ -99,14 +105,14 @@
 			return {
 				name: reduced.name || entity.name,
 				category: reduced.category || entity.category,
-				description: reduced.description || entity.description,
+				description: reduced.description,
 				facts: reduced.facts || []
 			};
 		}
 		return {
 			name: entity.name,
 			category: entity.category,
-			description: entity.description,
+			description: '',
 			facts: []
 		};
 	}
@@ -170,7 +176,7 @@
 			await createWikiEvent({
 				entity_id: entityId,
 				scene_id: sceneId,
-				block_id: null,
+				block_id: activeBlockId, // Anchor to current active block
 				event_type: 'remove_fact',
 				payload: { id: factId }
 			});
@@ -179,6 +185,65 @@
 		} catch (e) {
 			console.error(e);
 			notifications.error('Failed to remove fact.');
+		}
+	}
+
+	async function handleEventModalSubmit(result: { mode: 'correct' | 'evolve'; payload: any }) {
+		if (!editingEvent || !editingEntity) return;
+
+		try {
+			if (result.mode === 'correct') {
+				await updateWikiEventPayload(editingEvent.id, result.payload);
+				contextEngine.rawEvents = await getWikiEvents(sceneId);
+				notifications.success('Event updated');
+			} else if (result.mode === 'evolve') {
+				// Evolve creates new events. In the prose editor, they are anchored to the active block.
+				if (!activeBlockId) {
+					notifications.error('Click in the editor to select a block first.');
+					return;
+				}
+
+				if (editingEvent.event_type === 'add_fact') {
+					await createWikiEvent({
+						entity_id: editingEntity.id,
+						scene_id: sceneId,
+						block_id: activeBlockId,
+						event_type: 'remove_fact',
+						payload: { id: editingEvent.payload?.id }
+					});
+					await createWikiEvent({
+						entity_id: editingEntity.id,
+						scene_id: sceneId,
+						block_id: activeBlockId,
+						event_type: 'add_fact',
+						payload: { id: crypto.randomUUID(), content: result.payload.content }
+					});
+				} else if (editingEvent.event_type === 'update_name' || editingEvent.event_type === 'create') {
+					await createWikiEvent({
+						entity_id: editingEntity.id,
+						scene_id: sceneId,
+						block_id: activeBlockId,
+						event_type: 'update_name',
+						payload: { name: result.payload.name }
+					});
+				} else if (editingEvent.event_type === 'update_description') {
+					await createWikiEvent({
+						entity_id: editingEntity.id,
+						scene_id: sceneId,
+						block_id: activeBlockId,
+						event_type: 'update_description',
+						payload: { description: result.payload.description }
+					});
+				}
+				contextEngine.rawEvents = await getWikiEvents(sceneId);
+				notifications.success('Narrative evolved!');
+			}
+			showEventModal = false;
+			editingEvent = null;
+			editingEntity = null;
+		} catch (e) {
+			console.error(e);
+			notifications.error('Failed to process event update');
 		}
 	}
 
@@ -347,13 +412,31 @@
 												<span data-component="entity-fact-bullet" class="text-primary mt-0.5">•</span>
 												<span data-component="entity-fact-text">{fact.content}</span>
 											</div>
-											<button
-												class="text-stone-700 opacity-0 transition-all hover:text-rose-400 group-hover/fact:opacity-100"
-												onclick={() => handleDeleteFact(entity.id, fact.id)}
-												title="Remove fact"
-											>
-												<Trash2 size={10} />
-											</button>
+											<div class="flex items-center gap-1 opacity-0 transition-all group-hover/fact:opacity-100">
+												<button
+													class="text-stone-700 hover:text-white"
+													onclick={() => {
+														const factEvent = events.filter(e => e.event_type === 'add_fact' && e.payload?.id === fact.id).pop();
+														if (factEvent) {
+															editingEvent = factEvent;
+															editingEntity = entity;
+															showEventModal = true;
+														} else {
+															notifications.error('Could not find original fact event.');
+														}
+													}}
+													title="Edit fact"
+												>
+													<Pencil size={10} />
+												</button>
+												<button
+													class="text-stone-700 hover:text-rose-400"
+													onclick={() => handleDeleteFact(entity.id, fact.id)}
+													title="Remove fact"
+												>
+													<Trash2 size={10} />
+												</button>
+											</div>
 										</div>
 									{/each}
 								</div>
@@ -389,13 +472,22 @@
 													{new Date(event.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
 												</span>
 											</div>
-											<button
-												class="text-stone-700 opacity-0 transition-all hover:text-rose-400 group-hover/event:opacity-100"
-												onclick={() => handleDeleteEvent(event)}
-												title="Delete event"
-											>
-												<Trash2 size={10} />
-											</button>
+											<div class="flex items-center gap-1 opacity-0 transition-all group-hover/event:opacity-100">
+												<button
+													class="text-stone-700 hover:text-white"
+													onclick={() => { editingEvent = event; editingEntity = entity; showEventModal = true; }}
+													title="Edit event"
+												>
+													<Pencil size={10} />
+												</button>
+												<button
+													class="text-stone-700 hover:text-rose-400"
+													onclick={() => handleDeleteEvent(event)}
+													title="Delete event"
+												>
+													<Trash2 size={10} />
+												</button>
+											</div>
 										</div>
 									{/each}
 								</div>
@@ -421,8 +513,16 @@
 	<CreateWikiEntryModal
 		{serialId}
 		{scenes}
+		blockId={activeBlockId}
 		open={showCreateModal}
 		onClose={() => (showCreateModal = false)}
 		onCreated={handleEntryCreated}
+	/>
+
+	<EventEditorModal
+		event={editingEvent}
+		isOpen={showEventModal}
+		onClose={() => { showEventModal = false; editingEvent = null; editingEntity = null; }}
+		onSubmit={handleEventModalSubmit}
 	/>
 </div>

@@ -39,7 +39,7 @@ export interface ParamDef {
 	required: boolean;
 	default?: string | number;
 	placeholder?: string;
-	options?: (context?: { cursorBlockId?: string }) => ParamOption[];
+	options?: (context: { cursorBlockId?: string; resolvedParams: Record<string, string | number> }) => ParamOption[];
 }
 
 export interface CommandDef {
@@ -86,7 +86,7 @@ export interface SuggestionItem {
  * When cursorBlockId is provided, only clocks whose chronological head
  * is at or before the cursor position are included.
  */
-const getActiveClocks = (context?: { cursorBlockId?: string }): ParamOption[] => {
+const getActiveClocks = (context: { cursorBlockId?: string; resolvedParams: Record<string, string | number> }): ParamOption[] => {
 	const clocks: ParamOption[] = [];
 	for (const [id, entity] of contextEngine.reducedEntities.entries()) {
 		if (entity.category?.toLowerCase() === 'clock') {
@@ -110,7 +110,7 @@ const getActiveClocks = (context?: { cursorBlockId?: string }): ParamOption[] =>
  * When cursorBlockId is provided, only tracks whose chronological head
  * is at or before the cursor position are included.
  */
-const getActiveTracks = (context?: { cursorBlockId?: string }): ParamOption[] => {
+const getActiveTracks = (context: { cursorBlockId?: string; resolvedParams: Record<string, string | number> }): ParamOption[] => {
 	const tracks: ParamOption[] = [];
 	for (const [id, entity] of contextEngine.reducedEntities.entries()) {
 		if (entity.category?.toLowerCase() === 'track') {
@@ -127,6 +127,58 @@ const getActiveTracks = (context?: { cursorBlockId?: string }): ParamOption[] =>
 		}
 	}
 	return tracks;
+};
+
+const getActiveEntities = (context: { cursorBlockId?: string; resolvedParams: Record<string, string | number> }): ParamOption[] => {
+	const entities: ParamOption[] = [];
+	for (const [id, entity] of contextEngine.reducedEntities.entries()) {
+		if (context?.cursorBlockId && !isEntityAvailableAtBlock(id, context.cursorBlockId)) {
+			continue;
+		}
+		if (entity.isActive === false) continue;
+		entities.push({
+			label: entity.name,
+			value: id
+		});
+	}
+	return entities;
+};
+
+const getUpdateTargets = (context: { cursorBlockId?: string; resolvedParams: Record<string, string | number> }): ParamOption[] => {
+	const entityId = context.resolvedParams.entity as string;
+	if (!entityId) return [];
+	const entity = contextEngine.reducedEntities.get(entityId);
+	if (!entity) return [];
+
+	const options: ParamOption[] = [
+		{ label: 'Name', value: 'update_name' },
+		{ label: 'Description', value: 'update_description' }
+	];
+
+	if (entity.facts) {
+		for (const fact of entity.facts) {
+			options.push({ label: `Fact: ${fact.content.substring(0, 30)}${fact.content.length > 30 ? '...' : ''}`, value: `fact:${fact.id}` });
+		}
+	}
+	return options;
+};
+
+const getDeactivateTargets = (context: { cursorBlockId?: string; resolvedParams: Record<string, string | number> }): ParamOption[] => {
+	const entityId = context.resolvedParams.entity as string;
+	if (!entityId) return [];
+	const entity = contextEngine.reducedEntities.get(entityId);
+	if (!entity) return [];
+
+	const options: ParamOption[] = [
+		{ label: 'Entire Entity', value: 'deactivate_entity' }
+	];
+
+	if (entity.facts) {
+		for (const fact of entity.facts) {
+			options.push({ label: `Fact: ${fact.content.substring(0, 30)}${fact.content.length > 30 ? '...' : ''}`, value: `fact:${fact.id}` });
+		}
+	}
+	return options;
 };
 
 // ─── Shared Execution Helpers ───────────────────────────────────────
@@ -594,6 +646,149 @@ export const commandRegistry: CommandDef[] = [
 		}
 	},
 
+	// ─── Update Entity ───
+	{
+		name: 'update',
+		title: 'Update Wiki Entity',
+		description: 'Update the name, description, or a fact of an entity',
+		icon: 'pencil',
+		aliases: ['up'],
+		params: [
+			{
+				name: 'entity',
+				label: 'entity',
+				type: 'select',
+				required: true,
+				options: getActiveEntities,
+				placeholder: 'Select an entity...'
+			},
+			{
+				name: 'target',
+				label: 'target',
+				type: 'select',
+				required: true,
+				options: getUpdateTargets,
+				placeholder: 'What to update?'
+			},
+			{
+				name: 'value',
+				label: 'new value',
+				type: 'text',
+				required: true,
+				placeholder: 'New value'
+			}
+		],
+		execute: async (editor, range, params) => {
+			const entityId = String(params.entity);
+			const target = String(params.target);
+			const value = String(params.value).trim();
+			
+			const serialId = editor.serialId;
+			const sceneId = editor.sceneId;
+			const blockId = crypto.randomUUID();
+
+			if (!serialId || !sceneId || !entityId || !value) return;
+
+			editor.chain().focus().deleteRange(range).run();
+
+			if (target === 'update_name') {
+				await supabase.from('wiki_events').insert({
+					entity_id: entityId,
+					scene_id: sceneId,
+					block_id: blockId,
+					event_type: 'update_name',
+					payload: { name: value }
+				});
+			} else if (target === 'update_description') {
+				await supabase.from('wiki_events').insert({
+					entity_id: entityId,
+					scene_id: sceneId,
+					block_id: blockId,
+					event_type: 'update_description',
+					payload: { description: value }
+				});
+			} else if (target.startsWith('fact:')) {
+				const factId = target.split(':')[1];
+				// Deactivate old fact
+				await supabase.from('wiki_events').insert({
+					entity_id: entityId,
+					scene_id: sceneId,
+					block_id: blockId,
+					event_type: 'remove_fact',
+					payload: { id: factId }
+				});
+				// Activate new fact
+				await supabase.from('wiki_events').insert({
+					entity_id: entityId,
+					scene_id: sceneId,
+					block_id: blockId,
+					event_type: 'add_fact',
+					payload: { id: crypto.randomUUID(), content: value }
+				});
+			}
+			await contextEngine.refreshEvents(sceneId, editor.getJSON(), serialId);
+		}
+	},
+
+	// ─── Deactivate Entity ───
+	{
+		name: 'deactivate',
+		title: 'Deactivate Wiki Entity',
+		description: 'Deactivate an entity or remove a fact',
+		icon: 'archive',
+		aliases: ['de'],
+		params: [
+			{
+				name: 'entity',
+				label: 'entity',
+				type: 'select',
+				required: true,
+				options: getActiveEntities,
+				placeholder: 'Select an entity...'
+			},
+			{
+				name: 'target',
+				label: 'target',
+				type: 'select',
+				required: true,
+				options: getDeactivateTargets,
+				placeholder: 'What to deactivate?'
+			}
+		],
+		execute: async (editor, range, params) => {
+			const entityId = String(params.entity);
+			const target = String(params.target);
+			
+			const serialId = editor.serialId;
+			const sceneId = editor.sceneId;
+			const blockId = crypto.randomUUID();
+
+			if (!serialId || !sceneId || !entityId) return;
+
+			editor.chain().focus().deleteRange(range).run();
+
+			if (target === 'deactivate_entity') {
+				await supabase.from('wiki_events').insert({
+					entity_id: entityId,
+					scene_id: sceneId,
+					block_id: blockId,
+					event_type: 'deactivate_entity',
+					payload: {}
+				});
+			} else if (target.startsWith('fact:')) {
+				const factId = target.split(':')[1];
+				await supabase.from('wiki_events').insert({
+					entity_id: entityId,
+					scene_id: sceneId,
+					block_id: blockId,
+					event_type: 'remove_fact',
+					payload: { id: factId }
+				});
+			}
+			await contextEngine.refreshEvents(sceneId, editor.getJSON(), serialId);
+		}
+	},
+
 	// ─── GM Note ───
 	{
 		name: 'gm',
@@ -729,7 +924,7 @@ export function resolveCommandSuggestions(
 		if (param.type === 'select' && param.options) {
 			// Fuzzy match typed text to the closest option, with cursor context
 			const cursorBlockId = _editor.activeBlockId;
-			const options = param.options({ cursorBlockId });
+			const options = param.options({ cursorBlockId, resolvedParams });
 			const exact = options.find((o) => o.label.toLowerCase() === text.toLowerCase());
 			const partial = options.find((o) => o.label.toLowerCase().startsWith(text.toLowerCase()));
 			const fuzzy = options.find((o) => o.label.toLowerCase().includes(text.toLowerCase()));
@@ -760,7 +955,7 @@ export function resolveCommandSuggestions(
 	const activeParam = matched.params[activeParamIndex];
 	if (activeParam?.type === 'select' && activeParam.options) {
 		const cursorBlockId = _editor.activeBlockId;
-		const allOptions = activeParam.options({ cursorBlockId });
+		const allOptions = activeParam.options({ cursorBlockId, resolvedParams });
 		const filterText = segments[activeParamIndex]?.trim() || '';
 		selectOptions = filterText
 			? allOptions.filter((o) => o.label.toLowerCase().includes(filterText.toLowerCase()))

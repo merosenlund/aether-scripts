@@ -19,6 +19,7 @@
 	import { TrackBlock } from './extensions/TrackBlock';
 	import { OracleBlock } from './extensions/OracleBlock';
 	import { TelemetryExtension } from './extensions/TelemetryExtension';
+	import { ActiveBlockHighlight } from './extensions/ActiveBlockHighlight';
 	import suggestion from './extensions/suggestion.svelte.ts';
 
 	import Collaboration from '@tiptap/extension-collaboration';
@@ -510,6 +511,7 @@
 				ClockBlock,
 				TrackBlock,
 				OracleBlock,
+				ActiveBlockHighlight,
 				Commands.configure({
 					suggestion,
 					serialId,
@@ -904,5 +906,13 @@
 	:global([data-flash-highlight]) {
 		animation: flashHighlight 1.2s ease-out forwards;
 		border-left: 2px solid var(--color-primary, #f59e0b);
+	}
+
+	/* Keep active block visibly indicated when editor loses focus */
+	:global(.tiptap-container:not(:focus-within) .active-editor-block) {
+		background-color: rgba(245, 158, 11, 0.05);
+		border-radius: 4px;
+		box-shadow: inset 2px 0 0 0 rgba(245, 158, 11, 0.8);
+		transition: all 0.2s ease;
 	}
 </style>
