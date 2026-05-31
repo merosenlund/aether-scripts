@@ -25,3 +25,4 @@ vite.config.ts.timestamp-*
 # Antigravity CLI
 .antigravitycli
 
+.deno-deploy
