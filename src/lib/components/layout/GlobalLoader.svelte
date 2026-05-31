@@ -2,7 +2,7 @@
 	import { navigating } from '$app/state';
 </script>
 
-{#if navigating}
+{#if navigating.to}
 	<div
 		class="fixed top-0 left-0 right-0 z-50 h-1 overflow-hidden bg-primary/20"
 	>
