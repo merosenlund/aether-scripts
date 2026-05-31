@@ -33,7 +33,7 @@ export const load = async ({ locals: { supabase, getSession } }) => {
 export const actions = {
 	login: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
-		const email = formData.get('email') as string;
+		const email = (formData.get('email') as string)?.trim();
 		const password = formData.get('password') as string;
 
 		if (!email || !password) {
@@ -63,7 +63,7 @@ export const actions = {
 
 	register: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
-		const email = formData.get('email') as string;
+		const email = (formData.get('email') as string)?.trim();
 		const password = formData.get('password') as string;
 
 		if (!email || !password) {
