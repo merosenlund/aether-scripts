@@ -11,11 +11,14 @@
 		FolderPlus,
 		Layers,
 		Save,
-		CheckCircle
+		CheckCircle,
+		DownloadCloud
 	} from '@lucide/svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import { fade, slide } from 'svelte/transition';
+	import { generateSerialBackup } from '$lib/utils/export';
+	import { supabase } from '$lib/supabaseClient';
 
 	let { data } = $props<{ data: any }>();
 
@@ -24,6 +27,9 @@
 	let newArcTitle = $state('');
 	let isSavingOrder = $state(false);
 	let orderSaved = $state(false);
+
+	let isExporting = $state(false);
+	let exportError = $state<string | null>(null);
 
 	let showSettings = $state(false);
 	let editTitle = $state('');
@@ -108,6 +114,20 @@
 			orderSaved = true;
 			setTimeout(() => (orderSaved = false), 2000);
 			invalidateAll();
+		}
+	}
+
+	async function handleExport() {
+		if (isExporting) return;
+		isExporting = true;
+		exportError = null;
+		try {
+			await generateSerialBackup(data.serial.id, data.serial.title, supabase);
+		} catch (e) {
+			console.error(e);
+			exportError = 'Export failed. See console.';
+		} finally {
+			isExporting = false;
 		}
 	}
 
@@ -416,21 +436,44 @@
 					</div>
 
 					<!-- Action buttons -->
-					<div class="flex justify-end gap-3 border-t border-white/5 pt-3">
-						<button
-							type="button"
-							onclick={() => (showSettings = false)}
-							class="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-bold text-stone-300 transition-all hover:bg-white/10"
-						>
-							Cancel
-						</button>
-						<button
-							type="submit"
-							class="bg-primary text-primary-foreground shadow-primary/20 flex items-center gap-1.5 rounded-xl px-6 py-2.5 text-xs font-bold shadow-lg transition-all hover:opacity-90"
-						>
-							<Save class="h-4 w-4" />
-							Save Settings
-						</button>
+					<div class="flex items-center justify-between border-t border-white/5 pt-3">
+						<!-- Export Backup Button -->
+						<div class="flex items-center gap-3">
+							<button
+								type="button"
+								onclick={handleExport}
+								disabled={isExporting}
+								class="flex items-center gap-2 rounded-xl border border-stone-700/50 bg-stone-800/50 px-4 py-2.5 text-xs font-bold text-stone-300 transition-all hover:bg-stone-800 hover:text-white disabled:opacity-50"
+							>
+								{#if isExporting}
+									<div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-stone-400 border-t-transparent"></div>
+									Exporting...
+								{:else}
+									<DownloadCloud class="h-4 w-4 text-emerald-400" />
+									Export Backup
+								{/if}
+							</button>
+							{#if exportError}
+								<span class="text-xs font-medium text-red-400">{exportError}</span>
+							{/if}
+						</div>
+
+						<div class="flex gap-3">
+							<button
+								type="button"
+								onclick={() => (showSettings = false)}
+								class="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-bold text-stone-300 transition-all hover:bg-white/10"
+							>
+								Cancel
+							</button>
+							<button
+								type="submit"
+								class="bg-primary text-primary-foreground shadow-primary/20 flex items-center gap-1.5 rounded-xl px-6 py-2.5 text-xs font-bold shadow-lg transition-all hover:opacity-90"
+							>
+								<Save class="h-4 w-4" />
+								Save Settings
+							</button>
+						</div>
 					</div>
 				</form>
 			</div>
