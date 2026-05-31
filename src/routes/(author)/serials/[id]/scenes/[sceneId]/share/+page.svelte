@@ -16,22 +16,29 @@
 
 	let { data } = $props<{ data: any }>();
 
+	let initialStatus = data.scene.status || 'Playing';
+	let initialSemVer = data.scene.semantic_version || '1.0.0';
+	let initialScheduledAt = data.scene.scheduled_status_at;
+
 	// Scene publishing settings
-	let activeStatus = $state(data.scene.status || 'Playing');
-	let semanticVersion = $state(data.scene.semantic_version || '1.0.0');
-	let isScheduled = $state(!!data.scene.scheduled_status_at);
+	let activeStatus = $state(initialStatus);
+	let semanticVersion = $state(initialSemVer);
+	let isScheduled = $state(!!initialScheduledAt);
 	let scheduledDate = $state(
-		data.scene.scheduled_status_at ? data.scene.scheduled_status_at.split('T')[0] : ''
+		initialScheduledAt ? initialScheduledAt.split('T')[0] : ''
 	);
 	let scheduledTime = $state(
-		data.scene.scheduled_status_at
-			? data.scene.scheduled_status_at.split('T')[1]?.substring(0, 5)
+		initialScheduledAt
+			? initialScheduledAt.split('T')[1]?.substring(0, 5)
 			: '08:00'
 	);
 
+	let initialTeaserPercent = data.scene.serials?.next_scene_completion_percentage || 0;
+	let initialTeaserNote = data.scene.serials?.next_scene_update_note || '';
+
 	// Serial-level teaser settings
-	let teaserPercent = $state(data.scene.serials?.next_scene_completion_percentage || 0);
-	let teaserNote = $state(data.scene.serials?.next_scene_update_note || '');
+	let teaserPercent = $state(initialTeaserPercent);
+	let teaserNote = $state(initialTeaserNote);
 
 	let isSavingScene = $state(false);
 	let isSavingTeaser = $state(false);

@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { ArrowLeft, Trash2, Plus } from '@lucide/svelte';
+	import { ArrowLeft, Trash2, Plus, Pencil } from '@lucide/svelte';
 	import ProseViewer from '$lib/components/wiki/ProseViewer.svelte';
 	import { fetchSceneContent } from '$lib/api/wikiScenes';
 	import { updateWikiEventBlock, deleteWikiEvent, updateWikiEventPayload, createWikiEvent } from '$lib/api/wiki';
 	import { notifications } from '$lib/stores/notifications';
 	import { openConfirm } from '$lib/stores/prompt.svelte';
 	import type { WikiEntity, WikiEvent } from '$lib/api/wiki';
-	import { Pencil, Trash2, ArrowLeft } from '@lucide/svelte';
 	import EventEditorModal from '$lib/components/wiki/EventEditorModal.svelte';
 
 	let { data } = $props<{ data: any }>();

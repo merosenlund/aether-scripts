@@ -78,6 +78,7 @@
 		<div
 			class="w-full max-w-md rounded-2xl border border-white/10 bg-stone-900 shadow-2xl overflow-hidden"
 			role="dialog"
+			tabindex="-1"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 		>
@@ -119,17 +120,19 @@
 				<div class="space-y-4">
 					{#if ['add_fact', 'update_name', 'update_description', 'create'].includes(event.event_type)}
 						<div class="space-y-1.5">
-							<label class="text-[10px] font-bold tracking-widest text-stone-500 uppercase">
+							<label for="edit-content-input" class="text-[10px] font-bold tracking-widest text-stone-500 uppercase">
 								{event.event_type === 'add_fact' ? 'Fact Content' : event.event_type === 'update_description' ? 'Description' : 'Name'}
 							</label>
 							{#if event.event_type === 'update_name' || event.event_type === 'create'}
 								<input
+									id="edit-content-input"
 									type="text"
 									bind:value={editedContent}
 									class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
 								/>
 							{:else}
 								<textarea
+									id="edit-content-input"
 									bind:value={editedContent}
 									rows="3"
 									class="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
@@ -139,10 +142,11 @@
 					{/if}
 
 					<div class="space-y-1.5">
-						<label class="text-[10px] font-bold tracking-widest text-stone-500 uppercase">
+						<label for="edit-reason-input" class="text-[10px] font-bold tracking-widest text-stone-500 uppercase">
 							Reason <span class="font-normal normal-case opacity-50">(optional)</span>
 						</label>
 						<input
+							id="edit-reason-input"
 							type="text"
 							bind:value={editedReason}
 							placeholder="Why did this happen?"

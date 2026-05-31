@@ -143,6 +143,7 @@
 	class="min-w-[280px] overflow-hidden rounded-xl border border-white/10 bg-stone-900 p-1.5 shadow-2xl backdrop-blur-xl"
 >
 	{#if hintState}
+		{@const HintIcon = getIconComponent(hintState.command.icon)}
 		<!-- ─── HINT MODE: Passive parameter display ─── -->
 		<div data-component="hint-panel" class="flex flex-col gap-2 p-2">
 			<!-- Command Header -->
@@ -151,7 +152,7 @@
 					data-component="hint-icon"
 					class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20"
 				>
-					<svelte:component this={getIconComponent(hintState.command.icon)} class="h-4 w-4 text-primary" />
+					<HintIcon class="h-4 w-4 text-primary" />
 				</div>
 				<div data-component="hint-titles" class="flex flex-col">
 					<span class="text-xs font-bold tracking-wider text-primary uppercase">
@@ -271,6 +272,7 @@
 		<!-- ─── BROWSING MODE: Command list ─── -->
 		<div data-component="commands-browse" class="flex flex-col gap-0.5">
 			{#each items as item, index}
+				{@const ItemIcon = getIconComponent(item.icon)}
 				<button
 					data-component="command-item"
 					class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all {index ===
@@ -286,7 +288,7 @@
 							? 'bg-primary/20'
 							: 'bg-white/5'}"
 					>
-						<svelte:component this={getIconComponent(item.icon)} class="h-4 w-4" />
+						<ItemIcon class="h-4 w-4" />
 					</div>
 					<div data-component="command-text" class="flex flex-col">
 						<span class="text-xs font-bold tracking-wider uppercase">{item.title}</span>

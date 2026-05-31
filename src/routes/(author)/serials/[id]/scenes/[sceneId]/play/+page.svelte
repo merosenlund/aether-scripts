@@ -9,7 +9,9 @@
 	import { gameSession } from '$lib/stores/gameSession.svelte';
 
 	let { data } = $props<{ data: any }>();
-	let content = $state(data.scene.content_blocks || '');
+	
+	let initialContent = data.scene.content_blocks || '';
+	let content = $state(initialContent);
 	let activeBlockId = $state('');
 	let visibleBlockIds = $state<string[]>([]);
 	let activeTab = $state('wiki');

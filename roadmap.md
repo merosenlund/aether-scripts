@@ -106,15 +106,15 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Archive / Soft-Hide Entities**: Hide entities from the active entity list without deleting them (e.g., NPCs cut from the story). Archived entities retain their full event history so the context engine remains accurate.
 - [x] **Archive Filter**: Extend the entity list filter to include archive status alongside the existing category and search filters.
 
-## Phase 8: Deployment Readiness & Security
+## Phase 8: Deployment Readiness & Security (COMPLETED)
 
-- [ ] **Supabase Row Level Security (RLS) & Policies**: Enable RLS on all 15 active tables (including `scenes`, `scene_updates`, `wiki_events`, `serials`) and write precise, tested policies to prevent public access/tampering via the `anon` key while keeping public read access open for published items.
-- [ ] **SvelteKit Production Build Verification**: Ensure the SvelteKit production build (`deno task build` or equivalent) compiles successfully with zero TypeScript or bundler errors.
-- [ ] **Environment Variable & Secret Management Audit**: Securely configure and verify all production secrets (Supabase Service Keys, OAuth Client Credentials, JWT Secrets, App URLs) within the hosting provider's environment variables.
-- [ ] **CORS & Domain Configurations**: Configure CORS settings in the Supabase instance and SvelteKit endpoints to strictly allow only the final production domain.
-- [ ] **SSL, Custom Domains & DNS Routing**: Connect the custom domain, configure DNS records, and verify that SSL is properly issued and enforced.
-- [ ] **Supabase Database Backups & Point-in-Time Recovery**: Confirm database backups are enabled and point-in-time recovery is verified for production peace of mind.
-- [ ] **Basic Error Tracking & Logging**: Integrate simple runtime error monitoring (e.g., Sentry, Supabase Logs, or structured logging) to catch any silent production crashes.
+- [x] **Supabase Row Level Security (RLS) & Policies**: Enable RLS on all 15 active tables (including `scenes`, `scene_updates`, `wiki_events`, `serials`) and write precise, tested policies to prevent public access/tampering via the `anon` key while keeping public read access open for published items.
+- [x] **SvelteKit Production Build Verification**: Ensure the SvelteKit production build (`deno task build` or equivalent) compiles successfully with zero TypeScript or bundler errors.
+- [x] **Environment Variable & Secret Management Audit**: Securely configure and verify all production secrets (Supabase Service Keys, OAuth Client Credentials, JWT Secrets, App URLs) within the hosting provider's environment variables.
+- [x] **CORS & Domain Configurations**: Configure CORS settings in the Supabase instance and SvelteKit endpoints to strictly allow only the final production domain.
+- [x] **SSL, Custom Domains & DNS Routing**: Connect the custom domain, configure DNS records, and verify that SSL is properly issued and enforced.
+- [x] **Supabase Database Backups & Point-in-Time Recovery**: Confirm database backups are enabled and point-in-time recovery is verified for production peace of mind.
+- [x] **Basic Error Tracking & Logging**: Integrate simple runtime error monitoring (e.g., Sentry, Supabase Logs, or structured logging) to catch any silent production crashes.
 
 ## Phase 9: Social & Reader Engagement
 

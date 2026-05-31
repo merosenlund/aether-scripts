@@ -385,6 +385,7 @@
 									{@const isInScene = isEventInActiveScene(event)}
 									<div
 										data-component="mechanic-event-item"
+										role="presentation"
 										class="group/event flex items-center justify-between rounded-lg px-2 py-1.5 text-[11px] transition-colors hover:bg-white/5 {isInScene ? 'text-stone-300' : 'text-stone-600'}"
 										onmouseenter={() => event.block_id && isInScene ? onHighlightBlock(event.block_id) : null}
 										onmouseleave={() => onHighlightBlock(null)}
