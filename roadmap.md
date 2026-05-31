@@ -121,6 +121,30 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 This phase captures improvements and refinements discovered during live usage of the deployed app.
 
 - [ ] **Loading Feedback**: Add clear visual feedback when actions are processing (e.g., loading spinners on buttons like Login, and global navigation progress indicators during page transitions).
+### Editor & Prose UX
+- [ ] **GM Block Splitting**: Pressing `Enter` inside a GM block should create a new consecutive GM block (so large sections can be broken up for better event anchoring). Pressing `Enter` on an empty GM block should break out into a standard prose block.
+- [ ] **Typewriter Scrolling**: Add a toggleable auto-scroll feature to keep the active cursor vertically centered on the screen, especially useful during Play mode.
+- [ ] **Spellcheck Toggle**: Add a setting to toggle browser typo squigglies (`spellcheck="false"`) on and off in the editor to reduce visual clutter during drafting.
+
+### Game Mechanics & Wiki
+- [ ] **Mythic Tables Expansion**: Add more frequently used Mythic tables as options within the `/roll` command, specifically the Name generation tables (providing the raw Mythic results to interpret, rather than just generating a generic name).
+- [ ] **Macro/Workflow Commands (Exploration)**: Explore creating workflow-based slash commands (like `/new character`) that streamline complex processes (e.g., rolling two names, opening a GM block for interpretation, and then creating the wiki entry).
+- [ ] **Sidebar Wiki Evolution**: Add an "Edit" button to entities and events in the editor sidebar that opens the same modal used in the World Manager, allowing the author to quickly choose between correcting a typo or evolving the narrative.
+
+### Analytics & Goals
+- [ ] **Public Analytics**: Writing analytics should be visible to all users to show progress. Currently, the Writing Analytics nav item redirects non-authors to the home page.
+- [ ] **Wiki Effort Tracking**: Incorporate the time and effort spent creating/editing Wiki entries into the overall writing session metrics, so worldbuilding counts towards daily progress.
+- [ ] **Goal Configuration UX**: Add loading/saved states when updating writing goals. Ensure the charts reactively update without requiring a full page refresh.
+- [ ] **Chart Tooltips & Legend**: Remove the hover delay on the Writing Activity tooltip so it appears instantly. Make the legend hoverable to show the exact word count thresholds for each color shade.
+
+### Navigation & Content Discovery
+- [ ] **Relocate "Reading Lists"**: Move it out of the main top-level nav and tuck it into the "Library" menu. Rename or clarify it, since it's meant for custom reading orders (like Arcs/Sagas) rather than a traditional "To Be Read" list.
+- [ ] **Teaser Logic Fix**: The serial teaser currently says "No Published Chapters" for the author if nothing is published yet, despite having 800 words drafted. It should probably show the latest drafted chapter's teaser to the author, or clearly distinguish between author-view and reader-view.
+
+### Authentication & Onboarding
+- [ ] **Sign-Up Flow Enhancements**: Add a clear UI message after clicking "Sign Up" telling the user to check their email for a confirmation link. 
+- [ ] **Fix Supabase Confirmation Link**: Fix the `{"error": "requested path is invalid"}` error when clicking the Supabase email confirmation link (likely needs a redirect URL configured in the Supabase dashboard).
+
 
 ## Phase 12: Social & Reader Engagement
 
