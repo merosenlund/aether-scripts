@@ -1,6 +1,18 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
+
 	let { data, form } = $props();
 	let isSignUp = $state(false);
+	let submitting = $state(false);
+
+	const handleSubmit: SubmitFunction = () => {
+		submitting = true;
+		return async ({ update }) => {
+			submitting = false;
+			update();
+		};
+	};
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
@@ -16,7 +28,7 @@
 			</div>
 		{/if}
 
-		<form method="POST" action={isSignUp ? '?/register' : '?/login'} class="space-y-4">
+		<form method="POST" action={isSignUp ? '?/register' : '?/login'} class="space-y-4" use:enhance={handleSubmit}>
 			<div>
 				<label for="email" class="block text-sm font-medium">Email</label>
 				<input
@@ -37,8 +49,16 @@
 					class="mt-1 w-full rounded border bg-zinc-50 p-2 dark:bg-zinc-800"
 				/>
 			</div>
-			<button type="submit" class="w-full rounded bg-blue-600 py-2 text-white hover:bg-blue-700">
-				{isSignUp ? 'Sign Up' : 'Sign In'}
+			<button type="submit" disabled={submitting} class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+				{#if submitting}
+					<svg class="mr-2 h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+					</svg>
+					Please wait...
+				{:else}
+					{isSignUp ? 'Sign Up' : 'Sign In'}
+				{/if}
 			</button>
 		</form>
 

@@ -41,7 +41,7 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Scheduled Status Changes**: Ability to queue a scene's status change (e.g., auto-publish at 8:00 AM).
 - [x] **Arc Organization**: Drag-and-drop interface for grouping Scenes into Arcs.
 
-## Phase 4.5: Transparent Author Analytics (COMPLETED)
+## Phase 5: Transparent Author Analytics (COMPLETED)
 
 - [x] **Session Telemetry**: Track live author metrics including online status, active typing indicator, session word count, and Words Per Minute (WPM).
 - [x] **Editing Insights (Churn)**: Track word churn during editing sessions (words added vs. deleted) to understand rewriting effort.
@@ -49,13 +49,13 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Status-Based Word Counts**: Track and compare the word count of a scene across its different lifecycle statuses (e.g., Raw Play vs. Published length).
 - [x] **Public Dashboard & Scroll Teaser**: Inject these metrics directly into the end-of-scroll "preview" for readers. This includes showing if you are currently online, typing, working on another series, or if the next scene is queued with a "go live" date.
 
-## Phase 4.8: Reader Lists & Discovery (COMPLETED)
+## Phase 6: Reader Lists & Discovery (COMPLETED)
 
 - [x] **Curated Lists (`/lists`)**: Build out the `/lists` route to allow users to group, manage, and share serials/scenes.
 - [x] **List Management**: UI for creating new lists, adding/removing entries, and setting lists as public or private.
 - [x] **Discovery**: Feature public lists on the dashboard to help readers discover new content curated by the community.
 
-## Phase 5: Architectural Reboot (Block-Level Event Sourcing) (COMPLETED)
+## Phase 7: Architectural Reboot (Block-Level Event Sourcing) (COMPLETED)
 
 - [x] **Database Foundation**: Rebuild Supabase schema around a strict Event-Sourcing pattern (`wiki_entities`, `wiki_events`).
 - [x] **Block-Level Temporal Granularity**: Ensure all facts, clocks, and game mechanics are stored as immutable events tied to specific Tiptap `block_id`s, enabling mathematically perfect, spoiler-free time-travel.
@@ -63,50 +63,50 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Context Engine Refactor**: Rebuild the Reader Context Engine to derive entity state by chronologically reducing database events up to the reader's current block ID.
 - [x] **Extensive Codebase Cleanup**: Perform a deep purge of deprecated code, old Tiptap extensions (e.g., hidden metadata blocks), obsolete API endpoints, and unused database tables to ensure the new foundation isn't poisoned by technical debt from previous iterations.
 
-## Phase 6: Authoring Experience Reboot (COMPLETED)
+## Phase 8: Authoring Experience Reboot (COMPLETED)
 
-### Phase 6.1: Reactive State Architecture Refactor
+### Phase 8.1: Reactive State Architecture Refactor
 - [x] **Shared Entity State**: Move fetching and storage of `entities` into the global `contextEngine.svelte.ts` store to act as the single source of truth.
 - [x] **Reactive Sidebars**: Update sidebars to read directly from `contextEngine.entities` so they update instantaneously across the app without manual refresh.
 - [x] **Dynamic Node Views**: Refactor NodeViews (like `ClockBlock.ts`) to derive their state reactively by scanning `contextEngine.rawEvents`, ensuring PERFECT sync between what the sidebars see and what the prose displays.
 
-### Phase 6.2: Command Formula Engine ✅
+### Phase 8.2: Command Formula Engine ✅
 - [x] **Command Formula & UI Upgrades**: Built a passive Google Sheets-style hint panel that shows parameter expectations inline. Cursor stays in the editor — space triggers hint mode, Tab advances params, arrow keys navigate select dropdowns, Enter executes.
 - [x] **Unified `/oracle` Fate Check**: Accepts raw odds number + question via inline params (e.g., `/oracle 75 Is the door locked?`). Implements 20% exceptional threshold (Exceptional Yes/No).
 - [x] **Improved `/roll` Dice Roller**: Accepts custom dice formulas (e.g., `2d6+3`), validates with real-time feedback (✓/✗), inserts stylized inline node, and logs to sidebar roll log via `gameSession.addRoll()`.
 - [x] **Intelligent Clock Commands**: `/increment` and `/decrement` populate a dropdown of active clocks from contextEngine. Arrow keys navigate, Enter selects.
 - [x] **New `/advance` Track Command**: Advances progress tracks with optional amount param, using active tracks from contextEngine.
 
-### Phase 6.3: Editor Synchronization & Rewind Logic ✅
+### Phase 8.3: Editor Synchronization & Rewind Logic ✅
 - [x] **Entity-Head-Aware Command Filtering**: Replaced binary "rewind mode" with intelligent per-entity filtering. Slash command dropdowns (`/increment`, `/decrement`, `/advance`) only show entities whose chronological head is at or before the cursor's block position, naturally preventing timeline pollution. Creation commands (`/clock`, `/track`) remain unrestricted.
 - [x] **Sidebar-Initiated Anchor Indicators**: Both WikiSidebar and MechanicsTab entities are now expandable, revealing events/facts with delete controls. Hovering an event highlights its anchored block in the editor; clicking scrolls to it with a flash animation. Added `openConfirm()` dialog for clean delete confirmations.
 
-### Phase 6.4: World Manager UX Overhaul
+### Phase 8.4: World Manager UX Overhaul
 - [x] **Optimizing the Layout**: Acknowledge the two distinct purposes of the World Manager: (1) overview of entities and (2) adjusting event attachments. The middle section needs an overhaul—consider a tabbed view or a separate route specifically designed for managing event attachment points painlessly. 
 - [x] **Context-Rich Events**: Allow clocks/tracks to have content attached to trigger events so the reason for the tick is recorded in the timeline. Fix broken buttons like "New Wiki Entry".
 - [x] **Readable Block Connections**: Replace raw UUID `block_id` text fields with intelligent select dropdowns that parse the scene and present readable text snippets for linking prose.
 - [x] **Intuitive Entity Editing & Drawer Fixes**: Fix state leak in the "Trigger Event" drawer (e.g., clock drawer incorrectly showing character fields). Replace database-centric forms (`event_type: add_fact`) with intuitive UI elements natively on the entity view (e.g., an inline "Add new fact..." input).
 
-## Phase 7: Wiki Editing & Lifecycle Management (COMPLETED)
+## Phase 9: Wiki Editing & Lifecycle Management (COMPLETED)
 
-### Phase 7.1: Description Lifecycle Fix ✅
+### Phase 9.1: Description Lifecycle Fix ✅
 - [x] **Description-as-Event**: Remove `description` from the `wiki_entities` table. The initial description is captured in the `create` event payload, and all subsequent changes flow through `update_description` events. The context engine derives current description by reducing events, consistent with how all other entity state is handled.
 - [x] **Guaranteed Creation Event**: Ensure the entity creation flow always produces a `create` event anchored to a prose block. This is the author's mechanism for controlling when a reader first encounters the entity in the timeline — no entity should exist outside the event log.
 
-### Phase 7.2: Direct Entity Editing (Editorial Mode) ✅
+### Phase 9.2: Direct Entity Editing (Editorial Mode) ✅
 - [x] **Inline Name & Category Editing**: Click-to-edit entity name and category directly on the overview page. These are pure editorial mutations — no event is created. Intended for cleanup (typos, renaming placeholders, reorganization) not narrative reveals.
 - [x] **Inline Fact Editing**: Edit the content of existing facts in place on the entity overview. Mutates the `add_fact` event payload directly — no new event. Narrative fact reveals (new information discovered during play) continue to use the existing `add_fact` event workflow.
 - [x] **Entity Deletion**: Delete an entity with a confirmation dialog showing the count of associated events and anchored prose blocks. Cascade-deletes all events and clears prose anchors.
 
-### Phase 7.3: Direct Event Editing (Editorial Mode) ✅
+### Phase 9.3: Direct Event Editing (Editorial Mode) ✅
 - [x] **Inline Event Payload Editing**: Edit the content and reason fields of existing events directly from the event timeline — for correcting typos or rewording without altering the narrative structure or creating new events.
 - [x] **Bulk Event Cleanup**: Multi-select events in the timeline with a bulk-delete action for rapidly pruning stale or incorrectly created events.
 
-### Phase 7.4: Entity Organization ✅
+### Phase 9.4: Entity Organization ✅
 - [x] **Archive / Soft-Hide Entities**: Hide entities from the active entity list without deleting them (e.g., NPCs cut from the story). Archived entities retain their full event history so the context engine remains accurate.
 - [x] **Archive Filter**: Extend the entity list filter to include archive status alongside the existing category and search filters.
 
-## Phase 8: Deployment Readiness & Security (COMPLETED)
+## Phase 10: Deployment Readiness & Security (COMPLETED)
 
 - [x] **Supabase Row Level Security (RLS) & Policies**: Enable RLS on all 15 active tables (including `scenes`, `scene_updates`, `wiki_events`, `serials`) and write precise, tested policies to prevent public access/tampering via the `anon` key while keeping public read access open for published items.
 - [x] **SvelteKit Production Build Verification**: Ensure the SvelteKit production build (`deno task build` or equivalent) compiles successfully with zero TypeScript or bundler errors.
@@ -116,7 +116,13 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Supabase Database Backups & Point-in-Time Recovery**: Confirm database backups are enabled and point-in-time recovery is verified for production peace of mind.
 - [x] **Basic Error Tracking & Logging**: Integrate simple runtime error monitoring (e.g., Sentry, Supabase Logs, or structured logging) to catch any silent production crashes.
 
-## Phase 9: Social & Reader Engagement
+## Phase 11: Polish & User Experience (UX)
+
+This phase captures improvements and refinements discovered during live usage of the deployed app.
+
+- [ ] **Loading Feedback**: Add clear visual feedback when actions are processing (e.g., loading spinners on buttons like Login, and global navigation progress indicators during page transitions).
+
+## Phase 12: Social & Reader Engagement
 
 - [ ] **Immersion-First Commenting**: Comments default to hidden to preserve reading immersion. Includes three viewing modes:
   - _Proximity Reveal_: Making an inline comment temporarily reveals other comments in that paragraph to foster contextual discussion.
@@ -129,14 +135,14 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Author Notes**: Exclusive commentary layers for premium readers.
 - [ ] **Comment Promotion**: UI to elevate a reader's comment directly into a narrative "Thread" or turn it into a community Poll, visually showing the community that their input is driving the story.
 
-## Phase 10: PWA & Live Notifications
+## Phase 13: PWA & Live Notifications
 
 - [ ] **PWA Transformation**: Manifest and Service Worker setup for "Install to Home Screen" support.
 - [ ] **Push Notifications & Personalized Delivery**: Browser-level push alerts for live-writing events and scene releases. Instead of global release times, scenes go live immediately but readers configure their own notification schedules (e.g., Morning Coffee, Bedtime Reading, or Saturday Batches).
 - [ ] **Offline Reading**: Cached scene content for reading your library without a connection.
 - [ ] **Kindle-Sync Logic**: Finalize cross-device scroll and block-level progress synchronization.
 
-## Phase 11: Community, Polling & Ethical Monetization
+## Phase 14: Community, Polling & Ethical Monetization
 
 - [ ] **Merchant of Record (MoR) Integration**: Secure payment processing (e.g., Lemon Squeezy or Paddle) to handle global tax liability automatically. Focus on flat support with a budget-friendly yearly option (e.g., $3/month minimum or $10/year) to bypass micro-transaction fees.
 - [ ] **Self-Serve Subscription Management**: Tools for users to turn off auto-renew or adjust future support amounts seamlessly.
@@ -149,7 +155,7 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [ ] **Opt-In Transparent Analytics**: Analytics and inclusion in the Admin CRM are strictly opt-in (configurable during sign-up or in settings). Tracks meaningful engagement (milestones, comments) rather than speed metrics, and provides users a personal "Reading Stats" dashboard so data collection is a shared, transparent feature.
 - [ ] **Unified Community Experience**: Ensuring premium support enhances the reading experience without fragmenting the community (no paywalled comments, no FOMO mechanics).
 
-## Phase 12: Live Stream Writing (Stretch Goal)
+## Phase 15: Live Stream Writing (Stretch Goal)
 
 - [ ] **Twitch/YouTube Companion UI**: The `/stream` route acts as a high-fidelity, interactive companion to a video stream (e.g., embedding a Twitch player). It solves the "blurry text on a 1080p stream" problem by letting readers read the raw, crisp text updates locally while listening to your audio/video commentary.
 - [ ] **Audience Oracle (Crowdsourced GM)**: A `/chat_poll` feature where the author can prompt the audience with a story decision. The vote is cast natively in the app and the winning result is injected directly into the editor.

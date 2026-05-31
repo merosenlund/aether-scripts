@@ -6,6 +6,7 @@
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import Toaster from '$lib/components/Toaster.svelte';
 	import PromptModal from '$lib/components/PromptModal.svelte';
+	import GlobalLoader from '$lib/components/layout/GlobalLoader.svelte';
 
 	let { data, children } = $props();
 	let { supabase, session } = $derived(data);
@@ -24,6 +25,7 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <div class="flex h-screen w-full overflow-hidden bg-stone-950 font-sans">
+	<GlobalLoader />
 	<Sidebar />
 	<main class="relative flex flex-1 flex-col overflow-y-auto">
 		<!-- Ambient Background Glows -->
