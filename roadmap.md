@@ -145,6 +145,10 @@ This phase captures improvements and refinements discovered during live usage of
 - [ ] **Sign-Up Flow Enhancements**: Add a clear UI message after clicking "Sign Up" telling the user to check their email for a confirmation link. 
 - [ ] **Fix Supabase Confirmation Link**: Fix the `{"error": "requested path is invalid"}` error when clicking the Supabase email confirmation link (likely needs a redirect URL configured in the Supabase dashboard).
 
+### Unsorted Feedback (Brain Dump)
+*(Instructions for AI: When asked to organize this list, read through the raw bullet points below and move them into the established categories above: "Editor & Prose UX", "Game Mechanics & Wiki", "Analytics & Goals", "Navigation & Content Discovery", or "Authentication & Onboarding". If an item doesn't fit, create a new appropriate category. Rewrite the raw feedback into clear, actionable tasks with checkboxes, and add italicized questions for any ambiguous requirements.)*
+
+- 
 
 ## Phase 12: Social & Reader Engagement
 
