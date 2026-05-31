@@ -1,0 +1,1 @@
+import{o as e,s as t}from"./BR3fw8zY.js";import"./CCi4sbZS.js";import{t as n}from"./DBB1msrd.js";function r(r,i){let a=e(i,[`$$slots`,`$$events`,`$$legacy`]),o=[[`line`,{x1:`10`,x2:`14`,y1:`2`,y2:`2`}],[`line`,{x1:`12`,x2:`15`,y1:`14`,y2:`11`}],[`circle`,{cx:`12`,cy:`14`,r:`8`}]];n(r,t({name:`timer`},()=>a,{get iconNode(){return o}}))}export{r as t};
