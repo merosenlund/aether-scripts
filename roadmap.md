@@ -125,6 +125,14 @@ This phase captures improvements and refinements discovered during live usage of
 - [ ] **GM Block Splitting**: Pressing `Enter` inside a GM block should create a new consecutive GM block (so large sections can be broken up for better event anchoring). Pressing `Enter` on an empty GM block should break out into a standard prose block.
 - [ ] **Typewriter Scrolling**: Add a toggleable auto-scroll feature to keep the active cursor vertically centered on the screen, especially useful during Play mode.
 - [ ] **Spellcheck Toggle**: Add a setting to toggle browser typo squigglies (`spellcheck="false"`) on and off in the editor to reduce visual clutter during drafting.
+- [ ] **Subtle Block Backgrounds**: Tone down the background colors for specially formatted blocks (e.g., GM blocks) so that grammar checker underlines (like ProWritingAid) are more visible.
+
+### History & Versioning UX
+- [ ] **Snapshot Semantic Versioning**: Allow manual editing of semantic version numbers in the snapshot history tab. *Should semantic versions also be displayed alongside snapshots in the diff view?*
+- [ ] **Editable Snapshot Names**: Allow authors to rename existing snapshots from the history tab.
+- [ ] **Snapshot Creation Modal**: Display a modal when creating a new snapshot to allow the author to name it and set the version number immediately.
+- [ ] **Reactive Snapshot History**: Fix the bug where newly created snapshots do not appear in the snapshot history tab without a page refresh.
+- [ ] **Disable Active Block Formatting in Diff View**: Remove the "active block" styling (e.g., highlighting or borders) when viewing a scene in history comparison mode, as the content is read-only.
 
 ### Game Mechanics & Wiki
 - [ ] **Mythic Tables Expansion**: Add more frequently used Mythic tables as options within the `/roll` command, specifically the Name generation tables (providing the raw Mythic results to interpret, rather than just generating a generic name).
@@ -136,19 +144,23 @@ This phase captures improvements and refinements discovered during live usage of
 - [ ] **Wiki Effort Tracking**: Incorporate the time and effort spent creating/editing Wiki entries into the overall writing session metrics, so worldbuilding counts towards daily progress.
 - [ ] **Goal Configuration UX**: Add loading/saved states when updating writing goals. Ensure the charts reactively update without requiring a full page refresh.
 - [ ] **Chart Tooltips & Legend**: Remove the hover delay on the Writing Activity tooltip so it appears instantly. Make the legend hoverable to show the exact word count thresholds for each color shade.
+- [ ] **Track Editing Effort**: Incorporate editing effort into the writing activity tracker so that days with heavy editing (which might result in negative word counts) still contribute to the daily streak (the "green square"). *Would you prefer to track this by active time spent in the editor, total keystrokes/events logged, or by a "churn" metric (total words added + words deleted)?*
 
 ### Navigation & Content Discovery
 - [ ] **Relocate "Reading Lists"**: Move it out of the main top-level nav and tuck it into the "Library" menu. Rename or clarify it, since it's meant for custom reading orders (like Arcs/Sagas) rather than a traditional "To Be Read" list.
 - [ ] **Teaser Logic Fix**: The serial teaser currently says "No Published Chapters" for the author if nothing is published yet, despite having 800 words drafted. It should probably show the latest drafted chapter's teaser to the author, or clearly distinguish between author-view and reader-view.
+- [ ] **Empty Series Visibility**: Ensure series are visible in the reader's library even if they contain zero scenes, as long as the series status is not set to `hidden`.
 
 ### Authentication & Onboarding
 - [ ] **Sign-Up Flow Enhancements**: Add a clear UI message after clicking "Sign Up" telling the user to check their email for a confirmation link. 
 - [ ] **Fix Supabase Confirmation Link**: Fix the `{"error": "requested path is invalid"}` error when clicking the Supabase email confirmation link (likely needs a redirect URL configured in the Supabase dashboard).
 
+### Third-Party Integrations
+- [ ] **ProWritingAid Integration (Exploration)**: Investigate options for a deeper integration with ProWritingAid or similar grammar/style checkers directly into the editor. *Do they offer an API or SDK that we could leverage for native Tiptap integration, or should we just optimize the editor styling to play nicely with their browser extension?*
+
 ### Unsorted Feedback (Brain Dump)
 *(Instructions for AI: When asked to organize this list, read through the raw bullet points below and move them into the established categories above: "Editor & Prose UX", "Game Mechanics & Wiki", "Analytics & Goals", "Navigation & Content Discovery", or "Authentication & Onboarding". If an item doesn't fit, create a new appropriate category. Rewrite the raw feedback into clear, actionable tasks with checkboxes, and add italicized questions for any ambiguous requirements.)*
 
-- 
 
 ## Phase 12: Social & Reader Engagement
 
