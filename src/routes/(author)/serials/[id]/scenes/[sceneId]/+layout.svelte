@@ -72,13 +72,6 @@
 			>
 				{data.scene.status || 'Playing'}
 			</span>
-			{#if data.scene.semantic_version}
-				<span
-					class="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[10px] font-bold text-stone-500"
-				>
-					v{data.scene.semantic_version}
-				</span>
-			{/if}
 		</div>
 	</header>
 

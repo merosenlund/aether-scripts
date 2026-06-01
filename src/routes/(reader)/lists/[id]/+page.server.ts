@@ -63,8 +63,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, getSess
         published_at,
         summary,
         description,
-        content_blocks,
-        scene_versions(content)
+        scene_versions(content, name, semantic_version, created_at)
       )
     `
 		)
@@ -84,7 +83,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, getSess
 
 		if (scene) {
 			const activeVersion = scene.scene_versions?.[0];
-			const jsonContent = (activeVersion && activeVersion.content) || scene.content_blocks;
+			const jsonContent = activeVersion?.content;
 
 			if (jsonContent) {
 				try {
@@ -120,7 +119,10 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, getSess
 						published_at: scene.published_at,
 						summary: scene.summary,
 						description: scene.description,
-						content: contentHtml
+						content: contentHtml,
+						version_name: activeVersion?.name,
+						version_semver: activeVersion?.semantic_version,
+						version_created_at: activeVersion?.created_at
 					}
 				: null
 		};

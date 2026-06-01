@@ -128,11 +128,12 @@ This phase captures improvements and refinements discovered during live usage of
 - [ ] **Subtle Block Backgrounds**: Tone down the background colors for specially formatted blocks (e.g., GM blocks) so that grammar checker underlines (like ProWritingAid) are more visible.
 
 ### History & Versioning UX
-- [ ] **Snapshot Semantic Versioning**: Allow manual editing of semantic version numbers in the snapshot history tab. *Should semantic versions also be displayed alongside snapshots in the diff view?*
-- [ ] **Editable Snapshot Names**: Allow authors to rename existing snapshots from the history tab.
-- [ ] **Snapshot Creation Modal**: Display a modal when creating a new snapshot to allow the author to name it and set the version number immediately.
-- [ ] **Reactive Snapshot History**: Fix the bug where newly created snapshots do not appear in the snapshot history tab without a page refresh.
-- [ ] **Disable Active Block Formatting in Diff View**: Remove the "active block" styling (e.g., highlighting or borders) when viewing a scene in history comparison mode, as the content is read-only.
+- [x] **Snapshot Semantic Versioning**: Allow manual editing of semantic version numbers in the snapshot history tab. *Should semantic versions also be displayed alongside snapshots in the diff view?*
+- [x] **Editable Snapshot Names**: Allow authors to rename existing snapshots from the history tab.
+- [x] **Snapshot Creation Modal**: Display a modal when creating a new snapshot to allow the author to name it and set the version number immediately.
+- [x] **Reactive Snapshot History**: Fix the bug where newly created snapshots do not appear in the snapshot history tab without a page refresh.
+- [x] **Disable Active Block Formatting in Diff View**: Remove the "active block" styling (e.g., highlighting or borders) when viewing a scene in history comparison mode, as the content is read-only.
+- [ ] **Version Statuses**: Move scene statuses (e.g., Published, Beta) from the scene level to the version level. This allows authors to publish a `1.0.0` version for general readers, but have a `1.1.0` rewrite visible only to beta readers.
 
 ### Game Mechanics & Wiki
 - [ ] **Mythic Tables Expansion**: Add more frequently used Mythic tables as options within the `/roll` command, specifically the Name generation tables (providing the raw Mythic results to interpret, rather than just generating a generic name).

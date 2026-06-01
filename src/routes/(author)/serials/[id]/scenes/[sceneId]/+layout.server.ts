@@ -37,7 +37,7 @@ export const load: LayoutServerLoad = async ({ params, locals: { supabase, getSe
 	// Fetch scene versions (snapshots) for history
 	const { data: versions } = await supabase
 		.from('scene_versions')
-		.select('id, version_number, stage, created_at')
+		.select('id, version_number, stage, created_at, name, semantic_version')
 		.eq('scene_id', sceneId)
 		.order('version_number', { ascending: false });
 

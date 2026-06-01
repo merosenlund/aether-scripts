@@ -67,7 +67,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, getSess
 	// 3. Fetch Scenes
 	const { data: scenes } = await supabase
 		.from('scenes')
-		.select('id, arc_id, author_title, status, order_index, published_at, semantic_version')
+		.select('id, arc_id, author_title, status, order_index, published_at')
 		.eq('serial_id', serialId)
 		.order('order_index', { ascending: true });
 

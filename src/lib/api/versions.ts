@@ -8,7 +8,13 @@ export type SceneStage = 'Draft' | 'Edit' | 'Published';
 // guard for cross-tab / cross-device races.
 let snapshotLock: Promise<void> = Promise.resolve();
 
-export async function createSnapshot(sceneId: string, stage: SceneStage, content: unknown) {
+export async function createSnapshot(
+	sceneId: string,
+	stage: SceneStage,
+	content: unknown,
+	name?: string,
+	semantic_version?: string
+) {
 	let release!: () => void;
 	const acquired = snapshotLock;
 	snapshotLock = new Promise<void>((resolve) => {
@@ -36,7 +42,9 @@ export async function createSnapshot(sceneId: string, stage: SceneStage, content
 				version_number: nextVersion,
 				content,
 				stage,
-				is_active: true
+				is_active: true,
+				name,
+				semantic_version
 			})
 			.select()
 			.single();
@@ -67,6 +75,21 @@ export async function transitionStage(versionId: string, newStage: SceneStage) {
 	const { data, error } = await supabase
 		.from('scene_versions')
 		.update({ stage: newStage })
+		.eq('id', versionId)
+		.select()
+		.single();
+
+	if (error) throw error;
+	return data;
+}
+
+export async function updateSnapshotMetadata(
+	versionId: string,
+	updates: { name?: string; semantic_version?: string }
+) {
+	const { data, error } = await supabase
+		.from('scene_versions')
+		.update(updates)
 		.eq('id', versionId)
 		.select()
 		.single();

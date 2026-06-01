@@ -209,9 +209,14 @@
 									{scene.display_title || scene.author_title || `Scene ${index + 1}`}
 								</h4>
 								<span class="h-[1px] flex-1 bg-zinc-800/40"></span>
-								<span class="font-mono text-[9px] font-bold text-zinc-600 uppercase"
-									>{formatDate(scene.published_at)}</span
-								>
+								{#if scene.version_semver}
+									<span class="font-mono text-[9px] font-bold text-zinc-600 uppercase border border-zinc-800 rounded px-1.5 py-0.5">
+										v{scene.version_semver}
+									</span>
+								{/if}
+								<span class="font-mono text-[9px] font-bold text-zinc-600 uppercase">
+									{formatDate(scene.version_created_at || scene.published_at)}
+								</span>
 							</div>
 
 							<!-- Scene Text Canvas -->

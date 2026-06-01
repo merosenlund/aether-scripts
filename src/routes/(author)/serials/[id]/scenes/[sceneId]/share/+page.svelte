@@ -17,12 +17,10 @@
 	let { data } = $props<{ data: any }>();
 
 	let initialStatus = data.scene.status || 'Playing';
-	let initialSemVer = data.scene.semantic_version || '1.0.0';
 	let initialScheduledAt = data.scene.scheduled_status_at;
 
 	// Scene publishing settings
 	let activeStatus = $state(initialStatus);
-	let semanticVersion = $state(initialSemVer);
 	let isScheduled = $state(!!initialScheduledAt);
 	let scheduledDate = $state(
 		initialScheduledAt ? initialScheduledAt.split('T')[0] : ''
@@ -46,7 +44,6 @@
 	// Derived dirty state check for publish settings
 	let isDirty = $derived(
 		activeStatus !== (data.scene.status || 'Playing') ||
-			semanticVersion !== (data.scene.semantic_version || '1.0.0') ||
 			isScheduled !== !!data.scene.scheduled_status_at ||
 			(isScheduled &&
 				scheduledDate !==
@@ -87,24 +84,6 @@
 		}
 	];
 
-	// Bumping version helper
-	function bumpVersion(type: 'major' | 'minor' | 'patch') {
-		const parts = semanticVersion.split('.').map(Number);
-		if (parts.length !== 3 || parts.some(isNaN)) return;
-
-		if (type === 'major') {
-			parts[0] += 1;
-			parts[1] = 0;
-			parts[2] = 0;
-		} else if (type === 'minor') {
-			parts[1] += 1;
-			parts[2] = 0;
-		} else if (type === 'patch') {
-			parts[2] += 1;
-		}
-		semanticVersion = parts.join('.');
-	}
-
 	async function saveScenePublishSettings() {
 		isSavingScene = true;
 
@@ -117,7 +96,6 @@
 			.from('scenes')
 			.update({
 				status: activeStatus,
-				semantic_version: semanticVersion,
 				scheduled_status: isScheduled ? 'Published' : null,
 				scheduled_status_at: scheduledTimestamp,
 				published_at:
@@ -294,61 +272,6 @@
 
 			<!-- Right Column: Versioning & Progress Teasers -->
 			<div class="space-y-6">
-				<!-- Semantic Versioning Card -->
-				<div
-					class="space-y-5 rounded-3xl border border-white/5 bg-stone-900/40 p-6 backdrop-blur-md"
-				>
-					<h3
-						class="flex items-center gap-2 border-b border-white/5 pb-3 text-sm font-bold tracking-widest text-stone-400 uppercase"
-					>
-						<GitBranch class="text-primary h-4 w-4" />
-						Semantic Versioning
-					</h3>
-
-					<div class="space-y-4">
-						<div class="space-y-1.5">
-							<label
-								for="sem_ver"
-								class="text-[10px] font-bold tracking-wider text-stone-400 uppercase"
-								>Reader-facing Version</label
-							>
-							<input
-								id="sem_ver"
-								type="text"
-								bind:value={semanticVersion}
-								class="focus:border-primary/50 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center font-mono text-sm tracking-widest text-stone-100 transition-all focus:outline-none"
-								placeholder="e.g. 1.0.0"
-							/>
-						</div>
-
-						<div class="grid grid-cols-3 gap-2">
-							<button
-								onclick={() => bumpVersion('major')}
-								class="rounded-xl border border-white/5 bg-white/[0.02] py-2 text-[10px] font-bold tracking-wider uppercase transition-all hover:border-white/10 hover:bg-white/5"
-							>
-								+ Major
-							</button>
-							<button
-								onclick={() => bumpVersion('minor')}
-								class="rounded-xl border border-white/5 bg-white/[0.02] py-2 text-[10px] font-bold tracking-wider uppercase transition-all hover:border-white/10 hover:bg-white/5"
-							>
-								+ Minor
-							</button>
-							<button
-								onclick={() => bumpVersion('patch')}
-								class="rounded-xl border border-white/5 bg-white/[0.02] py-2 text-[10px] font-bold tracking-wider uppercase transition-all hover:border-white/10 hover:bg-white/5"
-							>
-								+ Patch
-							</button>
-						</div>
-
-						<p class="text-[9px] leading-relaxed font-medium text-stone-500">
-							Use Major for full rewrites, Minor for polish/additions, and Patch for small typo
-							fixes.
-						</p>
-					</div>
-				</div>
-
 				<!-- Serial Progress Teaser Card -->
 				<div
 					class="space-y-5 rounded-3xl border border-white/5 bg-stone-900/40 p-6 backdrop-blur-md"

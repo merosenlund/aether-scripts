@@ -21,12 +21,14 @@
 	import { TelemetryExtension } from './extensions/TelemetryExtension';
 	import { ActiveBlockHighlight } from './extensions/ActiveBlockHighlight';
 	import suggestion from './extensions/suggestion.svelte.ts';
+	import SnapshotModal from '../components/SnapshotModal.svelte';
 
 	import Collaboration from '@tiptap/extension-collaboration';
 	import * as Y from 'yjs';
 	import { SupabaseYjsProvider } from './yjs';
 	import { createSnapshot, type SceneStage } from '../api/versions';
 	import { notifications } from '$lib/stores/notifications';
+	import { invalidateAll } from '$app/navigation';
 
 	let {
 		content = $bindable(''),
@@ -511,7 +513,7 @@
 				ClockBlock,
 				TrackBlock,
 				OracleBlock,
-				ActiveBlockHighlight,
+				...(editable ? [ActiveBlockHighlight] : []),
 				Commands.configure({
 					suggestion,
 					serialId,
@@ -682,12 +684,46 @@
 
 	export const getIsSaving = () => isSaving;
 
+	let isSnapshotModalOpen = $state(false);
+	let previousSemanticVersion = $state('0.0.0');
+
 	export async function save() {
 		if (!editor || !sceneId) return;
+
 		isSaving = true;
 		try {
-			await createSnapshot(sceneId, 'Edit', editor.getJSON());
+			const { data: previousVersion } = await supabase
+				.from('scene_versions')
+				.select('semantic_version')
+				.eq('scene_id', sceneId)
+				.order('version_number', { ascending: false })
+				.limit(1)
+				.maybeSingle();
+
+			if (previousVersion && previousVersion.semantic_version) {
+				previousSemanticVersion = previousVersion.semantic_version;
+			} else {
+				previousSemanticVersion = '0.0.0';
+			}
+
+			isSnapshotModalOpen = true;
+		} catch (e) {
+			console.error('Failed to prepare snapshot modal:', e);
+			notifications.error('Failed to prepare snapshot.');
+		} finally {
+			isSaving = false;
+		}
+	}
+
+	async function handleSnapshotConfirm(name: string, semanticVersion: string) {
+		if (!editor || !sceneId) return;
+
+		isSnapshotModalOpen = false;
+		isSaving = true;
+		try {
+			await createSnapshot(sceneId, 'Edit', editor.getJSON(), name, semanticVersion);
 			notifications.success('Snapshot created! You are now in Editing mode.');
+			await invalidateAll();
 		} catch (e) {
 			console.error(e);
 			notifications.error('Failed to create snapshot.');
@@ -753,7 +789,12 @@
 <div
 	class="relative flex h-full flex-col rounded-2xl border border-white/10 bg-stone-900/50 shadow-xl backdrop-blur-md"
 >
-
+	<SnapshotModal 
+		isOpen={isSnapshotModalOpen} 
+		initialSemanticVersion={previousSemanticVersion}
+		onConfirm={handleSnapshotConfirm}
+		onCancel={() => isSnapshotModalOpen = false} 
+	/>
 
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->

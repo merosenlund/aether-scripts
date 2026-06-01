@@ -95,8 +95,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
       status, 
       scheduled_status, 
       scheduled_status_at,
-      content_blocks,
-      scene_versions(content)
+      scene_versions(content, name, semantic_version, created_at)
     `
 		)
 		.eq('serial_id', serialId)
@@ -122,8 +121,8 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
 			let contentHtml = '';
 			const activeVersion = (scene.scene_versions as any)?.[0];
 
-			// Fallback logic: check for snapshot version first, then fall back to live content_blocks
-			const jsonContent = (activeVersion && activeVersion.content) || scene.content_blocks;
+			// Strictly use the snapshot content, never fall back to the live editor "head"
+			const jsonContent = activeVersion?.content;
 
 			if (jsonContent) {
 				try {
@@ -152,7 +151,10 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
 				status: scene.status,
 				scheduled_status: scene.scheduled_status,
 				scheduled_status_at: scene.scheduled_status_at,
-				content: contentHtml
+				content: contentHtml,
+				version_name: activeVersion?.name,
+				version_semver: activeVersion?.semantic_version,
+				version_created_at: activeVersion?.created_at
 			};
 		});
 

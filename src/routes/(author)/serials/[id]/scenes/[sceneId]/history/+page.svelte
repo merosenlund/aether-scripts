@@ -1,8 +1,11 @@
 <script lang="ts">
 	import Tiptap from '$lib/editor/Tiptap.svelte';
-	import { History, Eye, ArrowRight, Calendar, AlertCircle } from '@lucide/svelte';
+	import { History, Eye, ArrowRight, Calendar, AlertCircle, Edit2 } from '@lucide/svelte';
 	import { fade, slide } from 'svelte/transition';
 	import { supabase } from '$lib/supabaseClient';
+	import SnapshotModal from '$lib/components/SnapshotModal.svelte';
+	import { updateSnapshotMetadata } from '$lib/api/versions';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data } = $props<{ data: any }>();
 
@@ -12,6 +15,38 @@
 	let selectedVersionNumber = $state<number | null>(null);
 	let selectedVersionContent = $state<any>('');
 	let isLoadingVersion = $state(false);
+
+	let isEditingSnapshot = $state(false);
+	let editingVersionId = $state<string | null>(null);
+	let editingVersionName = $state('');
+	let editingVersionSemVer = $state('0.0.0');
+
+	function openEditModal(e: Event, ver: any) {
+		e.stopPropagation();
+		editingVersionId = ver.id;
+		editingVersionName = ver.name || '';
+		editingVersionSemVer = ver.semantic_version || '0.0.0';
+		isEditingSnapshot = true;
+	}
+
+	async function handleEditConfirm(name: string, semanticVersion: string) {
+		if (!editingVersionId) return;
+		isEditingSnapshot = false;
+		try {
+			await updateSnapshotMetadata(editingVersionId, { name, semantic_version: semanticVersion });
+			await invalidateAll();
+			
+			if (selectedVersionId === editingVersionId) {
+				const activeVer = data.versions.find((v: any) => v.id === editingVersionId);
+				if (activeVer) {
+					activeVer.name = name;
+					activeVer.semantic_version = semanticVersion;
+				}
+			}
+		} catch (e) {
+			console.error('Failed to update snapshot metadata:', e);
+		}
+	}
 
 	async function selectVersion(versionId: string, versionNumber: number) {
 		if (selectedVersionId === versionId) return;
@@ -50,6 +85,15 @@
 </script>
 
 <div class="absolute inset-0 flex overflow-hidden bg-stone-950 font-sans text-stone-100">
+	<SnapshotModal 
+		isOpen={isEditingSnapshot} 
+		mode="edit"
+		initialName={editingVersionName}
+		initialSemanticVersion={editingVersionSemVer}
+		onConfirm={handleEditConfirm}
+		onCancel={() => isEditingSnapshot = false} 
+	/>
+
 	<!-- Left Sidebar: Snapshots List -->
 	<aside class="flex w-80 shrink-0 flex-col border-r border-white/5 bg-stone-900/10">
 		<div class="border-b border-white/5 bg-white/[0.02] p-6">
@@ -78,9 +122,12 @@
 				</div>
 			{:else}
 				{#each data.versions as ver}
-					<button
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_interactive_supports_focus -->
+					<div
+						role="button"
 						onclick={() => selectVersion(ver.id, ver.version_number)}
-						class="group flex w-full flex-col gap-2 rounded-2xl border p-4 text-left transition-all {selectedVersionId ===
+						class="group flex w-full flex-col gap-2 rounded-2xl border p-4 text-left transition-all cursor-pointer {selectedVersionId ===
 						ver.id
 							? 'bg-primary/10 border-primary shadow-[0_0_12px_rgba(var(--primary),0.05)]'
 							: 'border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/5'}"
@@ -93,18 +140,41 @@
 							>
 								Snapshot v{ver.version_number}
 							</span>
-							<span
-								class="rounded border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-bold text-stone-500 uppercase"
-							>
-								{ver.stage}
-							</span>
+							<div class="flex items-center gap-1">
+								<span
+									class="rounded border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-bold text-stone-500 uppercase"
+								>
+									{ver.stage}
+								</span>
+								<button
+									class="rounded-md border border-transparent p-1 text-stone-500 hover:border-white/10 hover:bg-white/5 hover:text-white"
+									onclick={(e) => openEditModal(e, ver)}
+									title="Edit Snapshot"
+								>
+									<Edit2 class="h-3 w-3" />
+								</button>
+							</div>
 						</div>
 
-						<div class="flex items-center gap-1.5 text-[10px] font-medium text-stone-500">
+						{#if ver.name || ver.semantic_version}
+							<div class="flex items-center gap-1.5 text-xs text-stone-400 mt-1">
+								{#if ver.name}
+									<span class="font-bold text-stone-300 truncate">{ver.name}</span>
+								{/if}
+								{#if ver.name && ver.semantic_version}
+									<span class="text-stone-600">•</span>
+								{/if}
+								{#if ver.semantic_version}
+									<span class="font-mono text-[10px]">v{ver.semantic_version}</span>
+								{/if}
+							</div>
+						{/if}
+
+						<div class="flex items-center gap-1.5 text-[10px] font-medium text-stone-500 mt-1">
 							<Calendar class="h-3 w-3 text-stone-600" />
 							<span>{formatDate(ver.created_at)}</span>
 						</div>
-					</button>
+					</div>
 				{/each}
 			{/if}
 		</div>
@@ -132,6 +202,7 @@
 				</p>
 			</div>
 		{:else}
+			{@const activeVer = data.versions.find((v: any) => v.id === selectedVersionId)}
 			<!-- Active Split Screen -->
 			<div class="grid h-full min-h-0 flex-1 grid-cols-2 gap-4 overflow-hidden p-6" in:fade>
 				<!-- Left: Past Version (Read-Only) -->
@@ -143,7 +214,14 @@
 							class="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-stone-500 uppercase"
 						>
 							<Eye class="h-3.5 w-3.5 text-stone-600" />
-							Snapshot v{selectedVersionNumber} (Read-Only)
+							Snapshot v{selectedVersionNumber} 
+							{#if activeVer?.name}
+								• {activeVer.name} 
+							{/if}
+							{#if activeVer?.semantic_version}
+								(v{activeVer.semantic_version})
+							{/if}
+							<span class="ml-1 opacity-50">(Read-Only)</span>
 						</span>
 					</div>
 					<div

@@ -364,9 +364,14 @@
 								{/if}
 
 								<span class="h-[1px] flex-1 bg-zinc-800/40"></span>
-								<span class="shrink-0 font-mono text-[9px] font-bold text-zinc-600 uppercase"
-									>{formatDate(scene?.published_at)}</span
-								>
+								{#if scene?.version_semver}
+									<span class="font-mono text-[9px] font-bold text-zinc-600 uppercase border border-zinc-800 rounded px-1.5 py-0.5">
+										v{scene.version_semver}
+									</span>
+								{/if}
+								<span class="shrink-0 font-mono text-[9px] font-bold text-zinc-600 uppercase">
+									{formatDate(scene?.version_created_at || scene?.published_at)}
+								</span>
 							</div>
 
 							<!-- Rendering modes selection rendering -->
