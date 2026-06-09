@@ -15,7 +15,7 @@ export const StatBlock = Node.create({
 			mergeAttributes(HTMLAttributes, {
 				'data-type': 'stat-block',
 				class:
-					'bg-stone-50 dark:bg-stone-900 border border-stone-300 dark:border-stone-700 p-4 my-4 rounded-lg shadow-sm font-serif'
+					'bg-stone-50 dark:bg-stone-900/40 border border-stone-300 dark:border-stone-700/50 p-4 my-4 rounded-lg shadow-sm font-serif'
 			}),
 			0
 		];

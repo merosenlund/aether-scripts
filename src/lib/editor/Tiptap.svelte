@@ -22,6 +22,9 @@
 	import { ActiveBlockHighlight } from './extensions/ActiveBlockHighlight';
 	import suggestion from './extensions/suggestion.svelte.ts';
 	import SnapshotModal from '../components/SnapshotModal.svelte';
+	import { editorSettings } from '$lib/stores/settings.svelte';
+	import { Settings } from '@lucide/svelte';
+	import { TypewriterScroll } from './extensions/TypewriterScroll';
 
 	import Collaboration from '@tiptap/extension-collaboration';
 	import * as Y from 'yjs';
@@ -75,6 +78,7 @@
 	// Without this, the function fires during Yjs sync and permanently
 	// nullifies event block_ids that haven't appeared in the DOM yet.
 	let isEditorReady = $state(false);
+	let showSettings = $state(false);
 
 	$effect(() => {
 		if (staticSaveStatus === 'error' || yjsSaveStatus === 'error') {
@@ -514,6 +518,7 @@
 				TrackBlock,
 				OracleBlock,
 				...(editable ? [ActiveBlockHighlight] : []),
+				TypewriterScroll,
 				Commands.configure({
 					suggestion,
 					serialId,
@@ -522,6 +527,7 @@
 			],
 			editorProps: {
 				attributes: {
+					spellcheck: editorSettings.spellcheck ? "true" : "false",
 					class:
 						'prose prose-stone dark:prose-invert max-w-none focus:outline-none text-lg leading-relaxed text-stone-300 pl-24 pr-8 py-8 pb-64 min-h-full cursor-text'
 				},
@@ -645,6 +651,13 @@
 	});
 
 	$effect(() => {
+		// Update spellcheck dynamically
+		if (editor?.view?.dom) {
+			editor.view.dom.setAttribute('spellcheck', editorSettings.spellcheck ? "true" : "false");
+		}
+	});
+
+	$effect(() => {
 		// Determine the source of truth for the initial injection
 		const sourceContent = initialContent || content;
 
@@ -718,12 +731,12 @@
 	async function handleSnapshotConfirm(name: string, semanticVersion: string) {
 		if (!editor || !sceneId) return;
 
-		isSnapshotModalOpen = false;
 		isSaving = true;
 		try {
 			await createSnapshot(sceneId, 'Edit', editor.getJSON(), name, semanticVersion);
 			notifications.success('Snapshot created! You are now in Editing mode.');
 			await invalidateAll();
+			isSnapshotModalOpen = false;
 		} catch (e) {
 			console.error(e);
 			notifications.error('Failed to create snapshot.');
@@ -789,8 +802,47 @@
 <div
 	class="relative flex h-full flex-col rounded-2xl border border-white/10 bg-stone-900/50 shadow-xl backdrop-blur-md"
 >
+	{#if editable}
+		<div class="absolute top-4 right-4 z-10 flex flex-col items-end">
+			<button
+				onclick={() => showSettings = !showSettings}
+				class="p-2 text-stone-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+				title="Editor Settings"
+			>
+				<Settings size={18} />
+			</button>
+			
+			{#if showSettings}
+				<div class="mt-2 w-48 rounded-xl border border-white/10 bg-stone-900 p-4 shadow-xl backdrop-blur-xl">
+					<h4 class="mb-4 text-[10px] font-bold tracking-widest text-stone-500 uppercase">Editor Preferences</h4>
+					<div class="flex flex-col gap-4">
+						<label class="flex cursor-pointer items-center justify-between text-xs font-medium text-stone-300">
+							<span>Typewriter Scroll</span>
+							<input 
+								type="checkbox" 
+								checked={editorSettings.typewriterMode}
+								onchange={(e) => editorSettings.setTypewriterMode(e.currentTarget.checked)}
+								class="accent-primary cursor-pointer h-4 w-4 rounded border-white/10 bg-stone-900"
+							/>
+						</label>
+						<label class="flex cursor-pointer items-center justify-between text-xs font-medium text-stone-300">
+							<span>Spellcheck</span>
+							<input 
+								type="checkbox" 
+								checked={editorSettings.spellcheck}
+								onchange={(e) => editorSettings.setSpellcheck(e.currentTarget.checked)}
+								class="accent-primary cursor-pointer h-4 w-4 rounded border-white/10 bg-stone-900"
+							/>
+						</label>
+					</div>
+				</div>
+			{/if}
+		</div>
+	{/if}
+
 	<SnapshotModal 
 		isOpen={isSnapshotModalOpen} 
+		isSaving={isSaving}
 		initialSemanticVersion={previousSemanticVersion}
 		onConfirm={handleSnapshotConfirm}
 		onCancel={() => isSnapshotModalOpen = false} 

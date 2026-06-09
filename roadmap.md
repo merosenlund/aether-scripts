@@ -120,12 +120,12 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 
 This phase captures improvements and refinements discovered during live usage of the deployed app.
 
-- [ ] **Loading Feedback**: Add clear visual feedback when actions are processing (e.g., loading spinners on buttons like Login, and global navigation progress indicators during page transitions).
+- [x] **Loading Feedback**: Add clear visual feedback when actions are processing (e.g., loading spinners on buttons like Login, and global navigation progress indicators during page transitions).
 ### Editor & Prose UX
-- [ ] **GM Block Splitting**: Pressing `Enter` inside a GM block should create a new consecutive GM block (so large sections can be broken up for better event anchoring). Pressing `Enter` on an empty GM block should break out into a standard prose block.
-- [ ] **Typewriter Scrolling**: Add a toggleable auto-scroll feature to keep the active cursor vertically centered on the screen, especially useful during Play mode.
-- [ ] **Spellcheck Toggle**: Add a setting to toggle browser typo squigglies (`spellcheck="false"`) on and off in the editor to reduce visual clutter during drafting.
-- [ ] **Subtle Block Backgrounds**: Tone down the background colors for specially formatted blocks (e.g., GM blocks) so that grammar checker underlines (like ProWritingAid) are more visible.
+- [x] **GM Block Splitting**: Pressing `Enter` inside a GM block should create a new consecutive GM block (so large sections can be broken up for better event anchoring). Pressing `Enter` on an empty GM block should break out into a standard prose block.
+- [x] **Typewriter Scrolling**: Add a toggleable auto-scroll feature to keep the active cursor vertically centered on the screen, especially useful during Play mode.
+- [x] **Spellcheck Toggle**: Add a setting to toggle browser typo squigglies (`spellcheck="false"`) on and off in the editor to reduce visual clutter during drafting.
+- [x] **Subtle Block Backgrounds**: Tone down the background colors for specially formatted blocks (e.g., GM blocks) so that grammar checker underlines (like ProWritingAid) are more visible.
 
 ### History & Versioning UX
 - [x] **Snapshot Semantic Versioning**: Allow manual editing of semantic version numbers in the snapshot history tab. *Should semantic versions also be displayed alongside snapshots in the diff view?*

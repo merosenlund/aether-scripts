@@ -27,7 +27,7 @@ export const DiceRoller = Node.create({
 			mergeAttributes(HTMLAttributes, {
 				'data-type': 'dice-roller',
 				class:
-					'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 cursor-pointer select-none mx-1'
+					'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100/50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 cursor-pointer select-none mx-1 border border-blue-500/20'
 			}),
 			text
 		];
