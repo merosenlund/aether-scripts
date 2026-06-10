@@ -86,7 +86,7 @@
 				</div>
 			{:else}
 				<div class="max-w-3xl space-y-8">
-					<h1 class="text-6xl leading-[1.1] font-bold tracking-tighter text-white">
+					<h1 class="text-4xl sm:text-5xl md:text-6xl leading-[1.1] font-bold tracking-tighter text-white">
 						Immerse yourself in <span
 							class="bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent"
 							>Actual Play</span
@@ -97,10 +97,10 @@
 						where lore evolves as you read and the mechanics behind the story are just a toggle
 						away.
 					</p>
-					<div class="flex gap-4">
+					<div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
 						<a
 							href="/library"
-							class="bg-primary text-primary-foreground shadow-primary/20 flex items-center gap-2 rounded-2xl px-8 py-4 text-lg font-bold shadow-xl transition-all hover:opacity-90"
+							class="bg-primary text-primary-foreground shadow-primary/20 flex items-center justify-center gap-2 rounded-2xl px-8 py-4 text-lg font-bold shadow-xl transition-all hover:opacity-90 w-full sm:w-auto text-center"
 						>
 							Start Reading
 							<ArrowRight class="h-5 w-5" />
@@ -108,7 +108,7 @@
 						{#if data.userRole === 'author'}
 							<a
 								href="/write"
-								class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-lg font-bold text-white backdrop-blur-md transition-all hover:bg-white/10"
+								class="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-lg font-bold text-white backdrop-blur-md transition-all hover:bg-white/10 w-full sm:w-auto text-center"
 							>
 								<PenTool class="h-5 w-5" />
 								Author Workspace

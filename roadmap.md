@@ -116,6 +116,21 @@ Aether Scripts is a curated, digital-first actual play fiction platform designed
 - [x] **Supabase Database Backups & Point-in-Time Recovery**: Confirm database backups are enabled and point-in-time recovery is verified for production peace of mind.
 - [x] **Basic Error Tracking & Logging**: Integrate simple runtime error monitoring (e.g., Sentry, Supabase Logs, or structured logging) to catch any silent production crashes.
 
+## Phase 10.5: Mobile UX & Auth Lockdown (Invite-Only)
+
+### Mobile UX Improvements
+- [x] **Scene Tap vs Drag on Mobile**: Disable scene drag-and-drop by default on serial storyboard, allowing scenes to be opened via simple tap. Add a toggleable "Reorder Mode" button to enable drag-and-drop explicitly.
+- [x] **Responsive Sidebar with Hamburger Menu**: Implement a mobile-friendly overlay sidebar on viewports below `md` breakpoint, accessible via a floating hamburger button.
+- [x] **Mobile-Friendly Scene Editor Header**: Optimize layout on narrow screens (truncate scene titles, hide text labels on tabs, adjust height).
+- [x] **Responsive Hero & Button Layouts**: Wrap buttons and scale down large hero text sizes (e.g. homepage `text-6xl` to responsive sizing) for mobile screens.
+
+### Auth Lockdown & Invite-Only Flow
+- [x] **Disable Public Signup**: Configure Supabase to turn off public signups and restrict user creation to the email invite flow (magic links) via the admin console.
+- [x] **Redesigned Early-Access Login Page**: Update `/login` to mention the early development status, show a waitlist interest-capture form (storing email and optional interest details), and offer a login form for invited users.
+- [x] **Server-Side Auth Enforcement**: Update `hooks.server.ts` to block and redirect all unauthenticated requests to `/login`, except for the `/login` and `/auth/*` routes.
+- [x] **Waitlist Database Table**: Create a `waitlist` table in Supabase with appropriate Row Level Security (RLS) policies allowing anyone to insert (public sign-up interest) but only admin/service_role to read.
+- [x] **Auth Callback Endpoint**: Add or verify `/auth/callback` route for handling Supabase confirmation links and redirecting properly.
+
 ## Phase 11: Polish & User Experience (UX)
 
 This phase captures improvements and refinements discovered during live usage of the deployed app.

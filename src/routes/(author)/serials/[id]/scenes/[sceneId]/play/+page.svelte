@@ -1,10 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Reader from '$lib/components/Reader.svelte';
 	import Tiptap from '$lib/editor/Tiptap.svelte';
 	import WikiSidebar from '$lib/components/WikiSidebar.svelte';
 	import MechanicsTab from '$lib/components/mechanics/MechanicsTab.svelte';
 	import EditorTelemetryHUD from '$lib/components/editor/EditorTelemetryHUD.svelte';
-	import { PenTool, Eye, Save, Dices, Trash2, Clock, BookOpen, Activity } from '@lucide/svelte';
+	import { PenTool, Eye, Save, Dices, Trash2, Clock, BookOpen, Activity, Sidebar } from '@lucide/svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { gameSession } from '$lib/stores/gameSession.svelte';
 
@@ -19,6 +20,7 @@
 	let editorComponent = $state<any>();
 	let cursorState = $state<any>({ clocks: {} });
 	let saveStatus = $state<'synced' | 'saving' | 'error'>('synced');
+	let showSidebar = $state(false);
 
 	// Sidebar-initiated editor highlighting
 	function handleHighlightBlock(blockId: string | null) {
@@ -32,13 +34,17 @@
 			editorComponent?.scrollToBlock(blockId);
 		}
 	}
+
+	onMount(() => {
+		showSidebar = window.innerWidth >= 768;
+	});
 </script>
 
 <div class="absolute inset-0 flex flex-col overflow-hidden bg-stone-950 font-sans text-stone-100">
 	<div class="flex min-h-0 flex-1 overflow-hidden">
 		<!-- Main Play Area -->
 		<div
-			class="animate-fade-in relative flex flex-1 flex-col items-center overflow-hidden px-8 pt-8"
+			class="animate-fade-in relative flex flex-1 flex-col items-center overflow-hidden px-4 md:px-8 pt-4 md:pt-8"
 		>
 			<div class="flex h-full min-h-0 w-full max-w-4xl flex-col">
 				<!-- Controls -->
@@ -75,14 +81,29 @@
 						>
 							<Eye class="h-4 w-4" />
 						</button>
+						
+						<button
+							onclick={() => (showSidebar = !showSidebar)}
+							class="rounded-xl border p-2.5 shadow-sm transition-all {showSidebar
+								? 'bg-primary/20 border-primary text-primary'
+								: 'border-white/10 bg-white/5 text-stone-400 hover:border-white/20 hover:text-white'}"
+							title="Toggle Sidebar"
+						>
+							<Sidebar class="h-4 w-4" />
+						</button>
+
 						{#if !isPreview}
 							<button
 								onclick={() => editorComponent?.save()}
 								disabled={editorComponent?.getIsSaving?.()}
-								class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-5 py-2 text-xs font-bold shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
+								class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-3 py-2 md:px-5 md:py-2 text-xs font-bold shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
 							>
-								<Save class="mr-2 h-3.5 w-3.5" />
-								{editorComponent?.getIsSaving?.() ? 'Saving...' : 'Create Snapshot'}
+								<Save class="mr-1.5 md:mr-2 h-3.5 w-3.5" />
+								<span>{editorComponent?.getIsSaving?.() ? 'Saving...' : ''}</span>
+								{#if !editorComponent?.getIsSaving?.()}
+									<span class="hidden md:inline">Create Snapshot</span>
+									<span class="inline md:hidden">Snapshot</span>
+								{/if}
 							</button>
 						{/if}
 					</div>
@@ -112,9 +133,21 @@
 			</div>
 		</div>
 
+		{#if showSidebar}
+			<!-- Mobile Backdrop Overlay -->
+			<div
+				onclick={() => (showSidebar = false)}
+				keydown={(e) => e.key === 'Escape' && (showSidebar = false)}
+				role="button"
+				tabindex="0"
+				class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
+			></div>
+		{/if}
+
 		<!-- Sidebar: Assistive Tools -->
 		<aside
-			class="z-20 flex w-80 flex-col overflow-y-auto border-l border-white/5 bg-stone-900/20 shadow-2xl backdrop-blur-3xl"
+			class="fixed inset-y-0 right-0 z-40 flex w-[85vw] max-w-sm flex-col overflow-y-auto border-l border-white/5 bg-stone-900 shadow-2xl backdrop-blur-3xl transition-transform duration-300 md:relative md:inset-auto md:z-20 md:flex md:w-80
+			{showSidebar ? 'translate-x-0' : 'translate-x-full md:hidden'}"
 		>
 			<div class="flex gap-2 border-b border-white/5 bg-white/5 p-4">
 				<button

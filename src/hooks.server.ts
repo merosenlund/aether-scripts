@@ -50,15 +50,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Basic route protection
 	const routeId = event.route.id || '';
-	const isAuthorRoute = routeId.startsWith('/(author)');
-	const isAccountRoute = routeId.startsWith('/account');
-	const isSettingsRoute = routeId.startsWith('/settings');
+	const isPublicRoute = routeId === '/login' || routeId.startsWith('/auth');
 
-	if (isAuthorRoute || isAccountRoute || isSettingsRoute) {
+	if (!isPublicRoute) {
 		if (!session) {
 			return new Response('Redirect', { status: 303, headers: { Location: '/login' } });
 		}
 
+		const isAuthorRoute = routeId.startsWith('/(author)');
 		if (isAuthorRoute) {
 			// Check role
 			const { data: roleData } = await event.locals.supabase

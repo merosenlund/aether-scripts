@@ -19,9 +19,9 @@
 <div class="relative flex h-screen flex-col overflow-hidden bg-stone-950 font-sans text-stone-100">
 	<!-- Top Navigation Header -->
 	<header
-		class="z-30 flex h-16 shrink-0 items-center justify-between border-b border-white/5 bg-stone-900/40 px-6 shadow-md backdrop-blur-xl"
+		class="z-30 flex h-16 shrink-0 items-center justify-between border-b border-white/5 bg-stone-900/40 px-4 sm:px-6 shadow-md backdrop-blur-xl"
 	>
-		<div class="flex items-center gap-4">
+		<div class="flex items-center gap-2.5 sm:gap-4">
 			<a
 				data-component="back-link"
 				href="/serials/{serialId}"
@@ -32,10 +32,17 @@
 			</a>
 			<div class="h-4 w-px bg-white/10"></div>
 			<div>
-				<h2 class="mb-1 text-xs leading-none font-bold tracking-widest text-stone-500 uppercase">
-					{data.scene.serials?.title || 'Serial'}
-				</h2>
-				<h1 class="max-w-xs truncate text-sm leading-none font-bold text-white/95 sm:max-w-md">
+				<div class="flex items-center gap-1.5 mb-0.5 sm:mb-1">
+					<h2 class="text-[10px] leading-none font-bold tracking-widest text-stone-500 uppercase max-w-[80px] truncate sm:max-w-[150px]">
+						{data.scene.serials?.title || 'Serial'}
+					</h2>
+					<span
+						class="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-emerald-400 uppercase md:hidden"
+					>
+						{data.scene.status || 'Playing'}
+					</span>
+				</div>
+				<h1 class="max-w-[100px] truncate text-xs sm:text-sm leading-none font-bold text-white/95 sm:max-w-md">
 					{data.scene.author_title || `Scene ${data.scene.order_index}`}
 				</h1>
 			</div>
@@ -48,7 +55,7 @@
 				<a
 					data-component="nav-tab"
 					href="/serials/{serialId}/scenes/{sceneId}/{tab.path}"
-					class="relative flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold transition-all {activeTab ===
+					class="relative flex items-center gap-1.5 rounded-lg px-2.5 sm:px-4 py-1.5 text-xs font-bold transition-all {activeTab ===
 					tab.id
 						? 'text-white'
 						: 'text-stone-400 hover:text-white'}"
@@ -60,13 +67,13 @@
 						></div>
 					{/if}
 					<Icon class="h-3.5 w-3.5" />
-					<span>{tab.name}</span>
+					<span class="hidden sm:inline">{tab.name}</span>
 				</a>
 			{/each}
 		</nav>
 
-		<!-- Right Side Status Badge -->
-		<div class="flex items-center gap-3">
+		<!-- Right Side Status Badge (Hidden on mobile) -->
+		<div class="hidden md:flex items-center gap-3">
 			<span
 				class="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold tracking-widest text-emerald-400 uppercase shadow-[0_0_8px_rgba(16,185,129,0.05)]"
 			>

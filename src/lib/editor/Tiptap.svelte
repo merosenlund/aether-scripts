@@ -537,7 +537,7 @@
 				attributes: {
 					spellcheck: editorSettings.spellcheck ? "true" : "false",
 					class:
-						'prose prose-stone dark:prose-invert max-w-none focus:outline-none text-lg leading-relaxed text-stone-300 pl-24 pr-8 py-8 pb-64 min-h-full cursor-text'
+						'prose prose-stone dark:prose-invert max-w-none focus:outline-none text-lg leading-relaxed text-stone-300 px-6 md:px-16 py-6 md:py-8 pb-64 min-h-full cursor-text'
 				},
 				handleDOMEvents: {
 					beforeinput: () => {

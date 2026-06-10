@@ -61,43 +61,32 @@ export const actions = {
 		}
 	},
 
-	register: async ({ request, locals: { supabase } }) => {
+	joinWaitlist: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
 		const email = (formData.get('email') as string)?.trim();
-		const password = formData.get('password') as string;
+		const interestNote = (formData.get('interestNote') as string)?.trim() || null;
 
-		if (!email || !password) {
-			return fail(400, { error: 'Please enter both email and password' });
+		if (!email) {
+			return fail(400, { waitlistError: 'Please enter a valid email address.' });
 		}
 
 		try {
-			const { data, error } = await supabase.auth.signUp({
+			const { error } = await supabase.from('waitlist').insert({
 				email,
-				password
+				interest_note: interestNote
 			});
 
 			if (error) {
-				console.error('Supabase signUp error object:', error);
-				let errorMessage = error.message;
-				if (errorMessage === '{}' || !errorMessage) {
-					errorMessage = JSON.stringify(error);
+				if (error.code === '23505') {
+					return fail(400, { waitlistError: 'This email is already on our waitlist!' });
 				}
-				return fail(400, { error: errorMessage });
+				return fail(400, { waitlistError: error.message });
 			}
 
-			// Fallback if no user is returned immediately (e.g. email confirmation required)
-			if (!data.user) {
-				return fail(400, { error: 'Registration failed. Please try again.' });
-			}
-
-			const redirectPath = await getRedirectPath(supabase, data.user.id);
-			throw redirect(303, redirectPath);
+			return { waitlistSuccess: true };
 		} catch (e: any) {
-			if (e && typeof e === 'object' && 'status' in e && 'location' in e) {
-				throw e; // Rethrow SvelteKit redirects
-			}
-			console.error('Register action error:', e);
-			return fail(500, { error: e.message || 'An unexpected error occurred during registration.' });
+			console.error('Waitlist action error:', e);
+			return fail(500, { waitlistError: e.message || 'An unexpected error occurred.' });
 		}
 	}
 };

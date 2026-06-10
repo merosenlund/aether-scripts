@@ -158,7 +158,7 @@
 </script>
 
 <div
-	class="relative z-30 flex w-full shrink-0 items-center justify-between border-t border-white/5 bg-stone-900/90 px-8 py-3.5 text-xs font-medium text-stone-400 shadow-2xl backdrop-blur-xl"
+	class="relative z-30 flex w-full shrink-0 items-center justify-between border-t border-white/5 bg-stone-900/90 px-4 py-2.5 md:px-8 md:py-3.5 text-xs font-medium text-stone-400 shadow-2xl backdrop-blur-xl"
 >
 	<!-- Glowing Ambient Line at Top of Footer -->
 	<div
@@ -166,47 +166,48 @@
 	></div>
 
 	<!-- Left: Live Word Counts -->
-	<div class="flex items-center gap-6">
-		<div class="flex items-center gap-2">
+	<div class="flex items-center gap-3 md:gap-6">
+		<div class="flex items-center gap-1.5 md:gap-2" title="Scene Word Count">
 			<Type class="h-3.5 w-3.5 text-stone-500" />
-			<span class="text-[10px] font-bold tracking-wider text-stone-500 uppercase">Scene:</span>
-			<span class="font-mono text-sm font-bold text-stone-200"
+			<span class="hidden md:inline text-[10px] font-bold tracking-wider text-stone-500 uppercase">Scene:</span>
+			<span class="font-mono text-xs md:text-sm font-bold text-stone-200"
 				>{telemetryStore.currentWordCount}</span
 			>
-			<span class="text-stone-600">words</span>
+			<span class="hidden md:inline text-stone-600">words</span>
 		</div>
 
 		<div class="h-4 w-px bg-white/10"></div>
 
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-1.5 md:gap-2" title="Series Word Count">
 			<BarChart2 class="h-3.5 w-3.5 text-stone-500" />
-			<span class="text-[10px] font-bold tracking-wider text-stone-500 uppercase"
+			<span class="hidden md:inline text-[10px] font-bold tracking-wider text-stone-500 uppercase"
 				>Series Total:</span
 			>
-			<span class="font-mono text-sm font-bold text-stone-200">{seriesWordCount}</span>
-			<span class="text-stone-600">words</span>
+			<span class="font-mono text-xs md:text-sm font-bold text-stone-200">{seriesWordCount}</span>
+			<span class="hidden md:inline text-stone-600">words</span>
 		</div>
 	</div>
 
 	<!-- Center: Session Progress Delta -->
 	<div
-		class="flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.03] px-4 py-1 shadow-inner"
+		class="flex items-center gap-1.5 md:gap-2 rounded-full border border-white/5 bg-white/[0.03] px-2.5 py-0.5 md:px-4 md:py-1 shadow-inner"
+		title="Words this session"
 	>
 		{#if sessionWordsDelta >= 0}
-			<span class="font-mono text-[11px] font-bold text-emerald-400">+{sessionWordsDelta}</span>
+			<span class="font-mono text-[10px] md:text-[11px] font-bold text-emerald-400">+{sessionWordsDelta}</span>
 		{:else}
-			<span class="font-mono text-[11px] font-bold text-rose-400">{sessionWordsDelta}</span>
+			<span class="font-mono text-[10px] md:text-[11px] font-bold text-rose-400">{sessionWordsDelta}</span>
 		{/if}
-		<span class="text-[10px] font-bold tracking-wider text-stone-600 uppercase">this session</span>
+		<span class="hidden md:inline text-[10px] font-bold tracking-wider text-stone-600 uppercase">this session</span>
 	</div>
 
 	<!-- Right: Session Telemetry Stopwatch & Speed -->
-	<div class="flex items-center gap-6">
+	<div class="flex items-center gap-3 md:gap-6">
 		<!-- Active Duration -->
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-1.5 md:gap-2" title="Elapsed Time">
 			<Clock class="h-3.5 w-3.5 text-stone-500" />
-			<span class="text-[10px] font-bold tracking-wider text-stone-500 uppercase">Elapsed:</span>
-			<span class="font-mono text-sm font-bold text-stone-200"
+			<span class="hidden md:inline text-[10px] font-bold tracking-wider text-stone-500 uppercase">Elapsed:</span>
+			<span class="font-mono text-xs md:text-sm font-bold text-stone-200"
 				>{formatTime(telemetryStore.durationSeconds)}</span
 			>
 		</div>
@@ -214,15 +215,15 @@
 		<div class="h-4 w-px bg-white/10"></div>
 
 		<!-- Rolling WPM -->
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-1.5 md:gap-2" title="Typing Speed">
 			<Zap class="h-3.5 w-3.5 text-stone-500" />
-			<span class="text-[10px] font-bold tracking-wider text-stone-500 uppercase">Speed:</span>
-			<span class="font-mono text-sm font-bold text-stone-200">{telemetryStore.wpm}</span>
-			<span class="text-[10px] font-bold tracking-wider text-stone-600 uppercase">WPM</span>
+			<span class="hidden md:inline text-[10px] font-bold tracking-wider text-stone-500 uppercase">Speed:</span>
+			<span class="font-mono text-xs md:text-sm font-bold text-stone-200">{telemetryStore.wpm}</span>
+			<span class="text-[9px] md:text-[10px] font-bold tracking-wider text-stone-600 uppercase">WPM</span>
 		</div>
 
 		<!-- Keystroke effort indicators (hidden on small screen) -->
-		<div class="hidden items-center gap-2 sm:flex">
+		<div class="hidden items-center gap-2 lg:flex">
 			<div class="mr-4 h-4 w-px bg-white/10"></div>
 			<span class="text-[10px] font-bold tracking-wider text-stone-500 uppercase">Keystrokes:</span>
 			<span class="font-mono font-bold text-stone-300">{telemetryStore.keystrokes}</span>

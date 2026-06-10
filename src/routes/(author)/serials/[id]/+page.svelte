@@ -27,6 +27,7 @@
 	let newArcTitle = $state('');
 	let isSavingOrder = $state(false);
 	let orderSaved = $state(false);
+	let reorderMode = $state(false);
 
 	let isExporting = $state(false);
 	let exportError = $state<string | null>(null);
@@ -147,11 +148,11 @@
 	}
 </script>
 
-<div class="relative flex h-full flex-col overflow-hidden bg-stone-950 font-sans text-stone-100">
+<div class="relative flex min-h-full flex-col bg-stone-950 font-sans text-stone-100 md:h-full md:overflow-hidden">
 	<!-- Hero Section -->
 	<div
-		class="h-56 bg-gradient-to-br {data.serial.color_theme ||
-			'from-violet-600 to-indigo-600'} relative shrink-0 overflow-hidden"
+		class="relative bg-gradient-to-br {data.serial.color_theme ||
+			'from-violet-600 to-indigo-600'} shrink-0 overflow-hidden min-h-[160px] md:h-56"
 	>
 		<div class="absolute inset-0 bg-black/40"></div>
 		<div
@@ -160,7 +161,7 @@
 		></div>
 
 		<div
-			class="absolute right-0 bottom-0 left-0 flex items-end justify-between bg-gradient-to-t from-stone-950 to-transparent p-8"
+			class="relative md:absolute md:bottom-0 md:inset-x-0 z-10 flex flex-col gap-4 items-start md:flex-row md:items-end md:justify-between bg-gradient-to-t from-stone-950 to-transparent p-6 sm:p-8 pt-20 pb-6 md:pt-8 md:pb-8"
 		>
 			<div class="space-y-2">
 				<div
@@ -171,13 +172,13 @@
 					</span>
 					<span class="text-stone-300">Author Console</span>
 				</div>
-				<h1 class="font-serif text-4xl font-bold drop-shadow-xl">{data.serial.title}</h1>
+				<h1 class="font-serif text-3xl sm:text-4xl font-bold drop-shadow-xl">{data.serial.title}</h1>
 			</div>
-			<div class="flex gap-3">
+			<div class="grid grid-cols-2 gap-2.5 w-full md:flex md:flex-row md:w-auto">
 				<!-- Order status indicators -->
 				{#if isSavingOrder}
 					<div
-						class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-stone-400"
+						class="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-stone-400 w-full md:w-auto h-10 md:h-auto"
 						transition:fade
 					>
 						<div
@@ -187,7 +188,7 @@
 					</div>
 				{:else if orderSaved}
 					<div
-						class="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-400"
+						class="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-400 w-full md:w-auto h-10 md:h-auto"
 						transition:fade
 					>
 						<CheckCircle class="h-3.5 w-3.5" />
@@ -200,9 +201,9 @@
 						showSettings = !showSettings;
 						showAddArc = false;
 					}}
-					class="flex items-center rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-bold shadow-lg backdrop-blur-md transition-all hover:bg-white/10"
+					class="flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 md:px-4 md:py-3 text-xs font-bold shadow-lg backdrop-blur-md transition-all hover:bg-white/10 w-full md:w-auto h-10 md:h-auto whitespace-nowrap"
 				>
-					<Settings class="mr-2 h-4 w-4" />
+					<Settings class="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
 					Settings
 				</button>
 
@@ -211,27 +212,27 @@
 						showAddArc = !showAddArc;
 						showSettings = false;
 					}}
-					class="flex items-center rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-bold shadow-lg backdrop-blur-md transition-all hover:bg-white/10"
+					class="flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 md:px-4 md:py-3 text-xs font-bold shadow-lg backdrop-blur-md transition-all hover:bg-white/10 w-full md:w-auto h-10 md:h-auto whitespace-nowrap"
 				>
-					<FolderPlus class="mr-2 h-4 w-4" />
+					<FolderPlus class="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
 					Add Arc
 				</button>
 
 				<a
 					data-component="manage-wiki-button"
 					href="/serials/{data.serial.id}/wiki"
-					class="flex items-center rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-bold shadow-lg backdrop-blur-md transition-all hover:bg-white/10"
+					class="flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 md:px-4 md:py-3 text-xs font-bold shadow-lg backdrop-blur-md transition-all hover:bg-white/10 w-full md:w-auto h-10 md:h-auto whitespace-nowrap"
 				>
-					<BookOpen class="mr-2 h-4 w-4 text-stone-400" />
+					<BookOpen class="mr-1.5 h-3.5 w-3.5 text-stone-400 sm:mr-2 sm:h-4 sm:w-4" />
 					Manage Wiki
 				</a>
 
-				<form method="POST" action="?/createScene">
+				<form method="POST" action="?/createScene" class="w-full">
 					<button
 						type="submit"
-						class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-4 py-2.5 text-xs font-bold shadow-lg transition-all hover:opacity-90"
+						class="bg-primary text-primary-foreground shadow-primary/20 flex items-center justify-center rounded-xl px-3 py-2.5 md:px-4 md:py-3 text-xs font-bold shadow-lg transition-all hover:opacity-90 w-full h-10 md:h-auto whitespace-nowrap"
 					>
-						<Plus class="mr-2 h-4 w-4" />
+						<Plus class="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
 						New Scene
 					</button>
 				</form>
@@ -240,7 +241,7 @@
 	</div>
 
 	<!-- Content Workspace split into Columns -->
-	<div class="relative flex-1 overflow-y-auto p-8">
+	<div class="relative flex-1 p-4 sm:p-6 md:p-8 md:overflow-y-auto">
 		<!-- Add Arc Slide-down Dialog -->
 		{#if showAddArc}
 			<div
@@ -479,18 +480,27 @@
 			</div>
 		{/if}
 
-		<div class="mx-auto grid h-full max-w-5xl grid-cols-1 gap-8 lg:grid-cols-3">
+		<div class="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3 md:h-full">
 			<!-- Main Columns: Arcs & Scene boards -->
 			<div class="space-y-8 pb-32 lg:col-span-2">
-				<h2 class="flex items-center border-b border-white/5 pb-3 text-xl font-bold">
-					<Layers class="text-primary mr-3 h-5 w-5" />
-					Storyboards & Arcs (Drag & Drop)
+				<h2 class="flex items-center justify-between border-b border-white/5 pb-3 text-xl font-bold">
+					<span class="flex items-center">
+						<Layers class="text-primary mr-3 h-5 w-5" />
+						Storyboards & Arcs
+					</span>
+					<button
+						type="button"
+						onclick={() => (reorderMode = !reorderMode)}
+						class="rounded-xl border px-3 py-1.5 text-xs font-bold transition-all {reorderMode ? 'bg-primary text-primary-foreground border-transparent shadow-lg shadow-primary/20' : 'border-white/10 bg-white/5 text-stone-300 hover:bg-white/10'}"
+					>
+						{reorderMode ? 'Done Reordering' : 'Reorder Scenes'}
+					</button>
 				</h2>
 
 				<!-- Storyboard container -->
 				<div class="space-y-6">
 					{#each data.arcs as arc (arc.id)}
-						<div class="space-y-4 rounded-3xl border border-white/5 bg-stone-900/20 p-5">
+						<div class="space-y-3 sm:space-y-4 rounded-2xl sm:rounded-3xl border border-white/5 bg-stone-900/20 p-4 sm:p-5">
 							<div class="flex items-center justify-between">
 								<h3 class="flex items-center gap-2 font-serif text-lg font-bold text-white/90">
 									<span class="bg-primary/60 h-2 w-2 rounded-full"></span>
@@ -505,7 +515,7 @@
 
 							<!-- Dnd Zone for this Arc -->
 							<div
-								use:dndzone={{ items: scenesByArc[arc.id] || [], flipDurationMs }}
+								use:dndzone={{ items: scenesByArc[arc.id] || [], flipDurationMs, dragDisabled: !reorderMode }}
 								onconsider={(e) => handleConsider(arc.id, e)}
 								onfinalize={(e) => handleFinalize(arc.id, e)}
 								class="min-h-16 space-y-2 rounded-2xl border border-dashed border-white/5 bg-black/10 p-2 transition-colors"
@@ -520,7 +530,12 @@
 											<a
 												data-component="scene-card-link"
 												href="/serials/{data.serial.id}/scenes/{scene.id}/play"
-												class="flex cursor-grab items-center justify-between rounded-xl border border-white/5 bg-stone-900/60 p-3.5 transition-all hover:border-white/10 hover:bg-white/5 active:cursor-grabbing"
+												onclick={(e) => {
+													if (reorderMode) {
+														e.preventDefault();
+													}
+												}}
+												class="flex items-center justify-between rounded-xl border border-white/5 bg-stone-900/60 p-3.5 transition-all hover:border-white/10 hover:bg-white/5 {reorderMode ? 'cursor-grab active:cursor-grabbing border-stone-700/50 bg-stone-900/80 shadow-md' : 'cursor-pointer'}"
 											>
 												<div class="flex items-center gap-3">
 													<div
@@ -556,14 +571,14 @@
 					{/each}
 
 					<!-- Unassigned Scenes DND Dropzone -->
-					<div class="space-y-4 rounded-3xl border border-white/5 bg-stone-900/20 p-5">
+					<div class="space-y-3 sm:space-y-4 rounded-2xl sm:rounded-3xl border border-white/5 bg-stone-900/20 p-4 sm:p-5">
 						<h3 class="flex items-center gap-2 font-serif text-lg font-bold text-stone-400">
 							<span class="h-2 w-2 rounded-full bg-stone-700"></span>
 							Unassigned Scenes
 						</h3>
 
 						<div
-							use:dndzone={{ items: scenesByArc.unassigned || [], flipDurationMs }}
+							use:dndzone={{ items: scenesByArc.unassigned || [], flipDurationMs, dragDisabled: !reorderMode }}
 							onconsider={(e) => handleConsider('unassigned', e)}
 							onfinalize={(e) => handleFinalize('unassigned', e)}
 							class="min-h-16 space-y-2 rounded-2xl border border-dashed border-white/5 bg-black/10 p-2 transition-colors"
@@ -578,7 +593,12 @@
 										<a
 											data-component="scene-card-link"
 											href="/serials/{data.serial.id}/scenes/{scene.id}/play"
-											class="flex cursor-grab items-center justify-between rounded-xl border border-white/5 bg-stone-900/60 p-3.5 transition-all hover:border-white/10 hover:bg-white/5 active:cursor-grabbing"
+											onclick={(e) => {
+												if (reorderMode) {
+													e.preventDefault();
+												}
+											}}
+											class="flex items-center justify-between rounded-xl border border-white/5 bg-stone-900/60 p-3.5 transition-all hover:border-white/10 hover:bg-white/5 {reorderMode ? 'cursor-grab active:cursor-grabbing border-stone-700/50 bg-stone-900/80 shadow-md' : 'cursor-pointer'}"
 										>
 											<div class="flex items-center gap-3">
 												<div

@@ -45,7 +45,7 @@
 	<div class="flex min-h-0 flex-1 overflow-hidden">
 		<!-- Main Editor Area -->
 		<div
-			class="animate-fade-in relative flex flex-1 flex-col items-center overflow-hidden px-8 pt-8"
+			class="animate-fade-in relative flex flex-1 flex-col items-center overflow-hidden px-4 md:px-8 pt-4 md:pt-8"
 		>
 			<div class="flex h-full min-h-0 w-full max-w-4xl flex-col">
 				<!-- Editor Header / Action Row -->
@@ -74,10 +74,14 @@
 						<button
 							onclick={() => editorComponent?.save()}
 							disabled={editorComponent?.getIsSaving?.()}
-							class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-5 py-2 text-xs font-bold shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
+							class="bg-primary text-primary-foreground shadow-primary/20 flex items-center rounded-xl px-3 py-2 md:px-5 md:py-2 text-xs font-bold shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
 						>
-							<Save class="mr-2 h-3.5 w-3.5" />
-							{editorComponent?.getIsSaving?.() ? 'Saving...' : 'Create Snapshot'}
+							<Save class="mr-1.5 md:mr-2 h-3.5 w-3.5" />
+							<span>{editorComponent?.getIsSaving?.() ? 'Saving...' : ''}</span>
+							{#if !editorComponent?.getIsSaving?.()}
+								<span class="hidden md:inline">Create Snapshot</span>
+								<span class="inline md:hidden">Snapshot</span>
+							{/if}
 						</button>
 					</div>
 				</div>

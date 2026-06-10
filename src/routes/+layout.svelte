@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
@@ -10,6 +11,7 @@
 
 	let { data, children } = $props();
 	let { supabase, session } = $derived(data);
+	let showSidebar = $derived(page.url.pathname !== '/login' && !page.url.pathname.startsWith('/auth'));
 
 	onMount(() => {
 		const { data: authListener } = supabase.auth.onAuthStateChange((event, _session) => {
@@ -26,8 +28,10 @@
 
 <div class="flex h-screen w-full overflow-hidden bg-stone-950 font-sans">
 	<GlobalLoader />
-	<Sidebar />
-	<main class="relative flex flex-1 flex-col overflow-y-auto">
+	{#if showSidebar}
+		<Sidebar />
+	{/if}
+	<main class="relative flex flex-1 flex-col overflow-y-auto {showSidebar && !page.url.pathname.includes('/scenes/') ? 'pt-16 md:pt-0' : ''}">
 		<!-- Ambient Background Glows -->
 		<div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
 			<div
