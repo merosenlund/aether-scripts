@@ -261,7 +261,7 @@ export async function generateSerialBackup(serialId: string, serialTitle: string
 	}
 
 	// Reduce events to get the current state of all entities (pass null for activeBlockIdsSet to reveal all)
-	const reducedEntitiesMap = reduceWikiEvents(allEventsData, null, baseEntities);
+	const reducedEntitiesMap = reduceWikiEvents(allEventsData, null, null, baseEntities);
 
 	// 4. Process Wiki Entities into Markdown files grouped by category
 	for (const [entityId, entity] of reducedEntitiesMap.entries()) {

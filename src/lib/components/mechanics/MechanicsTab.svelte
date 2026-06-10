@@ -29,6 +29,7 @@
 	let expandedEntityIds = $state<Set<string>>(new Set());
 
 	let editingEvent = $state<WikiEvent | null>(null);
+	let editingEntity = $state<WikiEntity | null>(null);
 	let showEventModal = $state(false);
 
 	const entities = $derived(
@@ -330,8 +331,25 @@
 							</div>
 							<ChevronRight
 								size={14}
-								class="text-stone-600 transition-transform duration-200 {isExpanded ? 'rotate-90' : ''}"
+								class="text-stone-500 transition-transform duration-200 {isExpanded ? 'rotate-90' : ''}"
 							/>
+						</button>
+						<button
+							data-component="edit-mechanic-button"
+							class="hover:text-primary hover:bg-primary/10 ml-2 rounded-lg p-2 text-stone-500 opacity-0 transition-colors group-hover:opacity-100"
+							onclick={() => {
+								const createEvent = contextEngine.rawEvents.find(evt => evt.entity_id === entity.id && evt.event_type === 'create');
+								if (createEvent) {
+									editingEvent = createEvent;
+									editingEntity = entity;
+									showEventModal = true;
+								} else {
+									notifications.error('Could not find create event for mechanic.');
+								}
+							}}
+							title="Edit mechanic"
+						>
+							<Pencil size={14} />
 						</button>
 					</div>
 
@@ -463,8 +481,9 @@
 
 	<EventEditorModal
 		event={editingEvent}
+		entity={editingEntity}
 		isOpen={showEventModal}
-		onClose={() => { showEventModal = false; editingEvent = null; }}
+		onClose={() => { showEventModal = false; editingEvent = null; editingEntity = null; }}
 		onSubmit={handleEventModalSubmit}
 	/>
 </div>

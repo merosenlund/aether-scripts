@@ -38,10 +38,13 @@
 	let searchQuery = $state('');
 	let expandedEntityIds = $state<Set<string>>(new Set());
 	let showCreateModal = $state(false);
+	let newEntityCategory = $state<'character' | 'location' | 'thread'>('character');
 
 	let editingEvent = $state<WikiEvent | null>(null);
 	let editingEntity = $state<WikiEntity | null>(null);
 	let showEventModal = $state(false);
+
+	let newFactTexts = $state<Record<string, string>>({});
 
 	onMount(async () => {
 		try {
@@ -58,6 +61,13 @@
 		} finally {
 			isLoading = false;
 		}
+
+		const handleOpenWikiModal = (e: CustomEvent) => {
+			newEntityCategory = e.detail.category || 'character';
+			showCreateModal = true;
+		};
+		window.addEventListener('aether:open-wiki-modal', handleOpenWikiModal as EventListener);
+		return () => window.removeEventListener('aether:open-wiki-modal', handleOpenWikiModal as EventListener);
 	});
 
 	// An entity is "revealed" if it has an event that is within the current readBlockIds
@@ -185,6 +195,33 @@
 		} catch (e) {
 			console.error(e);
 			notifications.error('Failed to remove fact.');
+		}
+	}
+
+	async function handleAddFact(entityId: string) {
+		const content = newFactTexts[entityId]?.trim();
+		if (!content) return;
+
+		try {
+			if (!activeBlockId) {
+				notifications.error('Click in the editor to select a block first.');
+				return;
+			}
+
+			const ev = await createWikiEvent({
+				entity_id: entityId,
+				scene_id: sceneId,
+				block_id: activeBlockId,
+				event_type: 'add_fact',
+				payload: { id: crypto.randomUUID(), content }
+			});
+			contextEngine.rawEvents = [...contextEngine.rawEvents, ev].sort(
+				(a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+			);
+			newFactTexts[entityId] = '';
+		} catch (e) {
+			console.error(e);
+			notifications.error('Failed to add fact.');
 		}
 	}
 
@@ -374,16 +411,36 @@
 							/>
 						</button>
 
-						{#if !visibleBlockIds.length}
+						<div class="flex items-center ml-2 opacity-0 transition-opacity group-hover:opacity-100">
 							<button
-								data-component="anchor-button"
-								onclick={() => handleAnchor(entity.id)}
-								class="hover:text-primary hover:bg-primary/10 ml-2 rounded-lg p-2 text-stone-500 opacity-0 transition-colors group-hover:opacity-100"
-								title="Anchor to current block"
+								data-component="edit-entity-button"
+								onclick={(e) => {
+									e.stopPropagation();
+									const createEvent = contextEngine.rawEvents.find(evt => evt.entity_id === entity.id && evt.event_type === 'create');
+									if (createEvent) {
+										editingEvent = createEvent;
+										editingEntity = entity;
+										showEventModal = true;
+									} else {
+										notifications.error('Could not find create event for entity.');
+									}
+								}}
+								class="hover:text-primary hover:bg-primary/10 rounded-lg p-2 text-stone-500 transition-colors"
+								title="Edit entity"
 							>
-								<Pin size={14} />
+								<Pencil size={14} />
 							</button>
-						{/if}
+							{#if !visibleBlockIds.length}
+								<button
+									data-component="anchor-button"
+									onclick={(e) => { e.stopPropagation(); handleAnchor(entity.id); }}
+									class="hover:text-primary hover:bg-primary/10 rounded-lg p-2 text-stone-500 transition-colors"
+									title="Anchor to current block"
+								>
+									<Pin size={14} />
+								</button>
+							{/if}
+						</div>
 					</div>
 
 					<!-- Expandable Section -->
@@ -441,6 +498,29 @@
 									{/each}
 								</div>
 							{/if}
+
+							<!-- Add Fact Input -->
+							<form
+								class="mt-2 flex gap-1"
+								onsubmit={(e) => {
+									e.preventDefault();
+									handleAddFact(entity.id);
+								}}
+							>
+								<input
+									type="text"
+									bind:value={newFactTexts[entity.id]}
+									placeholder="Add a new fact..."
+									class="flex-1 rounded-md bg-white/5 px-2 py-1 text-[11px] text-white placeholder-stone-500 focus:bg-white/10 focus:outline-none"
+								/>
+								<button
+									type="submit"
+									disabled={!newFactTexts[entity.id]?.trim()}
+									class="rounded-md bg-primary/20 px-2 py-1 text-[11px] text-primary hover:bg-primary/30 disabled:opacity-50"
+								>
+									<Plus size={12} />
+								</button>
+							</form>
 
 							<!-- Events Timeline -->
 							{#if events.length > 0}
@@ -515,6 +595,7 @@
 		{scenes}
 		blockId={activeBlockId}
 		open={showCreateModal}
+		initialCategory={newEntityCategory}
 		onClose={() => (showCreateModal = false)}
 		onCreated={handleEntryCreated}
 	/>

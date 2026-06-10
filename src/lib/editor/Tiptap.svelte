@@ -298,9 +298,13 @@
 					}
 					case 'oracleBlock': {
 						const type = node.attrs.type || 'fate';
-						const question = node.attrs.question || '';
+						const tableName = node.attrs.tableName;
+						const question = node.attrs.question || node.attrs.note || '';
 						const result = node.attrs.result || '?';
-						return `🔮 [Oracle: ${type.toUpperCase()}] Q: ${question} -> A: ${result}`;
+						const rolls = node.attrs.rolls && node.attrs.rolls.length > 0 ? ` (${node.attrs.rolls.join(', ')})` : '';
+						const title = tableName ? tableName : type.toUpperCase();
+						const qText = question ? ` Q: ${question} ->` : '';
+						return `🔮 [Oracle: ${title}]${rolls}${qText} A: ${result}`;
 					}
 					case 'diceRoller': {
 						const formula = node.attrs.formula || '1d20';
@@ -379,9 +383,13 @@
 					}
 					case 'oracleBlock': {
 						const type = node.attrs.type || 'fate';
-						const question = node.attrs.question || '';
+						const tableName = node.attrs.tableName;
+						const question = node.attrs.question || node.attrs.note || '';
 						const result = node.attrs.result || '?';
-						text = `🔮 [Oracle: ${type.toUpperCase()}] Q: ${question} -> A: ${result}`;
+						const rolls = node.attrs.rolls && node.attrs.rolls.length > 0 ? ` (${node.attrs.rolls.join(', ')})` : '';
+						const title = tableName ? tableName : type.toUpperCase();
+						const qText = question ? ` Q: ${question} ->` : '';
+						text = `🔮 [Oracle: ${title}]${rolls}${qText} A: ${result}`;
 						break;
 					}
 					case 'diceRoller': {

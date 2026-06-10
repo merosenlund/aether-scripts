@@ -113,7 +113,7 @@ Deno.test('reduceWikiEvents: reduces standard fields, descriptions, and facts co
 	];
 
 	// Test 1: Author/unfiltered mode (activeBlockIdsSet = null)
-	const unfilteredResult = reduceWikiEvents(events, null);
+	const unfilteredResult = reduceWikiEvents(events, null, null);
 	const entityUnfiltered = unfilteredResult.get('entity-1');
 	assertEquals(entityUnfiltered?.name, 'Eldrin');
 	assertEquals(entityUnfiltered?.category, 'character');
@@ -123,7 +123,7 @@ Deno.test('reduceWikiEvents: reduces standard fields, descriptions, and facts co
 
 	// Test 2: Filtered mode (only block-1 and block-2 read)
 	const readBlocks = new Set(['block-1', 'block-2']);
-	const filteredResult = reduceWikiEvents(events, readBlocks);
+	const filteredResult = reduceWikiEvents(events, readBlocks, null);
 	const entityFiltered = filteredResult.get('entity-1');
 	assertEquals(entityFiltered?.name, 'Eldrin');
 	assertEquals(entityFiltered?.description, 'An old wizard with a magical staff.');
@@ -179,7 +179,7 @@ Deno.test('reduceWikiEvents: reduces clock configuration and step changes', () =
 		}
 	];
 
-	const result = reduceWikiEvents(events, null);
+	const result = reduceWikiEvents(events, null, null);
 	const clock = result.get('clock-1');
 	assertEquals(clock?.name, 'Alert Level');
 	assertEquals(clock?.category, 'clock');
@@ -217,7 +217,7 @@ Deno.test('reduceWikiEvents: reduces progress track configuration', () => {
 		}
 	];
 
-	const result = reduceWikiEvents(events, null);
+	const result = reduceWikiEvents(events, null, null);
 	const track = result.get('track-1');
 	assertEquals(track?.name, 'Journey Progress');
 	assertEquals(track?.category, 'track');
@@ -274,7 +274,7 @@ Deno.test('reduceWikiEvents: seeds name/category/metadata from baseEntities; des
 		}
 	];
 
-	const result = reduceWikiEvents([], null, baseEntities);
+	const result = reduceWikiEvents([], null, null, baseEntities);
 	const entity = result.get('entity-base-1');
 	assertEquals(entity?.name, 'Gondor');
 	assertEquals(entity?.category, 'location');
@@ -296,12 +296,12 @@ Deno.test('Chronological slicing: Clock blocks show states up to their anchoring
 	// For Block 1 (anchored to ev-1)
 	const index1 = events.findIndex(e => e.block_id === 'block-1');
 	const sliced1 = events.slice(0, index1 + 1);
-	const res1 = reduceWikiEvents(sliced1 as any, null, baseEntities as any);
+	const res1 = reduceWikiEvents(sliced1 as any, null, null, baseEntities as any);
 	assertEquals(res1.get('clock-1')?.metadata.filled, 0); // Should be 0 (ignores the sidebar event and later events)
 
 	// For Block 3 (anchored to ev-3)
 	const index3 = events.findIndex(e => e.block_id === 'block-3');
 	const sliced3 = events.slice(0, index3 + 1);
-	const res3 = reduceWikiEvents(sliced3 as any, null, baseEntities as any);
+	const res3 = reduceWikiEvents(sliced3 as any, null, null, baseEntities as any);
 	assertEquals(res3.get('clock-1')?.metadata.filled, 2); // Should be 2 (includes sidebar event + block-3 increment)
 });

@@ -12,7 +12,10 @@ export const OracleBlock = Node.create({
 			type: { default: 'fate' },
 			question: { default: '' },
 			result: { default: '' },
-			odds: { default: 50 }
+			odds: { default: 50 },
+			rolls: { default: [] },
+			tableName: { default: '' },
+			note: { default: '' }
 		};
 	},
 
@@ -30,9 +33,15 @@ export const OracleBlock = Node.create({
 
 	renderText({ node }) {
 		const type = node.attrs.type || 'fate';
-		const question = node.attrs.question || '';
+		const tableName = node.attrs.tableName;
+		const question = node.attrs.question || node.attrs.note || '';
 		const result = node.attrs.result || '?';
-		return `🔮 [Oracle: ${type.toUpperCase()}] Q: ${question} -> A: ${result}`;
+		const rolls = node.attrs.rolls && node.attrs.rolls.length > 0 ? ` (${node.attrs.rolls.join(', ')})` : '';
+		
+		const title = tableName ? tableName : type.toUpperCase();
+		const qText = question ? ` Q: ${question} ->` : '';
+		
+		return `🔮 [Oracle: ${title}]${rolls}${qText} A: ${result}`;
 	},
 
 	addNodeView() {
@@ -44,7 +53,10 @@ export const OracleBlock = Node.create({
 				props: {
 					type: node.attrs.type,
 					question: node.attrs.question,
-					result: node.attrs.result
+					result: node.attrs.result,
+					rolls: node.attrs.rolls,
+					tableName: node.attrs.tableName,
+					note: node.attrs.note
 				}
 			});
 

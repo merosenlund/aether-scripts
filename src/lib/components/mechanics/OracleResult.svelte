@@ -4,11 +4,17 @@
 	let {
 		type = 'fate',
 		question = '',
-		result = ''
+		result = '',
+		rolls = [],
+		tableName = '',
+		note = ''
 	} = $props<{
-		type?: 'fate' | 'theme';
+		type?: 'fate' | 'action' | 'describe' | 'table' | 'theme';
 		question?: string;
 		result?: string;
+		rolls?: number[];
+		tableName?: string;
+		note?: string;
 	}>();
 
 	// Color mapping based on result (Mythic style)
@@ -36,18 +42,21 @@
 		{/if}
 	</div>
 	<div class="flex-1 space-y-1">
-		{#if question}
+		{#if question || note}
 			<div class="text-primary/70 mb-1 text-xs font-bold tracking-widest uppercase">
-				{type === 'fate' ? 'Fate Question' : 'Theme Query'}
+				{tableName || (type === 'fate' ? 'Fate Check' : type === 'action' ? 'Action Oracle' : type === 'describe' ? 'Descriptor Oracle' : 'Oracle')}
 			</div>
-			<div class="text-sm text-stone-400 italic">"{question}"</div>
+			<div class="text-sm text-stone-400 italic">"{question || note}"</div>
 		{:else}
 			<div class="text-primary/70 mb-1 text-xs font-bold tracking-widest uppercase">
-				Oracle ({type})
+				{tableName || `Oracle (${type})`}
 			</div>
 		{/if}
-		<div class="text-lg tracking-tight {resultColor}">
-			{result}
+		<div class="text-lg tracking-tight {resultColor} flex items-center gap-2">
+			{#if rolls && rolls.length > 0}
+				<span class="bg-stone-800 text-stone-400 px-1.5 py-0.5 rounded text-sm font-mono leading-none border border-stone-700">({rolls.join(', ')})</span>
+			{/if}
+			<span>{result}</span>
 		</div>
 	</div>
 </div>

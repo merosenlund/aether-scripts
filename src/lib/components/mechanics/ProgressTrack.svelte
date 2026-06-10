@@ -54,6 +54,7 @@
 		const reducedMap = reduceWikiEvents(
 			filteredEvents,
 			null,
+			null,
 			contextEngine.baseEntities
 		);
 		return reducedMap.get(entityId) || null;

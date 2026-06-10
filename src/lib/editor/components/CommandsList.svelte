@@ -136,6 +136,18 @@
 
 		return false;
 	}
+	function scrollIntoView(node: HTMLElement, condition: boolean) {
+		if (condition) {
+			node.scrollIntoView({ block: 'nearest' });
+		}
+		return {
+			update(newCondition: boolean) {
+				if (newCondition) {
+					node.scrollIntoView({ block: 'nearest' });
+				}
+			}
+		};
+	}
 </script>
 
 <div
@@ -203,6 +215,7 @@
 				>
 					{#each hintState.selectOptions as option, idx (option.value)}
 						<button
+							use:scrollIntoView={idx === selectedSelectIndex}
 							data-component="hint-select-option"
 							class="flex w-full items-center px-3 py-2 text-left text-xs font-medium transition-all {idx === selectedSelectIndex
 								? 'bg-primary/20 text-primary shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'

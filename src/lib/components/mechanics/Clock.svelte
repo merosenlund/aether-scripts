@@ -40,6 +40,7 @@
 		const reducedMap = reduceWikiEvents(
 			slicedEvents,
 			null, // No additional block-visibility filtering needed
+			null,
 			contextEngine.baseEntities
 		);
 		return reducedMap.get(entityId) || null;

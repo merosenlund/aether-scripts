@@ -1,4 +1,4 @@
-import { getWikiEvents, getWikiEntities, type WikiEvent, type WikiEntity } from '$lib/api/wiki';
+import { getWikiEvents, getWikiEventsForSerial, getWikiEntities, type WikiEvent, type WikiEntity } from '$lib/api/wiki';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 export interface ReducedEntity {
@@ -97,12 +97,16 @@ export function reduceEntityEvents(events: WikiEvent[], baseEntity: WikiEntity):
 export function reduceWikiEvents(
 	events: WikiEvent[],
 	activeBlockIdsSet: Set<string> | SvelteSet<string> | null,
+	currentSceneId: string | null,
 	baseEntities: WikiEntity[] = []
 ) {
 	// Filter events based on block-level chronological visibility
 	const filteredEvents = events.filter((event) => {
 		if (!activeBlockIdsSet) return true;
 		if (!event.block_id) return true;
+		// If the event belongs to another scene, we assume it's part of the pre-existing history
+		// (Progressive disclosure only applies to the scene currently being read/played)
+		if (currentSceneId && event.scene_id !== currentSceneId) return true;
 		return activeBlockIdsSet.has(event.block_id);
 	});
 
@@ -161,10 +165,13 @@ class ContextEngineStore {
 	// This must be set explicitly — an empty readBlockIds no longer implies "show all".
 	showAll = $state(false);
 
+	// Current scene ID for progressive disclosure filtering
+	currentSceneId = $state<string | null>(null);
+
 	// Derive the reduced entities state reactively
 	reducedEntities = $derived.by(() => {
 		const filterSet = this.showAll ? null : this.readBlockIds;
-		return reduceWikiEvents(this.rawEvents, filterSet, this.baseEntities);
+		return reduceWikiEvents(this.rawEvents, filterSet, this.currentSceneId, this.baseEntities);
 	});
 
 	// Load base entities
@@ -177,23 +184,31 @@ class ContextEngineStore {
 	// Pass showAll=true for author/edit mode (wiki shows everything).
 	// Pass showAll=false (default) for play mode (progressive disclosure).
 	async initScene(sceneId: string, docJson: unknown, serialId?: string, showAll = false) {
-		this.rawEvents = await getWikiEvents(sceneId);
+		this.currentSceneId = sceneId;
+		if (serialId) {
+			this.rawEvents = await getWikiEventsForSerial(serialId);
+			await this.loadBaseEntities(serialId);
+		} else {
+			this.rawEvents = await getWikiEvents(sceneId);
+		}
 		this.parseDocBlocks(docJson);
 		this.readBlockIds.clear();
 		this.showAll = showAll;
-		if (serialId) {
-			await this.loadBaseEntities(serialId);
-		}
+		// loadBaseEntities is handled above if serialId is present
 	}
 
 	// Lightweight event refresh after wiki mutations (clock increments, track advances, etc.).
 	// Preserves readBlockIds and showAll so in-progress reader state is not disrupted.
 	async refreshEvents(sceneId: string, docJson: unknown, serialId?: string) {
-		this.rawEvents = await getWikiEvents(sceneId);
-		this.parseDocBlocks(docJson);
+		this.currentSceneId = sceneId;
 		if (serialId) {
+			this.rawEvents = await getWikiEventsForSerial(serialId);
 			await this.loadBaseEntities(serialId);
+		} else {
+			this.rawEvents = await getWikiEvents(sceneId);
 		}
+		this.parseDocBlocks(docJson);
+		// loadBaseEntities is handled above if serialId is present
 	}
 
 	// Parse Tiptap JSON to construct the physical block ordering

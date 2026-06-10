@@ -136,9 +136,9 @@ This phase captures improvements and refinements discovered during live usage of
 - [ ] **Version Statuses**: Move scene statuses (e.g., Published, Beta) from the scene level to the version level. This allows authors to publish a `1.0.0` version for general readers, but have a `1.1.0` rewrite visible only to beta readers.
 
 ### Game Mechanics & Wiki
-- [ ] **Mythic Tables Expansion**: Add more frequently used Mythic tables as options within the `/roll` command, specifically the Name generation tables (providing the raw Mythic results to interpret, rather than just generating a generic name).
-- [ ] **Macro/Workflow Commands (Exploration)**: Explore creating workflow-based slash commands (like `/new character`) that streamline complex processes (e.g., rolling two names, opening a GM block for interpretation, and then creating the wiki entry).
-- [ ] **Sidebar Wiki Evolution**: Add an "Edit" button to entities and events in the editor sidebar that opens the same modal used in the World Manager, allowing the author to quickly choose between correcting a typo or evolving the narrative.
+- [x] **Mythic Tables Expansion**: Add more frequently used Mythic tables as options within the `/roll` command, specifically the Name generation tables (providing the raw Mythic results to interpret, rather than just generating a generic name).
+- [x] **Macro/Workflow Commands (Exploration)**: Explore creating workflow-based slash commands (like `/new character`) that streamline complex processes (e.g., rolling two names, opening a GM block for interpretation, and then creating the wiki entry).
+- [x] **Sidebar Wiki Evolution**: Add an "Edit" button to entities and events in the editor sidebar that opens the same modal used in the World Manager, allowing the author to quickly choose between correcting a typo or evolving the narrative.
 
 ### Analytics & Goals
 - [ ] **Public Analytics**: Writing analytics should be visible to all users to show progress. Currently, the Writing Analytics nav item redirects non-authors to the home page.

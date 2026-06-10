@@ -38,7 +38,7 @@
 	});
 
 	const canEvolve = $derived(
-		event && ['add_fact', 'update_name', 'update_description'].includes(event.event_type)
+		event && ['add_fact', 'update_name', 'update_description', 'create'].includes(event.event_type)
 	);
 
 	function handleSubmit() {

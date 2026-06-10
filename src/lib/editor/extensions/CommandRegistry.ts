@@ -18,6 +18,7 @@ import { contextEngine } from '$lib/stores/contextEngine.svelte';
 import { gameSession } from '$lib/stores/gameSession.svelte';
 import { isEntityAvailableAtBlock } from '$lib/stores/entityHeadIndex.svelte';
 import { rollDice, validateDiceFormula, type ValidationResult } from './diceParser';
+import { mythicTables, lookupResult, rollOnTable, rollMultiple, getTablesByCategory } from './mythicTables';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ export interface ParamOption {
 export interface ParamDef {
 	name: string;
 	label: string;
-	type: 'text' | 'number' | 'select' | 'dice';
+	type: 'text' | 'number' | 'select' | 'dice' | 'results';
 	required: boolean;
 	default?: string | number;
 	placeholder?: string;
@@ -236,25 +237,23 @@ async function persistTrackAdvance(
 
 // ─── Command Definitions ────────────────────────────────────────────
 
-const oracleActions = [
-	'Seek', 'Oppose', 'Communicate', 'Move', 'Transform',
-	'Deceive', 'Reveal', 'Discover', 'Fight', 'Aid'
-];
-
-const oracleThemes = [
-	'Danger', 'Hope', 'Power', 'Wealth', 'Knowledge',
-	'Love', 'Death', 'Nature', 'Magic', 'Technology'
-];
-
 export const commandRegistry: CommandDef[] = [
-	// ─── Oracle ───
+	// ─── Fate Check ───
 	{
-		name: 'oracle',
-		title: 'Oracle: Fate Check',
+		name: 'fate',
+		title: 'Fate Check',
 		description: 'Ask a Yes/No question against the odds',
 		icon: 'help-circle',
-		aliases: ['fate', 'odds'],
+		aliases: ['oracle', 'odds'],
 		params: [
+			{
+				name: 'results',
+				label: 'manual d100(s) or xN',
+				type: 'results',
+				required: false,
+				default: '',
+				placeholder: '42 or x2'
+			},
 			{
 				name: 'odds',
 				label: 'odds',
@@ -275,7 +274,16 @@ export const commandRegistry: CommandDef[] = [
 		execute: async (editor, range, params) => {
 			const target = parseInt(String(params.odds)) || 50;
 			const question = String(params.question || '');
-			const roll = Math.floor(Math.random() * 100) + 1;
+			const resultsRaw = String(params.results || '').trim();
+			
+			let roll = 0;
+			if (resultsRaw && !resultsRaw.startsWith('x')) {
+				const parts = resultsRaw.split(' ');
+				roll = parseInt(parts[0]) || 0;
+			}
+			if (roll <= 0 || roll > 100) {
+				roll = Math.floor(Math.random() * 100) + 1;
+			}
 
 			// 20% exceptional rule
 			const exceptionalYes = Math.floor(target / 5);
@@ -291,26 +299,52 @@ export const commandRegistry: CommandDef[] = [
 				.deleteRange(range)
 				.insertContent({
 					type: 'oracleBlock',
-					attrs: { type: 'fate', question, result, odds: target }
+					attrs: { type: 'fate', question, result, odds: target, rolls: [roll] }
 				})
 				.run();
 
-			gameSession.addRoll(`Oracle (${target}%)`, roll);
+			gameSession.addRoll(`Fate (${target}%)`, roll);
 		}
 	},
 
-	// ─── Theme ───
+	// ─── Action Oracle ───
 	{
-		name: 'theme',
-		title: 'Oracle: Theme',
-		description: 'Roll for a random theme/action',
+		name: 'action',
+		title: 'Action Oracle',
+		description: 'Roll Action 1 and Action 2',
 		icon: 'sparkles',
-		aliases: [],
-		params: [],
-		execute: async (editor, range) => {
-			const action = oracleActions[Math.floor(Math.random() * oracleActions.length)];
-			const theme = oracleThemes[Math.floor(Math.random() * oracleThemes.length)];
-			const result = `${action} ${theme}`;
+		aliases: ['theme'],
+		params: [
+			{
+				name: 'results',
+				label: 'manual d100(s) or xN',
+				type: 'results',
+				required: false,
+				default: '',
+				placeholder: '33 91'
+			},
+			{
+				name: 'question',
+				label: 'question',
+				type: 'text',
+				required: false,
+				default: '',
+				placeholder: 'What is the villain plotting?'
+			}
+		],
+		execute: async (editor, range, params) => {
+			const question = String(params.question || '');
+			const resultsRaw = String(params.results || '').trim();
+			
+			let roll1 = 0, roll2 = 0;
+			if (resultsRaw && !resultsRaw.startsWith('x')) {
+				const parts = resultsRaw.split(' ');
+				roll1 = parseInt(parts[0]) || 0;
+				roll2 = parseInt(parts[1]) || 0;
+			}
+			
+			const res1 = roll1 > 0 && roll1 <= 100 ? { roll: roll1, result: lookupResult('action_1', roll1) } : rollOnTable('action_1');
+			const res2 = roll2 > 0 && roll2 <= 100 ? { roll: roll2, result: lookupResult('action_2', roll2) } : rollOnTable('action_2');
 
 			editor
 				.chain()
@@ -318,11 +352,241 @@ export const commandRegistry: CommandDef[] = [
 				.deleteRange(range)
 				.insertContent({
 					type: 'oracleBlock',
-					attrs: { type: 'theme', question: '', result }
+					attrs: { type: 'action', note: question, result: `${res1.result} + ${res2.result}`, rolls: [res1.roll, res2.roll] }
 				})
 				.run();
 
-			gameSession.addRoll('Theme', 0);
+			gameSession.addRoll('Action 1', res1.roll);
+			gameSession.addRoll('Action 2', res2.roll);
+		}
+	},
+
+	// ─── Describe Oracle ───
+	{
+		name: 'describe',
+		title: 'Descriptor Oracle',
+		description: 'Roll Descriptor 1 and Descriptor 2',
+		icon: 'sparkles',
+		aliases: [],
+		params: [
+			{
+				name: 'results',
+				label: 'manual d100(s) or xN',
+				type: 'results',
+				required: false,
+				default: '',
+				placeholder: '42 86'
+			},
+			{
+				name: 'question',
+				label: 'question',
+				type: 'text',
+				required: false,
+				default: '',
+				placeholder: 'What does the room look like?'
+			}
+		],
+		execute: async (editor, range, params) => {
+			const question = String(params.question || '');
+			const resultsRaw = String(params.results || '').trim();
+			
+			let roll1 = 0, roll2 = 0;
+			if (resultsRaw && !resultsRaw.startsWith('x')) {
+				const parts = resultsRaw.split(' ');
+				roll1 = parseInt(parts[0]) || 0;
+				roll2 = parseInt(parts[1]) || 0;
+			}
+			
+			const res1 = roll1 > 0 && roll1 <= 100 ? { roll: roll1, result: lookupResult('descriptor_1', roll1) } : rollOnTable('descriptor_1');
+			const res2 = roll2 > 0 && roll2 <= 100 ? { roll: roll2, result: lookupResult('descriptor_2', roll2) } : rollOnTable('descriptor_2');
+
+			editor
+				.chain()
+				.focus()
+				.deleteRange(range)
+				.insertContent({
+					type: 'oracleBlock',
+					attrs: { type: 'describe', note: question, result: `${res1.result} + ${res2.result}`, rolls: [res1.roll, res2.roll] }
+				})
+				.run();
+
+			gameSession.addRoll('Descriptor 1', res1.roll);
+			gameSession.addRoll('Descriptor 2', res2.roll);
+		}
+	},
+
+	// ─── Generic Oracle ───
+	{
+		name: 'oracle',
+		title: 'Generic Oracle',
+		description: 'Roll on any Mythic table',
+		icon: 'table',
+		aliases: ['table'],
+		params: [
+			{
+				name: 'results',
+				label: 'manual d100(s) or xN',
+				type: 'results',
+				required: false,
+				default: '',
+				placeholder: '42 or x3'
+			},
+			{
+				name: 'table',
+				label: 'table',
+				type: 'select',
+				required: true,
+				options: () => {
+					const opts: ParamOption[] = [];
+					const cats = getTablesByCategory();
+					for (const tables of cats.values()) {
+						for (const t of tables) {
+							opts.push({ label: t.name, value: t.id });
+						}
+					}
+					opts.sort((a, b) => a.label.localeCompare(b.label));
+					return opts;
+				}
+			},
+			{
+				name: 'question',
+				label: 'question/note',
+				type: 'text',
+				required: false,
+				default: '',
+				placeholder: 'Details...'
+			}
+		],
+		execute: async (editor, range, params) => {
+			const tableId = String(params.table);
+			const table = mythicTables.get(tableId);
+			if (!table) return;
+
+			const question = String(params.question || '');
+			const resultsRaw = String(params.results || '').trim();
+			
+			const rolls: number[] = [];
+			const results: string[] = [];
+
+			let count = 1;
+			if (tableId === 'names') count = 3;
+
+			if (resultsRaw.startsWith('x')) {
+				count = parseInt(resultsRaw.substring(1)) || count;
+			} else if (resultsRaw) {
+				const parts = resultsRaw.split(' ');
+				for (const p of parts) {
+					const r = parseInt(p);
+					if (r > 0) rolls.push(r);
+				}
+			}
+
+			if (rolls.length === 0) {
+				for (let i = 0; i < count; i++) {
+					const res = rollOnTable(tableId);
+					rolls.push(res.roll);
+					results.push(res.result);
+					gameSession.addRoll(table.name, res.roll);
+				}
+			} else {
+				for (const r of rolls) {
+					results.push(lookupResult(tableId, r));
+					gameSession.addRoll(table.name, r);
+				}
+			}
+
+			editor
+				.chain()
+				.focus()
+				.deleteRange(range)
+				.insertContent({
+					type: 'oracleBlock',
+					attrs: { type: 'table', tableName: table.name, note: question, result: results.join(' + '), rolls }
+				})
+				.run();
+		}
+	},
+
+	// ─── New Workflow ───
+	{
+		name: 'new',
+		title: 'New Entity Workflow',
+		description: 'Roll names, insert GM block, open creation modal',
+		icon: 'plus-circle',
+		aliases: ['create'],
+		params: [
+			{
+				name: 'category',
+				label: 'category',
+				type: 'select',
+				required: true,
+				default: 'character',
+				options: () => [
+					{ label: 'Character', value: 'character' },
+					{ label: 'Location', value: 'location' },
+					{ label: 'Thread', value: 'thread' }
+				]
+			}
+		],
+		execute: async (editor, range, params) => {
+			const category = String(params.category || 'character');
+			
+			let t1Id = 'names';
+			let t2Id = 'names';
+			let n1Note = 'First Name';
+			let n2Note = 'Last Name';
+			let count1 = 3;
+			let count2 = 3;
+
+			if (category === 'location') {
+				t1Id = 'locations';
+				t2Id = 'descriptor_1';
+				n1Note = 'Location Type';
+				n2Note = 'Descriptor';
+				count1 = 2;
+				count2 = 2;
+			} else if (category === 'thread') {
+				t1Id = 'action_1';
+				t2Id = 'descriptor_1';
+				n1Note = 'Action';
+				n2Note = 'Descriptor';
+				count1 = 2;
+				count2 = 2;
+			}
+
+			const res1 = rollMultiple(t1Id, count1);
+			const res2 = rollMultiple(t2Id, count2);
+			const name1 = res1.map(r => r.result).join(' + ');
+			const name2 = res2.map(r => r.result).join(' + ');
+			const rolls1 = res1.map(r => r.roll);
+			const rolls2 = res2.map(r => r.roll);
+			const table1 = mythicTables.get(t1Id);
+			const table2 = mythicTables.get(t2Id);
+
+			editor
+				.chain()
+				.focus()
+				.deleteRange(range)
+				.insertContent([
+					{
+						type: 'oracleBlock',
+						attrs: { type: 'table', tableName: table1?.name || 'Oracle', result: name1, rolls: rolls1, note: n1Note }
+					},
+					{
+						type: 'oracleBlock',
+						attrs: { type: 'table', tableName: table2?.name || 'Oracle', result: name2, rolls: rolls2, note: n2Note }
+					},
+					{
+						type: 'gmNote',
+						content: [{ type: 'text', text: 'Interpretation: ' }]
+					}
+				])
+				.run();
+
+			res1.forEach(r => gameSession.addRoll(table1?.name || 'Oracle', r.roll));
+			res2.forEach(r => gameSession.addRoll(table2?.name || 'Oracle', r.roll));
+
+			window.dispatchEvent(new CustomEvent('aether:open-wiki-modal', { detail: { category } }));
 		}
 	},
 

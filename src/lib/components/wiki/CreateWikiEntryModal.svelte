@@ -14,6 +14,7 @@
 		scenes = [],
 		blockId = null,
 		open = false,
+		initialCategory = 'character',
 		onClose = () => {},
 		onCreated = (_entity: WikiEntity, _event?: WikiEvent & { wiki_entities?: WikiEntity; scenes?: any }) => {}
 	} = $props<{
@@ -21,6 +22,7 @@
 		scenes: { id: string; author_title: string; display_title: string; order_index: number }[];
 		blockId?: string | null;
 		open: boolean;
+		initialCategory?: 'character' | 'location' | 'clock' | 'track' | 'thread';
 		onClose: () => void;
 		onCreated: (entity: WikiEntity, event?: WikiEvent & { wiki_entities?: WikiEntity; scenes?: any }) => void;
 	}>();
@@ -28,8 +30,14 @@
 	// Form state
 	let newEntityName = $state('');
 	let newEntityCategory = $state<'character' | 'location' | 'clock' | 'track' | 'thread'>(
-		'character'
+		initialCategory
 	);
+
+	$effect(() => {
+		if (open) {
+			newEntityCategory = initialCategory;
+		}
+	});
 	let newEntityDesc = $state('');
 	let clockSegments = $state(4);
 	let trackMax = $state(10);
@@ -38,7 +46,7 @@
 	function resetForm() {
 		newEntityName = '';
 		newEntityDesc = '';
-		newEntityCategory = 'character';
+		newEntityCategory = initialCategory;
 		clockSegments = 4;
 		trackMax = 10;
 	}
