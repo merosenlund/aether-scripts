@@ -1293,7 +1293,8 @@ Character Appearance
 68: Petite
 69: Piercing
 70: Powerful
-71: Professiona72: Reassuring
+71: Professional
+72: Reassuring
 73: Regal
 74: Remarkable
 75: Rough
@@ -1613,7 +1614,8 @@ Character Descriptors
 85: Slow
 86: Small
 87: Sneaky
-88: Sophisticate89: Strange
+88: Sophisticated
+89: Strange
 90: Strong
 91: Supportive
 92: Surprising
@@ -2188,8 +2190,11 @@ City Descriptors
 49: Leadership
 50: Liberty
 51: Loud
-52: Magnificen53: Masses
-54: Meaningfu55: Mechanica56: Messy
+52: Magnificent
+53: Masses
+54: Meaningful
+55: Mechanical
+56: Messy
 57: Mighty
 58: Military
 59: Miserable
@@ -2211,7 +2216,8 @@ City Descriptors
 75: Quiet
 76: Rare
 77: Reassuring
-78: Remarkabl79: River
+78: Remarkable
+79: River
 80: Rough
 81: Ruined
 82: Rustic
@@ -2487,7 +2493,8 @@ Creature Descriptors
 48: Limited
 49: Liquid
 50: Loud
-51: Mammalia52: Mandibles
+51: Mammalian
+52: Mandibles
 53: Masculine
 54: Mechanical
 55: Metallic
@@ -2496,7 +2503,8 @@ Creature Descriptors
 58: Mutant
 59: Natural
 60: Nature
-61: Nightmaris62: Object
+61: Nightmarish
+62: Object
 63: Odorous
 64: Passive
 65: Plant
@@ -2518,11 +2526,13 @@ Creature Descriptors
 81: Stinger
 82: Strange
 83: Strong
-84: Supernatur85: Tail
+84: Supernatural
+85: Tail
 86: Tentacled
 87: Tongue
 88: Toothy
-89: Transparen90: Tree-like
+89: Transparent
+90: Tree-like
 91: Twisted
 92: Undead
 93: Unnatural
@@ -3095,7 +3105,8 @@ Forest Descriptors
 50: Ledge
 51: Lethal
 52: Loud
-53: Magnificen54: Majestic
+53: Magnificent
+54: Majestic
 55: Masses
 56: Mature
 57: Message
@@ -3104,19 +3115,22 @@ Forest Descriptors
 60: Mysterious
 61: Natural
 62: Nature
-63: Nondescrip64: Normal
+63: Nondescript
+64: Normal
 65: Odd
 66: Old
 67: Path
 68: Peaceful
 69: Plants
 70: Pond
-71: Possession72: Powerful
+71: Possessions
+72: Powerful
 73: Pursue
 74: Quiet
 75: Rare
 76: Reassuring
-77: Remarkabl78: River
+77: Remarkable
+78: River
 79: Rocks
 80: Rough
 81: Ruined
@@ -3127,7 +3141,8 @@ Forest Descriptors
 86: Sounds
 87: Strange
 88: Strong
-89: Threatenin90: Tranquil
+89: Threatening
+90: Tranquil
 91: Tree
 92: Unusual
 93: Valuable
