@@ -100,10 +100,49 @@ export class SupabaseYjsProvider {
 				},
 				'load'
 			);
+			// Defer compaction to run in the background
+			setTimeout(() => {
+				this.compactIfNeeded(allData.length);
+			}, 2000);
+
 			return true;
 		}
 
 		return false;
+	}
+
+	private async compactIfNeeded(rowCount: number) {
+		if (rowCount < 500) return;
+
+		console.log(`[Yjs] Compacting ${rowCount} updates into a single state vector...`);
+		const stateVector = Y.encodeStateAsUpdate(this.doc);
+		const hexString = Array.from(stateVector)
+			.map((b) => b.toString(16).padStart(2, '0'))
+			.join('');
+
+		// Replace all updates with a single compacted one (atomic transaction)
+		const { error: deleteError } = await supabase
+			.from('scene_updates')
+			.delete()
+			.eq('scene_id', this.sceneId);
+
+		if (deleteError) {
+			console.error('Compaction delete failed:', deleteError);
+			return;
+		}
+
+		const { error: insertError } = await supabase
+			.from('scene_updates')
+			.insert({
+				scene_id: this.sceneId,
+				update_data: `\\x${hexString}`
+			});
+
+		if (insertError) {
+			console.error('Compaction insert failed:', insertError);
+		} else {
+			console.log('[Yjs] Compaction complete.');
+		}
 	}
 
 	private async saveUpdate(update: Uint8Array) {

@@ -116,7 +116,7 @@
 	}
 
 	function queueAutosave() {
-		if (!sceneId || !editable || !editor) return;
+		if (!sceneId || !editable || !editor || !isEditorReady) return;
 
 		if (saveTimeout) clearTimeout(saveTimeout);
 
@@ -580,9 +580,10 @@
 					}
 				}
 			},
-			// When using collaboration, content is loaded from the Y.Doc
-			// but we can provide initial content if needed
-			content: content || undefined,
+			// When using collaboration, content is loaded from the Y.Doc.
+			// Passing content here when editable + sceneId are true causes a CRDT timeline merge conflict
+			// when the historical Yjs updates load.
+			content: (editable && sceneId) ? undefined : (content || undefined),
 			onUpdate: ({ editor: e }) => {
 				onUpdate(e.getHTML());
 				queueAutosave();
@@ -698,6 +699,59 @@
 					hasYjsData = true; // Prevent re-triggering
 				}
 				console.log('[Tiptap] Fallback content injected.');
+				return;
+			}
+
+			// Case 3: Yjs loaded data but produced empty document — corruption detected
+			if (editable && isEditorReady && hasYjsData) {
+				const docJson = editor.getJSON();
+				const docIsEmpty = !docJson.content || docJson.content.length === 0 ||
+					(docJson.content.length === 1 &&
+					 docJson.content[0].type === 'paragraph' &&
+					 (!docJson.content[0].content || docJson.content[0].content.length === 0));
+
+				let sourceHasContent = false;
+				if (typeof sourceContent === 'object') {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const anyContent = sourceContent as any;
+					if (anyContent.type === 'doc' && anyContent.content) {
+						sourceHasContent = anyContent.content.length > 0;
+					} else if (Array.isArray(anyContent)) {
+						sourceHasContent = anyContent.length > 0;
+					}
+				} else if (typeof sourceContent === 'string') {
+					sourceHasContent = sourceContent.trim().length > 0;
+				}
+
+				if (docIsEmpty && sourceHasContent) {
+					console.warn('[Tiptap] Yjs produced empty doc but content_blocks has data. Recovering...');
+					// Wipe corrupt Yjs updates from DB
+					if (sceneId) {
+						supabase.from('scene_updates').delete().eq('scene_id', sceneId).then(({ error }) => {
+							if (error) console.error('Failed to clear corrupt Yjs updates:', error);
+						});
+					}
+					
+					// Inject content_blocks
+					let parsedContent = sourceContent;
+					if (typeof sourceContent === 'string' && sourceContent.trim().startsWith('{')) {
+						try {
+							parsedContent = JSON.parse(sourceContent);
+						} catch (e) {
+							console.error('Error parsing content JSON inside Tiptap:', e);
+						}
+					}
+					
+					let nodesToInsert = parsedContent;
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const anyParsed = parsedContent as any;
+					if (anyParsed.type === 'doc' && anyParsed.content) {
+						nodesToInsert = anyParsed.content;
+					}
+					
+					editor.chain().clearContent().insertContent(nodesToInsert).run();
+					hasYjsData = true; // Prevent re-triggering
+				}
 			}
 		}
 	});
