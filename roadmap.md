@@ -177,6 +177,10 @@ This phase captures improvements and refinements discovered during live usage of
 ### Unsorted Feedback (Brain Dump)
 *(Instructions for AI: When asked to organize this list, read through the raw bullet points below and move them into the established categories above: "Editor & Prose UX", "Game Mechanics & Wiki", "Analytics & Goals", "Navigation & Content Discovery", or "Authentication & Onboarding". If an item doesn't fit, create a new appropriate category. Rewrite the raw feedback into clear, actionable tasks with checkboxes, and add italicized questions for any ambiguous requirements.)*
 
+- Creating a snapshot makes a toast in the bottom right that says something along the lines of "Snapshot created, you are now in editing mode" however, it doesn't appear to actually put anything in editing mode which I'm fine with. I think I would rather have that be something I manually toggle. Maybe just change the toast message to only mention about the snapshot sucessfully saving?
+- Oracle blocks and other mechanic blocks copy and paste nicely, I would like for GM Notes to as well so that GM blocks can be told apart from regular prose when converted to raw text. Potentially have them start with GM Notes: in the text of the block, or at least add an attribute to the block that can be used to identify it.
+- Is there a max an oracle can be rolled? I tried to do the descriptor oracle with x4 and it kept just doing two.
+
 
 ## Phase 12: Social & Reader Engagement
 
